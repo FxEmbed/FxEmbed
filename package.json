@@ -20,7 +20,7 @@
     "@cloudflare/vitest-pool-workers": "^0.8.10",
     "@cloudflare/workers-types": "^4.20250404.0",
     "@microsoft/eslint-formatter-sarif": "^3.1.0",
-    "@sentry/esbuild-plugin": "^3.2.4",
+    "@sentry/esbuild-plugin": "^3.3.1",
     "@sentry/integrations": "^7.114.0",
     "@typescript-eslint/eslint-plugin": "^8.29.0",
     "@typescript-eslint/parser": "^8.29.0",
