@@ -32,7 +32,7 @@
     "eslint-plugin-sonarjs": "^0.25.1",
     "prettier": "^3.5.3",
     "ts-loader": "^9.5.2",
-    "typescript": "^5.8.2",
+    "typescript": "^5.8.3",
     "vitest": "^3.0.9",
     "wrangler": "^4.7.2"
   },
