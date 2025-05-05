@@ -30,7 +30,7 @@
     "eslint-config-prettier": "^10.1.2",
     "eslint-config-typescript": "^3.0.0",
     "eslint-plugin-optimize-regex": "^1.2.1",
-    "eslint-plugin-prettier": "^5.3.1",
+    "eslint-plugin-prettier": "^5.4.0",
     "globals": "^16.0.0",
     "prettier": "^3.5.3",
     "ts-loader": "^9.5.2",
