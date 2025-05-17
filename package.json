@@ -17,7 +17,7 @@
   "author": "dangered wolf",
   "license": "MIT",
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.8.24",
+    "@cloudflare/vitest-pool-workers": "^0.8.30",
     "@cloudflare/workers-types": "^4.20250517.0",
     "@eslint/js": "^9.27.0",
     "@microsoft/eslint-formatter-sarif": "^3.1.0",
