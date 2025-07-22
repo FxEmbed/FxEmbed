@@ -37,7 +37,7 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
     "vitest": "^3.2.4",
-    "wrangler": "^4.25.0"
+    "wrangler": "^4.25.1"
   },
   "dependencies": {
     "@hono/sentry": "^1.2.2",
