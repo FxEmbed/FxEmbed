@@ -2,21 +2,23 @@ import { Context } from 'hono';
 import { ContentfulStatusCode } from 'hono/utils/http-status';
 import i18next from 'i18next';
 import icu from 'i18next-icu';
+import translationResources from '../../i18n/resources';
 import { Constants } from '../constants';
+import { DataProvider } from '../enum';
+import { Experiment, experimentCheck } from '../experiments';
+import { getBranding } from '../helpers/branding';
+import { shouldTranscodeGif } from '../helpers/giftranscode';
+import { normalizeLanguage } from '../helpers/language';
 import { handleQuote } from '../helpers/quote';
-import { sanitizeText, truncateWithEllipsis } from '../helpers/utils';
-import { Strings } from '../strings';
+import { encodeSnowcode } from '../helpers/snowcode';
 import { getSocialProof } from '../helpers/socialproof';
+import { sanitizeText, truncateWithEllipsis } from '../helpers/utils';
+import { constructBlueskyThread } from '../providers/bsky/conversation';
+import { constructTwitterThread } from '../providers/twitter/conversation';
+import { renderInstantView } from '../render/instantview';
 import { renderPhoto } from '../render/photo';
 import { renderVideo } from '../render/video';
-import { renderInstantView } from '../render/instantview';
-import { constructTwitterThread } from '../providers/twitter/conversation';
-import { Experiment, experimentCheck } from '../experiments';
-import translationResources from '../../i18n/resources';
-import { constructBlueskyThread } from '../providers/bsky/conversation';
-import { DataProvider } from '../enum';
-import { encodeSnowcode } from '../helpers/snowcode';
-import { getBranding } from '../helpers/branding';
+import { Strings } from '../strings';
 import {
   APIMedia,
   APIPhoto,
@@ -27,8 +29,6 @@ import {
   ResponseInstructions,
   SocialThread
 } from '../types/types';
-import { shouldTranscodeGif } from '../helpers/giftranscode';
-import { normalizeLanguage } from '../helpers/language';
 export const returnError = (c: Context, error: string): Response => {
   const branding = getBranding(c);
   return c.html(
@@ -101,7 +101,8 @@ export const handleStatus = async (
   const api = {
     code: thread.code,
     message: '',
-    tweet: status
+    tweet: status,
+    nsfw: status?.possibly_sensitive ?? false
   };
 
   switch (api.code) {

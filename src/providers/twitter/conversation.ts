@@ -15,6 +15,19 @@ import {
 import { graphqlRequest } from './graphql/request';
 import { tryBalancedEndpoints, BalancedEndpoint } from '../../helpers/endpointBalancing';
 
+const extractNsfwDetected = (
+  response:
+    | TweetResultByRestIdResponse
+    | TweetResultsByRestIdsResponse
+    | TweetResultsByIdsResponse
+    | TweetResultByIdResponse
+    | TweetDetailResponse
+    | null
+): boolean => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return Boolean((response as any)?.__fxembed_nsfw_detected);
+};
+
 const writeDataPoint = (
   c: Context,
   language: string | undefined,
@@ -545,7 +558,15 @@ export const constructTwitterThread = async (
         return { status: null, thread: null, author: null, code: 404 };
       }
 
-      const buildStatus = await buildAPITwitterStatus(c, result, language, null, legacyAPI);
+      const nsfwDetected = extractNsfwDetected(response);
+      const buildStatus = await buildAPITwitterStatus(
+        c,
+        result,
+        language,
+        null,
+        legacyAPI,
+        nsfwDetected
+      );
       if (buildStatus === null) {
         writeDataPoint(c, language, null, '404');
         return { status: null, thread: null, author: null, code: 404 };
@@ -592,7 +613,15 @@ export const constructTwitterThread = async (
       return { status: null, thread: null, author: null, code: 404 };
     }
 
-    const buildStatus = await buildAPITwitterStatus(c, result, language, null, legacyAPI);
+    const nsfwDetected = extractNsfwDetected(response);
+    const buildStatus = await buildAPITwitterStatus(
+      c,
+      result,
+      language,
+      null,
+      legacyAPI,
+      nsfwDetected
+    );
 
     if ((buildStatus as FetchResults)?.status === 401) {
       writeDataPoint(c, language, null, '401');
@@ -664,12 +693,14 @@ export const constructTwitterThread = async (
     return { status: null, thread: null, author: null, code: 404 };
   }
 
+  const nsfwDetected = extractNsfwDetected(response);
   status = (await buildAPITwitterStatus(
     c,
     originalStatus,
     undefined,
     null,
-    legacyAPI
+    legacyAPI,
+    nsfwDetected
   )) as APITwitterStatus;
 
   if (status === null) {
@@ -838,7 +869,8 @@ export const constructTwitterThread = async (
         status,
         undefined,
         author,
-        false
+        false,
+        nsfwDetected
       )) as APITwitterStatus;
       socialThread.thread?.push(builtStatus);
     })

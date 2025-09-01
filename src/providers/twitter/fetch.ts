@@ -1,9 +1,9 @@
 import { Context } from 'hono';
 import { Constants } from '../../constants';
 import { Experiment, experimentCheck } from '../../experiments';
+import { detokenize } from '../../helpers/detokenize';
 import { generateUserAgent } from '../../helpers/useragent';
 import { generateSnowflake, withTimeout } from '../../helpers/utils';
-import { detokenize } from '../../helpers/detokenize';
 
 const API_ATTEMPTS = 3;
 let wasElongatorDisabled = false;
@@ -138,6 +138,7 @@ export const twitterFetch = async (c: Context, options: TwitterFetchOptions): Pr
     headers['x-guest-token'] = guestToken;
     let response: unknown;
     let apiRequest: Response | null = null;
+    let wasNsfwDetected = false;
 
     try {
       if (useElongator && typeof c.env?.TwitterProxy !== 'undefined') {
@@ -210,6 +211,15 @@ export const twitterFetch = async (c: Context, options: TwitterFetchOptions): Pr
       continue;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const _tweetResult = (response as any)?.data?.tweetResult;
+    const tweetResult = Array.isArray(_tweetResult)
+      ? _tweetResult[0]?.result
+      : _tweetResult?.result;
+    wasNsfwDetected =
+      tweetResult?.legacy?.possibly_sensitive ??
+      tweetResult?.core?.user_results?.result?.legacy?.possibly_sensitive;
+
     if (
       !wasElongatorDisabled &&
       !useElongator &&
@@ -219,6 +229,7 @@ export const twitterFetch = async (c: Context, options: TwitterFetchOptions): Pr
     ) {
       console.log(`nsfw tweet detected, it's elongator time`);
       useElongator = true;
+      wasNsfwDetected = true;
       continue;
     }
 
@@ -268,6 +279,13 @@ export const twitterFetch = async (c: Context, options: TwitterFetchOptions): Pr
       console.error((error as Error).stack);
     }
     console.log('twitterFetch is all done here, see you soon!');
+
+    // If we detected NSFW content, enrich the response with this information
+    if (wasNsfwDetected && response && typeof response === 'object') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (response as any).__fxembed_nsfw_detected = true;
+    }
+
     return response;
   }
 

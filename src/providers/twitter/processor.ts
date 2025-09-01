@@ -19,7 +19,8 @@ export const buildAPITwitterStatus = async (
   status: GraphQLTwitterStatus,
   language: string | undefined,
   threadAuthor: null | APIUser,
-  legacyAPI = false
+  legacyAPI = false,
+  nsfwDetected = false
 ): Promise<APITwitterStatus | FetchResults | null> => {
   const apiStatus = {} as APITwitterStatus;
 
@@ -126,7 +127,7 @@ export const buildAPITwitterStatus = async (
   apiStatus.created_at = status.legacy.created_at;
   apiStatus.created_timestamp = new Date(status.legacy.created_at).getTime() / 1000;
 
-  apiStatus.possibly_sensitive = status.legacy.possibly_sensitive;
+  apiStatus.possibly_sensitive = nsfwDetected || status.legacy.possibly_sensitive;
 
   if (status.views?.state === 'EnabledWithCount') {
     apiStatus.views = parseInt(status.views.count || '0') ?? null;
@@ -256,7 +257,14 @@ export const buildAPITwitterStatus = async (
   /* We found a quote, let's process that too */
   const quote = status.quoted_status_result ?? status.tweet?.quoted_status_result;
   if (quote) {
-    const buildQuote = await buildAPITwitterStatus(c, quote, language, threadAuthor, legacyAPI);
+    const buildQuote = await buildAPITwitterStatus(
+      c,
+      quote,
+      language,
+      threadAuthor,
+      legacyAPI,
+      nsfwDetected
+    );
     if ((buildQuote as FetchResults).status) {
       apiStatus.quote = undefined;
     } else {

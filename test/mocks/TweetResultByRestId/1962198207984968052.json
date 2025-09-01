@@ -1,0 +1,123 @@
+{
+  "data": {
+    "tweetResult": {
+      "result": {
+        "__typename": "Tweet",
+        "rest_id": "1962198207984968052",
+        "core": {
+          "user_results": {
+            "result": {
+              "__typename": "User",
+              "id": "VXNlcjoxOTQ3NDg3NDk0OTUxNjA0MjI2",
+              "rest_id": "1947487494951604226",
+              "affiliates_highlighted_label": {},
+              "has_graduated_access": true,
+              "is_blue_verified": false,
+              "legacy": {
+                "following": false,
+                "can_dm": false,
+                "can_media_tag": true,
+                "created_at": "Tue Jul 22 02:43:09 +0000 2025",
+                "default_profile": true,
+                "default_profile_image": false,
+                "description": "❤️",
+                "entities": { "description": { "urls": [] } },
+                "fast_followers_count": 0,
+                "favourites_count": 5,
+                "followers_count": 199308,
+                "friends_count": 0,
+                "has_custom_timelines": false,
+                "is_translator": false,
+                "listed_count": 683,
+                "location": "❤️",
+                "media_count": 212,
+                "name": "PRAVATE MILFs",
+                "normal_followers_count": 199308,
+                "pinned_tweet_ids_str": ["1962198111905825055"],
+                "possibly_sensitive": true,
+                "profile_banner_url": "https://pbs.twimg.com/profile_banners/1947487494951604226/1753154161",
+                "profile_image_url_https": "https://pbs.twimg.com/profile_images/1947495741049737218/C8hnTYfN_normal.jpg",
+                "profile_interstitial_type": "sensitive_media",
+                "screen_name": "MilfsPrava86971",
+                "statuses_count": 462,
+                "translator_type": "none",
+                "verified": false,
+                "want_retweets": false,
+                "withheld_in_countries": []
+              },
+              "parody_commentary_fan_label": "None",
+              "profile_image_shape": "Circle",
+              "tipjar_settings": {}
+            }
+          }
+        },
+        "card": {
+          "rest_id": "card://1962198203375271936",
+          "legacy": {
+            "binding_values": [
+              {
+                "key": "unified_card",
+                "value": {
+                  "string_value": "{\"type\":\"video_website\",\"component_objects\":{\"details_1\":{\"type\":\"details\",\"data\":{\"title\":{\"content\":\"...\",\"is_rtl\":false},\"subtitle\":{\"content\":\"aviatorreproducesauciness.com\",\"is_rtl\":false},\"destination\":\"override_browser_with_docked_media_1\"}},\"media_1\":{\"type\":\"media\",\"data\":{\"id\":\"13_1953701980863418368\",\"destination\":\"browser_with_docked_media_1\"}}},\"destination_objects\":{\"browser_with_docked_media_1\":{\"type\":\"browser_with_docked_media\",\"data\":{\"url_data\":{\"url\":\"https://aviatorreproducesauciness.com/2080982\",\"vanity\":\"aviatorreproducesauciness.com\"},\"media_id\":\"13_1953701980863418368\"}},\"override_browser_with_docked_media_1\":{\"type\":\"browser\",\"data\":{\"url_data\":{\"url\":\"https://aviatorreproducesauciness.com/2080982\",\"vanity\":\"aviatorreproducesauciness.com\"}}}},\"components\":[\"media_1\",\"details_1\"],\"media_entities\":{\"13_1953701980863418368\":{\"id\":1953701980863418368,\"id_str\":\"1953701980863418368\",\"indices\":[0,0],\"media_url\":\"\",\"media_url_https\":\"https://pbs.twimg.com/amplify_video_thumb/1953701980863418368/img/Ig6NvN9nRYN6NIKY.jpg\",\"url\":\"\",\"display_url\":\"\",\"expanded_url\":\"\",\"type\":\"video\",\"original_info\":{\"width\":720,\"height\":720},\"sizes\":{\"large\":{\"w\":720,\"h\":720,\"resize\":\"fit\"},\"medium\":{\"w\":720,\"h\":720,\"resize\":\"fit\"},\"thumb\":{\"w\":150,\"h\":150,\"resize\":\"crop\"},\"small\":{\"w\":680,\"h\":680,\"resize\":\"fit\"}},\"source_user_id\":1947487494951604226,\"source_user_id_str\":\"1947487494951604226\",\"video_info\":{\"aspect_ratio\":[1,1],\"duration_millis\":1436316,\"variants\":[{\"bitrate\":1280000,\"content_type\":\"video/mp4\",\"url\":\"https://video.twimg.com/amplify_video/1953701980863418368/vid/avc1/720x720/3KINeC3zo8ZySejU.mp4?tag=21\"},{\"bitrate\":832000,\"content_type\":\"video/mp4\",\"url\":\"https://video.twimg.com/amplify_video/1953701980863418368/vid/avc1/540x540/VERgc_HRRBbpCrs7.mp4?tag=21\"},{\"content_type\":\"application/x-mpegURL\",\"url\":\"https://video.twimg.com/amplify_video/1953701980863418368/pl/kcwrGzm6a6ZCd1ut.m3u8?tag=21\"},{\"bitrate\":432000,\"content_type\":\"video/mp4\",\"url\":\"https://video.twimg.com/amplify_video/1953701980863418368/vid/avc1/320x320/A6DIx1AzEQZyMuWq.mp4?tag=21\"}]},\"media_key\":\"13_1953701980863418368\",\"ext\":{\"mediaColor\":{\"r\":{\"ok\":{\"palette\":[{\"rgb\":{\"red\":192,\"green\":149,\"blue\":132},\"percentage\":42.57},{\"rgb\":{\"red\":169,\"green\":102,\"blue\":86},\"percentage\":13.4},{\"rgb\":{\"red\":181,\"green\":175,\"blue\":175},\"percentage\":13.3},{\"rgb\":{\"red\":2,\"green\":127,\"blue\":177},\"percentage\":9.58},{\"rgb\":{\"red\":44,\"green\":27,\"blue\":25},\"percentage\":8.87}]}},\"ttl\":-1}}}},\"experiment_signals\":{}}",
+                  "type": "STRING"
+                }
+              },
+              {
+                "key": "card_url",
+                "value": {
+                  "scribe_key": "card_url",
+                  "string_value": "https://twitter.com",
+                  "type": "STRING"
+                }
+              }
+            ],
+            "card_platform": {
+              "platform": {
+                "audience": { "name": "production" },
+                "device": { "name": "Swift", "version": "12" }
+              }
+            },
+            "name": "unified_card",
+            "url": "card://1962198203375271936",
+            "user_refs_results": []
+          }
+        },
+        "unmention_data": {},
+        "edit_control": {
+          "edit_tweet_ids": ["1962198207984968052"],
+          "editable_until_msecs": "1756663083000",
+          "is_edit_eligible": true,
+          "edits_remaining": "5"
+        },
+        "is_translatable": false,
+        "views": { "count": "29875", "state": "EnabledWithCount" },
+        "source": "<a href=\"https://twitter.com\" rel=\"nofollow\">Twitter for Advertisers</a>",
+        "legacy": {
+          "bookmark_count": 168,
+          "bookmarked": false,
+          "created_at": "Sun Aug 31 16:58:03 +0000 2025",
+          "conversation_id_str": "1962198207984968052",
+          "display_text_range": [0, 6],
+          "entities": {
+            "hashtags": [],
+            "symbols": [],
+            "timestamps": [],
+            "urls": [],
+            "user_mentions": []
+          },
+          "favorite_count": 301,
+          "favorited": false,
+          "full_text": "Chudai",
+          "is_quote_status": false,
+          "lang": "hi",
+          "quote_count": 0,
+          "reply_count": 4,
+          "retweet_count": 171,
+          "retweeted": false,
+          "user_id_str": "1947487494951604226",
+          "id_str": "1962198207984968052"
+        }
+      }
+    }
+  }
+}
