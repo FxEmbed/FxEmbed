@@ -1,18 +1,18 @@
-import { renderCard } from '../../helpers/card';
-import { Constants } from '../../constants';
-import { linkFixer } from '../../helpers/linkFixer';
-import { handleMosaic } from '../../helpers/mosaic';
-import { unescapeText } from '../../helpers/utils';
-import { processMedia } from '../../helpers/media';
-import { convertToApiUser } from './profile';
 import { Context } from 'hono';
-import { DataProvider } from '../../enum';
-import { APIUser, APITwitterStatus, FetchResults, APIVideo, APIPhoto } from '../../types/types';
-import { shouldTranscodeGif } from '../../helpers/giftranscode';
-import { translateStatusAI } from '../../helpers/translateAI';
-import { translateStatus } from '../../helpers/translate';
 import i18next from 'i18next';
+import { Constants } from '../../constants';
+import { DataProvider } from '../../enum';
+import { renderCard } from '../../helpers/card';
+import { shouldTranscodeGif } from '../../helpers/giftranscode';
+import { linkFixer } from '../../helpers/linkFixer';
+import { processMedia } from '../../helpers/media';
+import { handleMosaic } from '../../helpers/mosaic';
+import { translateStatus } from '../../helpers/translate';
+import { translateStatusAI } from '../../helpers/translateAI';
 import { translateStatusGrok } from '../../helpers/translateGrok';
+import { unescapeText } from '../../helpers/utils';
+import { APIPhoto, APITwitterStatus, APIUser, APIVideo, FetchResults } from '../../types/types';
+import { convertToApiUser } from './profile';
 
 export const buildAPITwitterStatus = async (
   c: Context,
@@ -127,7 +127,7 @@ export const buildAPITwitterStatus = async (
   apiStatus.created_at = status.legacy.created_at;
   apiStatus.created_timestamp = new Date(status.legacy.created_at).getTime() / 1000;
 
-  apiStatus.possibly_sensitive = nsfwDetected || status.legacy.possibly_sensitive;
+  apiStatus.possibly_sensitive = Boolean(nsfwDetected || status.legacy.possibly_sensitive);
 
   if (status.views?.state === 'EnabledWithCount') {
     apiStatus.views = parseInt(status.views.count || '0') ?? null;
