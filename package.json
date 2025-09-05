@@ -17,32 +17,32 @@
   "author": "dangered wolf",
   "license": "MIT",
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.8.58",
-    "@cloudflare/workers-types": "^4.20250821.0",
-    "@eslint/js": "^9.33.0",
+    "@cloudflare/vitest-pool-workers": "^0.8.66",
+    "@cloudflare/workers-types": "^4.20250905.0",
+    "@eslint/js": "^9.34.0",
     "@microsoft/eslint-formatter-sarif": "^3.1.0",
-    "@sentry/esbuild-plugin": "^4.1.1",
+    "@sentry/esbuild-plugin": "^4.3.0",
     "@sentry/integrations": "^7.114.0",
-    "@typescript-eslint/eslint-plugin": "^8.40.0",
-    "@typescript-eslint/parser": "^8.40.0",
-    "dotenv": "^17.2.1",
-    "eslint": "^9.33.0",
+    "@typescript-eslint/eslint-plugin": "^8.42.0",
+    "@typescript-eslint/parser": "^8.42.0",
+    "dotenv": "^17.2.2",
+    "eslint": "^9.34.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-config-typescript": "^3.0.0",
     "eslint-plugin-optimize-regex": "^1.2.1",
     "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.3.0",
     "prettier": "^3.6.2",
-    "ts-loader": "^9.5.2",
+    "ts-loader": "^9.5.4",
     "typescript": "^5.9.2",
-    "typescript-eslint": "^8.40.0",
+    "typescript-eslint": "^8.42.0",
     "vitest": "^3.2.4",
-    "wrangler": "^4.31.0"
+    "wrangler": "^4.34.0"
   },
   "dependencies": {
     "@hono/sentry": "^1.2.2",
-    "hono": "^4.9.2",
-    "i18next": "^25.4.0",
-    "i18next-icu": "^2.3.0"
+    "hono": "^4.9.6",
+    "i18next": "^25.5.0",
+    "i18next-icu": "^2.4.0"
   }
 }
