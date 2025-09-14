@@ -249,7 +249,7 @@ export const handleStatus = async (
         redirectUrl = `https://${Constants.API_HOST_LIST[0]}/2/go?url=${encodeURIComponent(redirectUrl)}`;
       }
       // Only append name if it's an image
-      if (selectedMedia?.type === 'photo' && flags.name) {
+      if (selectedMedia?.type === 'photo' && flags.name !== undefined) {
         redirectUrl = formatImageUrl(redirectUrl, flags.name);
       }
       console.log('redirectUrl', redirectUrl);

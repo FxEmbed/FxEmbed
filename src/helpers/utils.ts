@@ -79,9 +79,10 @@ export const escapeRegex = (text: string) => {
 
 export const formatImageUrl = (url: string, name = 'orig') => {
   try {
+    const urlObj = new URL(url);
     // remove existing name in url in case of conflicting
     // e.g. https://pbs.twimg.com/media/foobar.jpg:orig
-    const urlObj = new URL(url.replace(/:\w+$/, ''));
+    urlObj.pathname = urlObj.pathname.replace(/:\w+$/, '');
 
     if (name) {
       // add name parameter to url
