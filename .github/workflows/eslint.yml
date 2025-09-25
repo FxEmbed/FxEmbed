@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
-          node-version: 22.19.0
+          node-version: 22.20.0
           cache: npm
           cache-dependency-path: package-lock.json
 
