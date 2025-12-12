@@ -18,7 +18,7 @@
   "license": "MIT",
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.10.12",
-    "@cloudflare/workers-types": "^4.20251211.0",
+    "@cloudflare/workers-types": "^4.20251212.0",
     "@eslint/js": "^9.39.1",
     "@microsoft/eslint-formatter-sarif": "^3.1.0",
     "@sentry/esbuild-plugin": "^4.6.1",
