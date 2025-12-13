@@ -77,11 +77,19 @@ export const escapeRegex = (text: string) => {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 };
 
-export const formatImageUrl = (url: string) => {
+export const formatImageUrl = (url: string, name = 'orig') => {
   try {
     const urlObj = new URL(url);
-    // add name=orig parameter to url
-    urlObj.searchParams.set('name', 'orig');
+    // remove existing name in url in case of conflicting
+    // e.g. https://pbs.twimg.com/media/foobar.jpg:orig
+    urlObj.pathname = urlObj.pathname.replace(/:\w+$/, '');
+
+    if (name) {
+      // add name parameter to url
+      urlObj.searchParams.set('name', name);
+    } else {
+      urlObj.searchParams.delete('name');
+    }
     return urlObj.toString();
   } catch (_e) {
     return url;

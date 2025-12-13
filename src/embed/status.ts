@@ -4,7 +4,7 @@ import i18next from 'i18next';
 import icu from 'i18next-icu';
 import { Constants } from '../constants';
 import { handleQuote } from '../helpers/quote';
-import { sanitizeText, truncateWithEllipsis } from '../helpers/utils';
+import { formatImageUrl, sanitizeText, truncateWithEllipsis } from '../helpers/utils';
 import { Strings } from '../strings';
 import { getSocialProof } from '../helpers/socialproof';
 import { renderPhoto } from '../render/photo';
@@ -250,8 +250,8 @@ export const handleStatus = async (
         redirectUrl = `https://${Constants.API_HOST_LIST[0]}/2/go?url=${encodeURIComponent(redirectUrl)}`;
       }
       // Only append name if it's an image
-      if (/\.(png|jpe?g|gif)(\?|$)/.test(redirectUrl) && flags.name) {
-        redirectUrl = `${redirectUrl}:${flags.name}`;
+      if (selectedMedia?.type === 'photo' && flags.name !== undefined) {
+        redirectUrl = formatImageUrl(redirectUrl, flags.name);
       }
       console.log('redirectUrl', redirectUrl);
       return c.redirect(redirectUrl, 302);
