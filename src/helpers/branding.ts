@@ -23,29 +23,31 @@ export const getBranding = (c: Context | Request): Branding => {
     const url = new URL(c instanceof Request ? c.url : c.req.url);
     // get domain name, without subdomains
     const domain = url.hostname.split('.').slice(-2).join('.');
-    const branding = zones.find(zone => zone.domains.includes(domain)) ?? defaultBranding;
+    const zone = zones.find(zone => zone.domains.includes(domain)) ?? defaultBranding;
 
-    if (Array.isArray(branding.activityIcons)) {
-      branding.activityIcons =
-        branding.activityIcons[Math.floor(Math.random() * branding.activityIcons.length)];
+    const result: Branding = { ...zone };
+
+    let activityIcons = result.activityIcons;
+    if (Array.isArray(activityIcons)) {
+      result.activityIcons = activityIcons[Math.floor(Math.random() * activityIcons.length)];
     }
 
     if (url.searchParams.get('brandingName')) {
-      branding.name = url.searchParams.get('brandingName') ?? branding.name;
+      result.name = url.searchParams.get('brandingName') ?? result.name;
     }
     if (url.searchParams.get('brandingIcon')) {
-      branding.activityIcons = {
+      activityIcons = {
         default: decodeURIComponent(
-          url.searchParams.get('brandingIcon') ?? branding.activityIcons?.default ?? ''
+          url.searchParams.get('brandingIcon') ?? activityIcons?.default ?? ''
         )
       };
     }
     if (url.searchParams.get('brandingRedirectUrl')) {
-      branding.redirect = decodeURIComponent(
-        url.searchParams.get('brandingRedirectUrl') ?? branding.activityIcons?.default ?? ''
+      result.redirect = decodeURIComponent(
+        url.searchParams.get('brandingRedirectUrl') ?? result.redirect
       );
     }
-    return branding;
+    return result;
   } catch (_e) {
     return defaultBranding;
   }
