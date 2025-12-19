@@ -15,9 +15,7 @@ type Branding = {
 };
 
 export const getBranding = (c: Context | Request): Branding => {
-  const zones = branding.zones as unknown as Branding[] & {
-    activityIcons: { [key: string]: string } | { [key: string]: string }[];
-  };
+  const zones = branding.zones as unknown as Branding[];
   const defaultBranding = zones.find(zone => zone.default) ?? zones[0];
   try {
     const url = new URL(c instanceof Request ? c.url : c.req.url);
