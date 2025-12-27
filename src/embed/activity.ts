@@ -24,6 +24,93 @@ import {
 import { Context } from 'hono';
 import { shouldTranscodeGif } from '../helpers/giftranscode';
 import { normalizeLanguage } from '../helpers/language';
+import { renderArticleToHtml, DISCORD_ARTICLE_MAX_LENGTH } from '../helpers/article';
+import { TwitterApiMedia, TwitterApiImage, TwitterApiVideo } from '../types/vendor/twitter';
+
+const convertArticleMediaToAttachment = (
+  media: TwitterApiMedia
+): ActivityMediaAttachment | null => {
+  if (media.media_info.__typename === 'ApiImage') {
+    const image = media.media_info as TwitterApiImage;
+    return {
+      id: media.media_id,
+      type: 'image',
+      url: image.original_img_url,
+      preview_url: null,
+      remote_url: null,
+      preview_remote_url: null,
+      text_url: null,
+      description: null,
+      meta: {
+        original: {
+          width: image.original_img_width,
+          height: image.original_img_height,
+          size: `${image.original_img_width}x${image.original_img_height}`,
+          aspect: image.original_img_width / image.original_img_height
+        }
+      }
+    } as ActivityMediaAttachment;
+  } else if (
+    media.media_info.__typename === 'ApiVideo' ||
+    media.media_info.__typename === 'ApiGif'
+  ) {
+    const video = media.media_info as TwitterApiVideo;
+    const videoUrl = video.video_info?.variants?.[0]?.url || video.media_url_https;
+    let sizeMultiplier = 1;
+    const width = video.original_info.width;
+    const height = video.original_info.height;
+
+    if (width > 1920 || height > 1920) {
+      sizeMultiplier = 0.5;
+    }
+    if (width < 400 || height < 400) {
+      sizeMultiplier = 2;
+    }
+
+    if (experimentCheck(Experiment.VIDEO_REDIRECT_WORKAROUND, !!Constants.API_HOST_LIST)) {
+      const redirectedUrl = `https://${Constants.API_HOST_LIST[0]}/2/go?url=${encodeURIComponent(videoUrl)}`;
+      return {
+        id: media.media_id,
+        type: 'video',
+        url: redirectedUrl,
+        preview_url: video.media_url_https,
+        remote_url: null,
+        preview_remote_url: null,
+        text_url: null,
+        description: video.ext_alt_text ?? undefined,
+        meta: {
+          original: {
+            width: width * sizeMultiplier,
+            height: height * sizeMultiplier,
+            size: `${width * sizeMultiplier}x${height * sizeMultiplier}`,
+            aspect: width / height
+          }
+        }
+      } as ActivityMediaAttachment;
+    }
+
+    return {
+      id: media.media_id,
+      type: 'video',
+      url: videoUrl,
+      preview_url: video.media_url_https,
+      remote_url: null,
+      preview_remote_url: null,
+      text_url: null,
+      description: video.ext_alt_text ?? undefined,
+      meta: {
+        original: {
+          width: width * sizeMultiplier,
+          height: height * sizeMultiplier,
+          size: `${width * sizeMultiplier}x${height * sizeMultiplier}`,
+          aspect: width / height
+        }
+      }
+    } as ActivityMediaAttachment;
+  }
+
+  return null;
+};
 
 const generatePoll = (poll: APIPoll): string => {
   let str = '<blockquote>';
@@ -45,12 +132,33 @@ const generatePoll = (poll: APIPoll): string => {
   return str + '</blockquote>';
 };
 
-const getStatusText = (status: APIStatus) => {
+interface StatusTextResult {
+  text: string;
+  articleMedia: TwitterApiMedia[];
+}
+
+const getStatusText = (status: APIStatus): StatusTextResult => {
   let text = '';
+  const twitterStatus = status as APITwitterStatus;
+
+  // Check if this is a Twitter article
+  if (twitterStatus.article) {
+    const articleResult = renderArticleToHtml(twitterStatus.article.content, {
+      maxLength: DISCORD_ARTICLE_MAX_LENGTH,
+      renderInlineMedia: false,
+      mediaEntities: twitterStatus.article.media_entities
+    });
+
+    // Prepend article title
+    text = `<b>📰 ${twitterStatus.article.title}</b>${articleResult.html}`;
+
+    return { text, articleMedia: articleResult.collectedMedia };
+  }
+
   const convertedStatusText = status.text.trim().replace(/\n/g, '<br>︀︀');
-  if ((status as APITwitterStatus).translation) {
-    console.log('translation', JSON.stringify((status as APITwitterStatus).translation));
-    const { translation } = status as APITwitterStatus;
+  if (twitterStatus.translation) {
+    console.log('translation', JSON.stringify(twitterStatus.translation));
+    const { translation } = twitterStatus;
 
     const formatText = `<b>📑 {translation}</b>`.format({
       translation: i18next.t('translatedFrom').format({
@@ -82,7 +190,7 @@ const getStatusText = (status: APIStatus) => {
   if (socialProof) {
     text += socialProof;
   }
-  return text;
+  return { text, articleMedia: [] };
 };
 
 const linkifyMentions = (text: string, status: APIStatus) => {
@@ -284,6 +392,11 @@ export const handleActivity = async (
     return returnError(c, Strings.ERROR_API_FAIL);
   }
 
+  // Get status text and article media
+  const statusResult = getStatusText(thread.status);
+  const statusText = statusResult.text;
+  const articleMedia = statusResult.articleMedia;
+
   // Map FxEmbed API to Mastodon API v1
   const response: ActivityStatus = {
     id: statusId,
@@ -296,7 +409,7 @@ export const handleActivity = async (
     in_reply_to_account_id: null,
     language: thread.status.lang,
     // TODO: Do formatting
-    content: getStatusText(thread.status),
+    content: statusText,
     spoiler_text: '',
     visibility: 'public',
     application: {
@@ -317,10 +430,10 @@ export const handleActivity = async (
       discoverable: true,
       indexable: false,
       group: false,
-      avatar: thread.status.author.avatar_url,
-      avatar_static: thread.status.author.avatar_url,
-      header: thread.status.author.banner_url,
-      header_static: thread.status.author.banner_url,
+      avatar: thread.status.author.avatar_url ?? undefined,
+      avatar_static: thread.status.author.avatar_url ?? undefined,
+      header: thread.status.author.banner_url ?? undefined,
+      header_static: thread.status.author.banner_url ?? undefined,
       followers_count: thread.status.author.followers,
       following_count: thread.status.author.following,
       statuses_count: thread.status.author.statuses,
@@ -339,6 +452,11 @@ export const handleActivity = async (
 
   console.log('regular media', thread.status.media?.all);
   console.log('quote media', thread.status.quote?.media?.all);
+
+  // Convert article media to attachments format
+  const articleAttachments = articleMedia
+    .map((media: TwitterApiMedia) => convertArticleMediaToAttachment(media))
+    .filter(Boolean) as ActivityMediaAttachment[];
 
   const rawMediaList =
     (thread.status.media?.all?.length ?? 0) > 0
@@ -459,6 +577,11 @@ export const handleActivity = async (
           }
         })
         .filter(Boolean) as ActivityMediaAttachment[];
+
+      // Merge article media attachments, excluding duplicates by id
+      const existingIds = new Set(response.media_attachments.map(a => a.id));
+      const uniqueArticleAttachments = articleAttachments.filter(a => !existingIds.has(a.id));
+      response.media_attachments.push(...uniqueArticleAttachments);
     } else if (thread.status.media?.external) {
       const external = thread.status.media.external;
       // Cast the response media attachments to correct type
@@ -482,6 +605,9 @@ export const handleActivity = async (
           }
         } as ActivityMediaAttachment
       ];
+    } else if (articleAttachments.length > 0) {
+      // If no regular media but we have article media, use article media
+      response.media_attachments = articleAttachments;
     }
   }
 

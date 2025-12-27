@@ -1,310 +1,135 @@
 {
   "data": {
-    "tweetResult": [{
-      "result": {
-        "__typename": "Tweet",
-        "rest_id": "1964084223871971826",
-        "post_image_description": "A red fox with closed eyes and relaxed expression, lying on grass with pinecones nearby. Text overlay reads \"LIVE 14:21 BREAKING NEWS LOCAL FOX GOES 'AW' ADORABLE FLUFFBALL STRIKES AGAIN\" in yellow and red.",
-        "core": {
-          "user_results": {
-            "result": {
-              "__typename": "User",
-              "id": "VXNlcjoxNzg3MzExNDU5MTc0NTg4NDE3",
-              "rest_id": "1787311459174588417",
-              "affiliates_highlighted_label": {},
-              "avatar": {
-                "image_url": "https://pbs.twimg.com/profile_images/1962209901574320129/OkBXZF_p_normal.jpg"
-              },
-              "core": {
-                "created_at": "Mon May 06 02:40:47 +0000 2024",
-                "name": "Volt",
-                "screen_name": "vo1twasdowned"
-              },
-              "dm_permissions": {},
-              "is_blue_verified": false,
-              "legacy": {
-                "default_profile": true,
-                "default_profile_image": false,
-                "description": "23 | They/Them | Polish asf \uD83C\uDDF5\uD83C\uDDF1\uD83C\uDDF5\uD83C\uDDF1| vo1tair_shibuya on Fortnite | I like Foxes \uD83E\uDD8A| Supernatural & Zenless Zone Zero Enjoyer | Doom 3 Addict | Metalhead |",
-                "entities": {
-                  "description": {
-                    "urls": []
-                  }
+    "tweetResult": [
+      {
+        "result": {
+          "__typename": "Tweet",
+          "rest_id": "1964084223871971826",
+          "post_image_description": "A red fox with closed eyes and relaxed expression, lying on grass with pinecones nearby. Text overlay reads \"LIVE 14:21 BREAKING NEWS LOCAL FOX GOES 'AW' ADORABLE FLUFFBALL STRIKES AGAIN\" in yellow and red.",
+          "core": {
+            "user_results": {
+              "result": {
+                "__typename": "User",
+                "id": "VXNlcjoxNzg3MzExNDU5MTc0NTg4NDE3",
+                "rest_id": "1787311459174588417",
+                "affiliates_highlighted_label": {},
+                "avatar": {
+                  "image_url": "https://pbs.twimg.com/profile_images/1962209901574320129/OkBXZF_p_normal.jpg"
                 },
-                "fast_followers_count": 0,
-                "favourites_count": 4673,
-                "followers_count": 408,
-                "friends_count": 178,
-                "has_custom_timelines": false,
-                "is_translator": false,
-                "listed_count": 0,
-                "media_count": 394,
-                "normal_followers_count": 408,
-                "pinned_tweet_ids_str": [
-                  "1961849615801594350"
-                ],
-                "possibly_sensitive": false,
-                "profile_banner_url": "https://pbs.twimg.com/profile_banners/1787311459174588417/1750430516",
-                "profile_interstitial_type": "",
-                "statuses_count": 2065,
-                "translator_type": "none",
-                "withheld_in_countries": []
-              },
-              "location": {
-                "location": "ilmgf"
-              },
-              "media_permissions": {},
-              "parody_commentary_fan_label": "None",
-              "profile_image_shape": "Circle",
-              "privacy": {
-                "protected": false
-              },
-              "relationship_perspectives": {},
-              "tipjar_settings": {
-                "is_enabled": false,
-                "bandcamp_handle": "",
-                "bitcoin_handle": "",
-                "cash_app_handle": "",
-                "ethereum_handle": "",
-                "gofundme_handle": "",
-                "patreon_handle": "",
-                "pay_pal_handle": "",
-                "venmo_handle": ""
-              },
-              "verification": {
-                "verified": false
+                "core": {
+                  "created_at": "Mon May 06 02:40:47 +0000 2024",
+                  "name": "Volt",
+                  "screen_name": "vo1twasdowned"
+                },
+                "dm_permissions": {},
+                "is_blue_verified": false,
+                "legacy": {
+                  "default_profile": true,
+                  "default_profile_image": false,
+                  "description": "23 | They/Them | Polish asf \uD83C\uDDF5\uD83C\uDDF1\uD83C\uDDF5\uD83C\uDDF1| vo1tair_shibuya on Fortnite | I like Foxes \uD83E\uDD8A| Supernatural & Zenless Zone Zero Enjoyer | Doom 3 Addict | Metalhead |",
+                  "entities": {
+                    "description": {
+                      "urls": []
+                    }
+                  },
+                  "fast_followers_count": 0,
+                  "favourites_count": 4673,
+                  "followers_count": 408,
+                  "friends_count": 178,
+                  "has_custom_timelines": false,
+                  "is_translator": false,
+                  "listed_count": 0,
+                  "media_count": 394,
+                  "normal_followers_count": 408,
+                  "pinned_tweet_ids_str": ["1961849615801594350"],
+                  "possibly_sensitive": false,
+                  "profile_banner_url": "https://pbs.twimg.com/profile_banners/1787311459174588417/1750430516",
+                  "profile_interstitial_type": "",
+                  "statuses_count": 2065,
+                  "translator_type": "none",
+                  "withheld_in_countries": []
+                },
+                "location": {
+                  "location": "ilmgf"
+                },
+                "media_permissions": {},
+                "parody_commentary_fan_label": "None",
+                "profile_image_shape": "Circle",
+                "privacy": {
+                  "protected": false
+                },
+                "relationship_perspectives": {},
+                "tipjar_settings": {
+                  "is_enabled": false,
+                  "bandcamp_handle": "",
+                  "bitcoin_handle": "",
+                  "cash_app_handle": "",
+                  "ethereum_handle": "",
+                  "gofundme_handle": "",
+                  "patreon_handle": "",
+                  "pay_pal_handle": "",
+                  "venmo_handle": ""
+                },
+                "verification": {
+                  "verified": false
+                }
               }
             }
-          }
-        },
-        "unmention_data": {},
-        "edit_control": {
-          "edit_tweet_ids": [
-            "1964084223871971826"
-          ],
-          "editable_until_msecs": "1757112744000",
-          "is_edit_eligible": true,
-          "edits_remaining": "5"
-        },
-        "is_translatable": false,
-        "views": {
-          "count": "40284",
-          "state": "EnabledWithCount"
-        },
-        "source": "<a href=\"https://mobile.twitter.com\" rel=\"nofollow\">Twitter Web App</a>",
-        "grok_analysis_button": true,
-        "community_results": {
-          "result": {
-            "__typename": "Community",
-            "id_str": "1506777270324764673"
-          }
-        },
-        "author_community_relationship": {
+          },
+          "unmention_data": {},
+          "edit_control": {
+            "edit_tweet_ids": ["1964084223871971826"],
+            "editable_until_msecs": "1757112744000",
+            "is_edit_eligible": true,
+            "edits_remaining": "5"
+          },
+          "is_translatable": false,
+          "views": {
+            "count": "40284",
+            "state": "EnabledWithCount"
+          },
+          "source": "<a href=\"https://mobile.twitter.com\" rel=\"nofollow\">Twitter Web App</a>",
+          "grok_analysis_button": true,
           "community_results": {
             "result": {
               "__typename": "Community",
-              "id_str": "1506777270324764673",
-              "name": "Fox Twitter",
-              "description": "Fox superiority",
-              "created_at": 1648078670474,
-              "search_tags": [],
-              "is_nsfw": false,
-              "primary_community_topic": {
-                "topic_id": "2001",
-                "topic_name": "Animals"
-              },
-              "actions": {
-                "delete_action_result": {
-                  "__typename": "CommunityDeleteActionUnavailable",
-                  "reason": "Unavailable"
+              "id_str": "1506777270324764673"
+            }
+          },
+          "author_community_relationship": {
+            "community_results": {
+              "result": {
+                "__typename": "Community",
+                "id_str": "1506777270324764673",
+                "name": "Fox Twitter",
+                "description": "Fox superiority",
+                "created_at": 1648078670474,
+                "search_tags": [],
+                "is_nsfw": false,
+                "primary_community_topic": {
+                  "topic_id": "2001",
+                  "topic_name": "Animals"
                 },
-                "join_action_result": {
-                  "__typename": "CommunityJoinActionUnavailable",
-                  "reason": "Unavailable",
-                  "message": "Must be logged in."
-                },
-                "leave_action_result": {
-                  "__typename": "CommunityLeaveActionUnavailable",
-                  "reason": "ViewerNotMember",
-                  "message": "Not a member."
-                },
-                "pin_action_result": {
-                  "__typename": "CommunityTweetPinActionUnavailable"
-                }
-              },
-              "admin_results": {
-                "result": {
-                  "__typename": "User",
-                  "id": "VXNlcjoxMTk0NjI3OTM0NDk1MDkyNzM2",
-                  "rest_id": "1194627934495092736",
-                  "affiliates_highlighted_label": {},
-                  "avatar": {
-                    "image_url": "https://pbs.twimg.com/profile_images/1868266349920706560/DHnubtcB_normal.jpg"
+                "actions": {
+                  "delete_action_result": {
+                    "__typename": "CommunityDeleteActionUnavailable",
+                    "reason": "Unavailable"
                   },
-                  "core": {
-                    "created_at": "Wed Nov 13 14:47:57 +0000 2019",
-                    "name": "SHREDDY",
-                    "screen_name": "shreddyfox"
+                  "join_action_result": {
+                    "__typename": "CommunityJoinActionUnavailable",
+                    "reason": "Unavailable",
+                    "message": "Must be logged in."
                   },
-                  "dm_permissions": {},
-                  "is_blue_verified": false,
-                  "legacy": {
-                    "default_profile": true,
-                    "default_profile_image": false,
-                    "description": "36 | aspiring bodybuilder (not natty) | STL | BLM | best bun @SavajBunny | best hoosky @DerpyAlusky | he/him | married | pfp by Starbitt |",
-                    "entities": {
-                      "description": {
-                        "urls": []
-                      },
-                      "url": {
-                        "urls": [{
-                          "display_url": "linktr.ee/shreddyfox",
-                          "expanded_url": "https://linktr.ee/shreddyfox",
-                          "url": "https://t.co/pzmfLhr1ub",
-                          "indices": [
-                            0,
-                            23
-                          ]
-                        }]
-                      }
-                    },
-                    "fast_followers_count": 0,
-                    "favourites_count": 181786,
-                    "followers_count": 39393,
-                    "friends_count": 2901,
-                    "has_custom_timelines": true,
-                    "is_translator": false,
-                    "listed_count": 124,
-                    "media_count": 5008,
-                    "normal_followers_count": 39393,
-                    "pinned_tweet_ids_str": [
-                      "1926796678595543078"
-                    ],
-                    "possibly_sensitive": false,
-                    "profile_banner_url": "https://pbs.twimg.com/profile_banners/1194627934495092736/1715760462",
-                    "profile_interstitial_type": "",
-                    "statuses_count": 42552,
-                    "translator_type": "none",
-                    "url": "https://t.co/pzmfLhr1ub",
-                    "withheld_in_countries": []
+                  "leave_action_result": {
+                    "__typename": "CommunityLeaveActionUnavailable",
+                    "reason": "ViewerNotMember",
+                    "message": "Not a member."
                   },
-                  "location": {
-                    "location": "St Louis, MO"
-                  },
-                  "media_permissions": {},
-                  "parody_commentary_fan_label": "None",
-                  "profile_image_shape": "Circle",
-                  "privacy": {
-                    "protected": false
-                  },
-                  "relationship_perspectives": {},
-                  "tipjar_settings": {
-                    "is_enabled": false,
-                    "bandcamp_handle": "",
-                    "bitcoin_handle": "",
-                    "cash_app_handle": "",
-                    "ethereum_handle": "",
-                    "gofundme_handle": "",
-                    "patreon_handle": "",
-                    "pay_pal_handle": "",
-                    "venmo_handle": ""
-                  },
-                  "verification": {
-                    "verified": false
+                  "pin_action_result": {
+                    "__typename": "CommunityTweetPinActionUnavailable"
                   }
-                }
-              },
-              "creator_results": {
-                "result": {
-                  "__typename": "User",
-                  "id": "VXNlcjoxMTk0NjI3OTM0NDk1MDkyNzM2",
-                  "rest_id": "1194627934495092736",
-                  "affiliates_highlighted_label": {},
-                  "avatar": {
-                    "image_url": "https://pbs.twimg.com/profile_images/1868266349920706560/DHnubtcB_normal.jpg"
-                  },
-                  "core": {
-                    "created_at": "Wed Nov 13 14:47:57 +0000 2019",
-                    "name": "SHREDDY",
-                    "screen_name": "shreddyfox"
-                  },
-                  "dm_permissions": {},
-                  "is_blue_verified": false,
-                  "legacy": {
-                    "default_profile": true,
-                    "default_profile_image": false,
-                    "description": "36 | aspiring bodybuilder (not natty) | STL | BLM | best bun @SavajBunny | best hoosky @DerpyAlusky | he/him | married | pfp by Starbitt |",
-                    "entities": {
-                      "description": {
-                        "urls": []
-                      },
-                      "url": {
-                        "urls": [{
-                          "display_url": "linktr.ee/shreddyfox",
-                          "expanded_url": "https://linktr.ee/shreddyfox",
-                          "url": "https://t.co/pzmfLhr1ub",
-                          "indices": [
-                            0,
-                            23
-                          ]
-                        }]
-                      }
-                    },
-                    "fast_followers_count": 0,
-                    "favourites_count": 181786,
-                    "followers_count": 39393,
-                    "friends_count": 2901,
-                    "has_custom_timelines": true,
-                    "is_translator": false,
-                    "listed_count": 124,
-                    "media_count": 5008,
-                    "normal_followers_count": 39393,
-                    "pinned_tweet_ids_str": [
-                      "1926796678595543078"
-                    ],
-                    "possibly_sensitive": false,
-                    "profile_banner_url": "https://pbs.twimg.com/profile_banners/1194627934495092736/1715760462",
-                    "profile_interstitial_type": "",
-                    "statuses_count": 42552,
-                    "translator_type": "none",
-                    "url": "https://t.co/pzmfLhr1ub",
-                    "withheld_in_countries": []
-                  },
-                  "location": {
-                    "location": "St Louis, MO"
-                  },
-                  "media_permissions": {},
-                  "parody_commentary_fan_label": "None",
-                  "profile_image_shape": "Circle",
-                  "privacy": {
-                    "protected": false
-                  },
-                  "relationship_perspectives": {},
-                  "tipjar_settings": {
-                    "is_enabled": false,
-                    "bandcamp_handle": "",
-                    "bitcoin_handle": "",
-                    "cash_app_handle": "",
-                    "ethereum_handle": "",
-                    "gofundme_handle": "",
-                    "patreon_handle": "",
-                    "pay_pal_handle": "",
-                    "venmo_handle": ""
-                  },
-                  "verification": {
-                    "verified": false
-                  }
-                }
-              },
-              "invites_result": {
-                "__typename": "CommunityInvitesUnavailable",
-                "reason": "Unavailable",
-                "message": "Must be logged in."
-              },
-              "join_policy": "Open",
-              "invites_policy": "MemberInvitesAllowed",
-              "is_pinned": false,
-              "members_facepile_results": [{
+                },
+                "admin_results": {
                   "result": {
                     "__typename": "User",
                     "id": "VXNlcjoxMTk0NjI3OTM0NDk1MDkyNzM2",
@@ -329,15 +154,14 @@
                           "urls": []
                         },
                         "url": {
-                          "urls": [{
-                            "display_url": "linktr.ee/shreddyfox",
-                            "expanded_url": "https://linktr.ee/shreddyfox",
-                            "url": "https://t.co/pzmfLhr1ub",
-                            "indices": [
-                              0,
-                              23
-                            ]
-                          }]
+                          "urls": [
+                            {
+                              "display_url": "linktr.ee/shreddyfox",
+                              "expanded_url": "https://linktr.ee/shreddyfox",
+                              "url": "https://t.co/pzmfLhr1ub",
+                              "indices": [0, 23]
+                            }
+                          ]
                         }
                       },
                       "fast_followers_count": 0,
@@ -349,9 +173,7 @@
                       "listed_count": 124,
                       "media_count": 5008,
                       "normal_followers_count": 39393,
-                      "pinned_tweet_ids_str": [
-                        "1926796678595543078"
-                      ],
+                      "pinned_tweet_ids_str": ["1926796678595543078"],
                       "possibly_sensitive": false,
                       "profile_banner_url": "https://pbs.twimg.com/profile_banners/1194627934495092736/1715760462",
                       "profile_interstitial_type": "",
@@ -386,144 +208,61 @@
                     }
                   }
                 },
-                {
+                "creator_results": {
                   "result": {
                     "__typename": "User",
-                    "id": "VXNlcjoxNjkyMTUzNTc2NjM2NzEwOTEy",
-                    "rest_id": "1692153576636710912",
+                    "id": "VXNlcjoxMTk0NjI3OTM0NDk1MDkyNzM2",
+                    "rest_id": "1194627934495092736",
                     "affiliates_highlighted_label": {},
                     "avatar": {
-                      "image_url": "https://pbs.twimg.com/profile_images/1886969360603828224/r5SHy9Va_normal.jpg"
+                      "image_url": "https://pbs.twimg.com/profile_images/1868266349920706560/DHnubtcB_normal.jpg"
                     },
                     "core": {
-                      "created_at": "Thu Aug 17 12:37:29 +0000 2023",
-                      "name": "\uD83C\uDF41 \uD835\uDCE3\uD835\uDCF1\uD835\uDCEE \uD835\uDCD5\uD835\uDCF8\uD835\uDD01 \uD835\uDCDB\uD835\uDCF2\uD835\uDCEF\uD835\uDCEE \uD83C\uDF3E\uD83E\uDD8A",
-                      "screen_name": "TheFoxLife"
+                      "created_at": "Wed Nov 13 14:47:57 +0000 2019",
+                      "name": "SHREDDY",
+                      "screen_name": "shreddyfox"
                     },
                     "dm_permissions": {},
-                    "is_blue_verified": true,
+                    "is_blue_verified": false,
                     "legacy": {
                       "default_profile": true,
                       "default_profile_image": false,
-                      "description": "\uD83C\uDF3F Step into \uD83C\uDF41 The Fox Life \uD83C\uDF3E\uD83E\uDD8A .a world of charm, mischief, and beauty! \uD83D\uDC3E Enjoy daily fox videos & photos that bring endless joy. Follow for your daily\uD83D\uDC3E",
+                      "description": "36 | aspiring bodybuilder (not natty) | STL | BLM | best bun @SavajBunny | best hoosky @DerpyAlusky | he/him | married | pfp by Starbitt |",
                       "entities": {
                         "description": {
                           "urls": []
                         },
                         "url": {
-                          "urls": [{
-                            "display_url": "t.me/TheFoxLife7",
-                            "expanded_url": "http://t.me/TheFoxLife7",
-                            "url": "https://t.co/HsTsNQZBg4",
-                            "indices": [
-                              0,
-                              23
-                            ]
-                          }]
+                          "urls": [
+                            {
+                              "display_url": "linktr.ee/shreddyfox",
+                              "expanded_url": "https://linktr.ee/shreddyfox",
+                              "url": "https://t.co/pzmfLhr1ub",
+                              "indices": [0, 23]
+                            }
+                          ]
                         }
                       },
                       "fast_followers_count": 0,
-                      "favourites_count": 11662,
-                      "followers_count": 40458,
-                      "friends_count": 1499,
-                      "has_custom_timelines": false,
-                      "is_translator": false,
-                      "listed_count": 91,
-                      "media_count": 8415,
-                      "normal_followers_count": 40458,
-                      "pinned_tweet_ids_str": [
-                        "1938994489487695915"
-                      ],
-                      "possibly_sensitive": false,
-                      "profile_banner_url": "https://pbs.twimg.com/profile_banners/1692153576636710912/1724590720",
-                      "profile_interstitial_type": "",
-                      "statuses_count": 18322,
-                      "translator_type": "none",
-                      "url": "https://t.co/HsTsNQZBg4",
-                      "withheld_in_countries": []
-                    },
-                    "location": {
-                      "location": ""
-                    },
-                    "media_permissions": {},
-                    "parody_commentary_fan_label": "None",
-                    "profile_image_shape": "Circle",
-                    "privacy": {
-                      "protected": false
-                    },
-                    "relationship_perspectives": {},
-                    "tipjar_settings": {
-                      "is_enabled": false,
-                      "bandcamp_handle": "",
-                      "bitcoin_handle": "",
-                      "cash_app_handle": "",
-                      "ethereum_handle": "",
-                      "gofundme_handle": "",
-                      "patreon_handle": "",
-                      "pay_pal_handle": "",
-                      "venmo_handle": ""
-                    },
-                    "verification": {
-                      "verified": false
-                    }
-                  }
-                },
-                {
-                  "result": {
-                    "__typename": "User",
-                    "id": "VXNlcjoxMTE5MDM5NzUyOTg3MDAwODMy",
-                    "rest_id": "1119039752987000832",
-                    "affiliates_highlighted_label": {},
-                    "avatar": {
-                      "image_url": "https://pbs.twimg.com/profile_images/1545227162898145280/ZlEHwmQN_normal.jpg"
-                    },
-                    "core": {
-                      "created_at": "Fri Apr 19 00:47:22 +0000 2019",
-                      "name": "Junior the Epic Fox",
-                      "screen_name": "juniorepic123"
-                    },
-                    "dm_permissions": {},
-                    "is_blue_verified": false,
-                    "legacy": {
-                      "default_profile": true,
-                      "default_profile_image": false,
-                      "description": "\uD83C\uDDFA\uD83C\uDDF8\uD83C\uDDF2\uD83C\uDDFD\uD83C\uDDF5\uD83C\uDDF720/M | \uD83E\uDD8AEl Zorro \uD83E\uDD8A| USMC",
-                      "entities": {
-                        "description": {
-                          "urls": []
-                        },
-                        "url": {
-                          "urls": [{
-                            "display_url": "linktr.ee/juniorepic123",
-                            "expanded_url": "https://linktr.ee/juniorepic123",
-                            "url": "https://t.co/wtXKIXrGee",
-                            "indices": [
-                              0,
-                              23
-                            ]
-                          }]
-                        }
-                      },
-                      "fast_followers_count": 0,
-                      "favourites_count": 145818,
-                      "followers_count": 226,
-                      "friends_count": 1144,
+                      "favourites_count": 181786,
+                      "followers_count": 39393,
+                      "friends_count": 2901,
                       "has_custom_timelines": true,
                       "is_translator": false,
-                      "listed_count": 1,
-                      "media_count": 368,
-                      "normal_followers_count": 226,
-                      "pinned_tweet_ids_str": [],
+                      "listed_count": 124,
+                      "media_count": 5008,
+                      "normal_followers_count": 39393,
+                      "pinned_tweet_ids_str": ["1926796678595543078"],
                       "possibly_sensitive": false,
-                      "profile_banner_url": "https://pbs.twimg.com/profile_banners/1119039752987000832/1714259786",
+                      "profile_banner_url": "https://pbs.twimg.com/profile_banners/1194627934495092736/1715760462",
                       "profile_interstitial_type": "",
-                      "statuses_count": 9882,
+                      "statuses_count": 42552,
                       "translator_type": "none",
-                      "url": "https://t.co/wtXKIXrGee",
+                      "url": "https://t.co/pzmfLhr1ub",
                       "withheld_in_countries": []
                     },
                     "location": {
-                      "location": "place that's near that place"
+                      "location": "St Louis, MO"
                     },
                     "media_permissions": {},
                     "parody_commentary_fan_label": "None",
@@ -548,578 +287,818 @@
                     }
                   }
                 },
-                {
-                  "result": {
-                    "__typename": "User",
-                    "id": "VXNlcjoxMjk3OTY2ODI4MDQwNDU4MjQy",
-                    "rest_id": "1297966828040458242",
-                    "affiliates_highlighted_label": {},
-                    "avatar": {
-                      "image_url": "https://pbs.twimg.com/profile_images/1688201189286912000/vTGyNTqt_normal.jpg"
-                    },
-                    "core": {
-                      "created_at": "Mon Aug 24 18:39:48 +0000 2020",
-                      "name": "Whitestar",
-                      "screen_name": "Whitestar_001"
-                    },
-                    "dm_permissions": {},
-                    "is_blue_verified": false,
-                    "legacy": {
-                      "default_profile": true,
-                      "default_profile_image": false,
-                      "description": "|24 y/o| |He/Him| |Fox/Elk Hybrid| Fursuiter, and Furry Artist. Bluesky: @/whitestar001.bsky.social Suit by GrayRealmStudio @grayestrem",
-                      "entities": {
-                        "description": {
-                          "urls": []
-                        }
+                "invites_result": {
+                  "__typename": "CommunityInvitesUnavailable",
+                  "reason": "Unavailable",
+                  "message": "Must be logged in."
+                },
+                "join_policy": "Open",
+                "invites_policy": "MemberInvitesAllowed",
+                "is_pinned": false,
+                "members_facepile_results": [
+                  {
+                    "result": {
+                      "__typename": "User",
+                      "id": "VXNlcjoxMTk0NjI3OTM0NDk1MDkyNzM2",
+                      "rest_id": "1194627934495092736",
+                      "affiliates_highlighted_label": {},
+                      "avatar": {
+                        "image_url": "https://pbs.twimg.com/profile_images/1868266349920706560/DHnubtcB_normal.jpg"
                       },
-                      "fast_followers_count": 0,
-                      "favourites_count": 6248,
-                      "followers_count": 666,
-                      "friends_count": 349,
-                      "has_custom_timelines": true,
-                      "is_translator": false,
-                      "listed_count": 0,
-                      "media_count": 1119,
-                      "normal_followers_count": 666,
-                      "pinned_tweet_ids_str": [
-                        "1746248843170119861"
-                      ],
-                      "possibly_sensitive": false,
-                      "profile_banner_url": "https://pbs.twimg.com/profile_banners/1297966828040458242/1738980718",
-                      "profile_interstitial_type": "",
-                      "statuses_count": 7139,
-                      "translator_type": "none",
-                      "withheld_in_countries": []
-                    },
-                    "location": {
-                      "location": "Virginia"
-                    },
-                    "media_permissions": {},
-                    "parody_commentary_fan_label": "None",
-                    "profile_image_shape": "Circle",
-                    "privacy": {
-                      "protected": false
-                    },
-                    "relationship_perspectives": {},
-                    "tipjar_settings": {
-                      "is_enabled": false,
-                      "bandcamp_handle": "",
-                      "bitcoin_handle": "",
-                      "cash_app_handle": "",
-                      "ethereum_handle": "",
-                      "gofundme_handle": "",
-                      "patreon_handle": "",
-                      "pay_pal_handle": "",
-                      "venmo_handle": ""
-                    },
-                    "verification": {
-                      "verified": false
-                    }
-                  }
-                },
-                {
-                  "result": {
-                    "__typename": "User",
-                    "id": "VXNlcjoxMDc3MDMwNTQ4MTk4MDk2ODk3",
-                    "rest_id": "1077030548198096897",
-                    "affiliates_highlighted_label": {},
-                    "avatar": {
-                      "image_url": "https://pbs.twimg.com/profile_images/1680820605979963393/UlxR58FF_normal.jpg"
-                    },
-                    "core": {
-                      "created_at": "Mon Dec 24 02:37:47 +0000 2018",
-                      "name": "femmy.bsky.social",
-                      "screen_name": "Femboy_Foxxo"
-                    },
-                    "dm_permissions": {},
-                    "is_blue_verified": false,
-                    "legacy": {
-                      "default_profile": false,
-                      "default_profile_image": false,
-                      "description": "Gay|23|They/Them | \nMinors will be blocked | \nFuck: ♥♥♥ @the_mithxher ♥♥♥ | \nSpicy AD: @AdFoxxo | \nblue: https://t.co/SWp4VZeg0M",
-                      "entities": {
-                        "description": {
-                          "urls": [{
-                            "display_url": "femmy.bsky.social",
-                            "expanded_url": "http://femmy.bsky.social",
-                            "url": "https://t.co/SWp4VZeg0M",
-                            "indices": [
-                              105,
-                              128
+                      "core": {
+                        "created_at": "Wed Nov 13 14:47:57 +0000 2019",
+                        "name": "SHREDDY",
+                        "screen_name": "shreddyfox"
+                      },
+                      "dm_permissions": {},
+                      "is_blue_verified": false,
+                      "legacy": {
+                        "default_profile": true,
+                        "default_profile_image": false,
+                        "description": "36 | aspiring bodybuilder (not natty) | STL | BLM | best bun @SavajBunny | best hoosky @DerpyAlusky | he/him | married | pfp by Starbitt |",
+                        "entities": {
+                          "description": {
+                            "urls": []
+                          },
+                          "url": {
+                            "urls": [
+                              {
+                                "display_url": "linktr.ee/shreddyfox",
+                                "expanded_url": "https://linktr.ee/shreddyfox",
+                                "url": "https://t.co/pzmfLhr1ub",
+                                "indices": [0, 23]
+                              }
                             ]
-                          }]
-                        }
-                      },
-                      "fast_followers_count": 0,
-                      "favourites_count": 29570,
-                      "followers_count": 410,
-                      "friends_count": 867,
-                      "has_custom_timelines": true,
-                      "is_translator": false,
-                      "listed_count": 2,
-                      "media_count": 522,
-                      "normal_followers_count": 410,
-                      "pinned_tweet_ids_str": [
-                        "1382109225116131335"
-                      ],
-                      "possibly_sensitive": true,
-                      "profile_banner_url": "https://pbs.twimg.com/profile_banners/1077030548198096897/1579039739",
-                      "profile_interstitial_type": "",
-                      "statuses_count": 9040,
-                      "translator_type": "none",
-                      "withheld_in_countries": []
-                    },
-                    "location": {
-                      "location": "PFP: @Tiedernas"
-                    },
-                    "media_permissions": {},
-                    "parody_commentary_fan_label": "None",
-                    "profile_image_shape": "Circle",
-                    "privacy": {
-                      "protected": false
-                    },
-                    "relationship_perspectives": {},
-                    "tipjar_settings": {
-                      "is_enabled": false,
-                      "bandcamp_handle": "",
-                      "bitcoin_handle": "",
-                      "cash_app_handle": "",
-                      "ethereum_handle": "",
-                      "gofundme_handle": "",
-                      "patreon_handle": "",
-                      "pay_pal_handle": "",
-                      "venmo_handle": ""
-                    },
-                    "verification": {
-                      "verified": false
-                    }
-                  }
-                }
-              ],
-              "moderator_count": 3,
-              "member_count": 19645,
-              "role": "NonMember",
-              "rules": [{
-                  "rest_id": "1506777270433849349",
-                  "name": "Be kind and respectful."
-                },
-                {
-                  "rest_id": "1506781431074279427",
-                  "name": "Fox tweets"
-                },
-                {
-                  "rest_id": "1506781622695256066",
-                  "name": "Keep is SFW-ish",
-                  "description": "No nude pics"
-                }
-              ],
-              "custom_banner_media": {
-                "media_info": {
-                  "color_info": {
-                    "palette": [{
-                        "rgb": {
-                          "red": 206,
-                          "green": 107,
-                          "blue": 83
+                          }
                         },
-                        "percentage": 42.74
+                        "fast_followers_count": 0,
+                        "favourites_count": 181786,
+                        "followers_count": 39393,
+                        "friends_count": 2901,
+                        "has_custom_timelines": true,
+                        "is_translator": false,
+                        "listed_count": 124,
+                        "media_count": 5008,
+                        "normal_followers_count": 39393,
+                        "pinned_tweet_ids_str": ["1926796678595543078"],
+                        "possibly_sensitive": false,
+                        "profile_banner_url": "https://pbs.twimg.com/profile_banners/1194627934495092736/1715760462",
+                        "profile_interstitial_type": "",
+                        "statuses_count": 42552,
+                        "translator_type": "none",
+                        "url": "https://t.co/pzmfLhr1ub",
+                        "withheld_in_countries": []
                       },
-                      {
-                        "rgb": {
-                          "red": 233,
-                          "green": 204,
-                          "blue": 194
-                        },
-                        "percentage": 32.32
+                      "location": {
+                        "location": "St Louis, MO"
                       },
-                      {
-                        "rgb": {
-                          "red": 63,
-                          "green": 31,
-                          "blue": 48
-                        },
-                        "percentage": 16.68
+                      "media_permissions": {},
+                      "parody_commentary_fan_label": "None",
+                      "profile_image_shape": "Circle",
+                      "privacy": {
+                        "protected": false
                       },
-                      {
-                        "rgb": {
-                          "red": 133,
-                          "green": 67,
-                          "blue": 63
-                        },
-                        "percentage": 4.69
+                      "relationship_perspectives": {},
+                      "tipjar_settings": {
+                        "is_enabled": false,
+                        "bandcamp_handle": "",
+                        "bitcoin_handle": "",
+                        "cash_app_handle": "",
+                        "ethereum_handle": "",
+                        "gofundme_handle": "",
+                        "patreon_handle": "",
+                        "pay_pal_handle": "",
+                        "venmo_handle": ""
                       },
-                      {
-                        "rgb": {
-                          "red": 205,
-                          "green": 150,
-                          "blue": 100
-                        },
-                        "percentage": 0.52
+                      "verification": {
+                        "verified": false
                       }
-                    ]
+                    }
                   },
-                  "original_img_url": "https://pbs.twimg.com/community_banner_img/1506780961673035778/Vd-4ArFe?format=jpg&name=orig",
-                  "original_img_width": 822,
-                  "original_img_height": 329,
-                  "salient_rect": {
-                    "left": 410,
-                    "top": 164,
-                    "width": 1,
-                    "height": 1
-                  }
-                }
-              },
-              "default_banner_media": {
-                "media_info": {
-                  "color_info": {
-                    "palette": [{
-                        "rgb": {
-                          "red": 205,
-                          "green": 127,
-                          "blue": 229
-                        },
-                        "percentage": 69.53
+                  {
+                    "result": {
+                      "__typename": "User",
+                      "id": "VXNlcjoxNjkyMTUzNTc2NjM2NzEwOTEy",
+                      "rest_id": "1692153576636710912",
+                      "affiliates_highlighted_label": {},
+                      "avatar": {
+                        "image_url": "https://pbs.twimg.com/profile_images/1886969360603828224/r5SHy9Va_normal.jpg"
                       },
-                      {
-                        "rgb": {
-                          "red": 141,
-                          "green": 225,
-                          "blue": 189
-                        },
-                        "percentage": 13.47
+                      "core": {
+                        "created_at": "Thu Aug 17 12:37:29 +0000 2023",
+                        "name": "\uD83C\uDF41 \uD835\uDCE3\uD835\uDCF1\uD835\uDCEE \uD835\uDCD5\uD835\uDCF8\uD835\uDD01 \uD835\uDCDB\uD835\uDCF2\uD835\uDCEF\uD835\uDCEE \uD83C\uDF3E\uD83E\uDD8A",
+                        "screen_name": "TheFoxLife"
                       },
-                      {
-                        "rgb": {
-                          "red": 209,
-                          "green": 153,
-                          "blue": 237
+                      "dm_permissions": {},
+                      "is_blue_verified": true,
+                      "legacy": {
+                        "default_profile": true,
+                        "default_profile_image": false,
+                        "description": "\uD83C\uDF3F Step into \uD83C\uDF41 The Fox Life \uD83C\uDF3E\uD83E\uDD8A .a world of charm, mischief, and beauty! \uD83D\uDC3E Enjoy daily fox videos & photos that bring endless joy. Follow for your daily\uD83D\uDC3E",
+                        "entities": {
+                          "description": {
+                            "urls": []
+                          },
+                          "url": {
+                            "urls": [
+                              {
+                                "display_url": "t.me/TheFoxLife7",
+                                "expanded_url": "http://t.me/TheFoxLife7",
+                                "url": "https://t.co/HsTsNQZBg4",
+                                "indices": [0, 23]
+                              }
+                            ]
+                          }
                         },
-                        "percentage": 6.08
+                        "fast_followers_count": 0,
+                        "favourites_count": 11662,
+                        "followers_count": 40458,
+                        "friends_count": 1499,
+                        "has_custom_timelines": false,
+                        "is_translator": false,
+                        "listed_count": 91,
+                        "media_count": 8415,
+                        "normal_followers_count": 40458,
+                        "pinned_tweet_ids_str": ["1938994489487695915"],
+                        "possibly_sensitive": false,
+                        "profile_banner_url": "https://pbs.twimg.com/profile_banners/1692153576636710912/1724590720",
+                        "profile_interstitial_type": "",
+                        "statuses_count": 18322,
+                        "translator_type": "none",
+                        "url": "https://t.co/HsTsNQZBg4",
+                        "withheld_in_countries": []
                       },
-                      {
-                        "rgb": {
-                          "red": 180,
-                          "green": 105,
-                          "blue": 227
-                        },
-                        "percentage": 4.75
+                      "location": {
+                        "location": ""
                       },
-                      {
-                        "rgb": {
-                          "red": 182,
-                          "green": 208,
-                          "blue": 216
-                        },
-                        "percentage": 3.23
+                      "media_permissions": {},
+                      "parody_commentary_fan_label": "None",
+                      "profile_image_shape": "Circle",
+                      "privacy": {
+                        "protected": false
+                      },
+                      "relationship_perspectives": {},
+                      "tipjar_settings": {
+                        "is_enabled": false,
+                        "bandcamp_handle": "",
+                        "bitcoin_handle": "",
+                        "cash_app_handle": "",
+                        "ethereum_handle": "",
+                        "gofundme_handle": "",
+                        "patreon_handle": "",
+                        "pay_pal_handle": "",
+                        "venmo_handle": ""
+                      },
+                      "verification": {
+                        "verified": false
                       }
-                    ]
+                    }
                   },
-                  "original_img_url": "https://pbs.twimg.com/media/FECQBhUVIAAmMdc.jpg",
-                  "original_img_width": 1200,
-                  "original_img_height": 480
-                }
-              },
-              "join_requests_result": {
-                "__typename": "CommunityJoinRequestsUnavailable"
-              }
-            }
-          },
-          "role": "Member",
-          "user_results": {
-            "result": {
-              "__typename": "User",
-              "id": "VXNlcjoxNzg3MzExNDU5MTc0NTg4NDE3",
-              "rest_id": "1787311459174588417",
-              "affiliates_highlighted_label": {},
-              "avatar": {
-                "image_url": "https://pbs.twimg.com/profile_images/1962209901574320129/OkBXZF_p_normal.jpg"
-              },
-              "core": {
-                "created_at": "Mon May 06 02:40:47 +0000 2024",
-                "name": "Volt",
-                "screen_name": "vo1twasdowned"
-              },
-              "dm_permissions": {},
-              "is_blue_verified": false,
-              "legacy": {
-                "default_profile": true,
-                "default_profile_image": false,
-                "description": "23 | They/Them | Polish asf \uD83C\uDDF5\uD83C\uDDF1\uD83C\uDDF5\uD83C\uDDF1| vo1tair_shibuya on Fortnite | I like Foxes \uD83E\uDD8A| Supernatural & Zenless Zone Zero Enjoyer | Doom 3 Addict | Metalhead |",
-                "entities": {
-                  "description": {
-                    "urls": []
+                  {
+                    "result": {
+                      "__typename": "User",
+                      "id": "VXNlcjoxMTE5MDM5NzUyOTg3MDAwODMy",
+                      "rest_id": "1119039752987000832",
+                      "affiliates_highlighted_label": {},
+                      "avatar": {
+                        "image_url": "https://pbs.twimg.com/profile_images/1545227162898145280/ZlEHwmQN_normal.jpg"
+                      },
+                      "core": {
+                        "created_at": "Fri Apr 19 00:47:22 +0000 2019",
+                        "name": "Junior the Epic Fox",
+                        "screen_name": "juniorepic123"
+                      },
+                      "dm_permissions": {},
+                      "is_blue_verified": false,
+                      "legacy": {
+                        "default_profile": true,
+                        "default_profile_image": false,
+                        "description": "\uD83C\uDDFA\uD83C\uDDF8\uD83C\uDDF2\uD83C\uDDFD\uD83C\uDDF5\uD83C\uDDF720/M | \uD83E\uDD8AEl Zorro \uD83E\uDD8A| USMC",
+                        "entities": {
+                          "description": {
+                            "urls": []
+                          },
+                          "url": {
+                            "urls": [
+                              {
+                                "display_url": "linktr.ee/juniorepic123",
+                                "expanded_url": "https://linktr.ee/juniorepic123",
+                                "url": "https://t.co/wtXKIXrGee",
+                                "indices": [0, 23]
+                              }
+                            ]
+                          }
+                        },
+                        "fast_followers_count": 0,
+                        "favourites_count": 145818,
+                        "followers_count": 226,
+                        "friends_count": 1144,
+                        "has_custom_timelines": true,
+                        "is_translator": false,
+                        "listed_count": 1,
+                        "media_count": 368,
+                        "normal_followers_count": 226,
+                        "pinned_tweet_ids_str": [],
+                        "possibly_sensitive": false,
+                        "profile_banner_url": "https://pbs.twimg.com/profile_banners/1119039752987000832/1714259786",
+                        "profile_interstitial_type": "",
+                        "statuses_count": 9882,
+                        "translator_type": "none",
+                        "url": "https://t.co/wtXKIXrGee",
+                        "withheld_in_countries": []
+                      },
+                      "location": {
+                        "location": "place that's near that place"
+                      },
+                      "media_permissions": {},
+                      "parody_commentary_fan_label": "None",
+                      "profile_image_shape": "Circle",
+                      "privacy": {
+                        "protected": false
+                      },
+                      "relationship_perspectives": {},
+                      "tipjar_settings": {
+                        "is_enabled": false,
+                        "bandcamp_handle": "",
+                        "bitcoin_handle": "",
+                        "cash_app_handle": "",
+                        "ethereum_handle": "",
+                        "gofundme_handle": "",
+                        "patreon_handle": "",
+                        "pay_pal_handle": "",
+                        "venmo_handle": ""
+                      },
+                      "verification": {
+                        "verified": false
+                      }
+                    }
+                  },
+                  {
+                    "result": {
+                      "__typename": "User",
+                      "id": "VXNlcjoxMjk3OTY2ODI4MDQwNDU4MjQy",
+                      "rest_id": "1297966828040458242",
+                      "affiliates_highlighted_label": {},
+                      "avatar": {
+                        "image_url": "https://pbs.twimg.com/profile_images/1688201189286912000/vTGyNTqt_normal.jpg"
+                      },
+                      "core": {
+                        "created_at": "Mon Aug 24 18:39:48 +0000 2020",
+                        "name": "Whitestar",
+                        "screen_name": "Whitestar_001"
+                      },
+                      "dm_permissions": {},
+                      "is_blue_verified": false,
+                      "legacy": {
+                        "default_profile": true,
+                        "default_profile_image": false,
+                        "description": "|24 y/o| |He/Him| |Fox/Elk Hybrid| Fursuiter, and Furry Artist. Bluesky: @/whitestar001.bsky.social Suit by GrayRealmStudio @grayestrem",
+                        "entities": {
+                          "description": {
+                            "urls": []
+                          }
+                        },
+                        "fast_followers_count": 0,
+                        "favourites_count": 6248,
+                        "followers_count": 666,
+                        "friends_count": 349,
+                        "has_custom_timelines": true,
+                        "is_translator": false,
+                        "listed_count": 0,
+                        "media_count": 1119,
+                        "normal_followers_count": 666,
+                        "pinned_tweet_ids_str": ["1746248843170119861"],
+                        "possibly_sensitive": false,
+                        "profile_banner_url": "https://pbs.twimg.com/profile_banners/1297966828040458242/1738980718",
+                        "profile_interstitial_type": "",
+                        "statuses_count": 7139,
+                        "translator_type": "none",
+                        "withheld_in_countries": []
+                      },
+                      "location": {
+                        "location": "Virginia"
+                      },
+                      "media_permissions": {},
+                      "parody_commentary_fan_label": "None",
+                      "profile_image_shape": "Circle",
+                      "privacy": {
+                        "protected": false
+                      },
+                      "relationship_perspectives": {},
+                      "tipjar_settings": {
+                        "is_enabled": false,
+                        "bandcamp_handle": "",
+                        "bitcoin_handle": "",
+                        "cash_app_handle": "",
+                        "ethereum_handle": "",
+                        "gofundme_handle": "",
+                        "patreon_handle": "",
+                        "pay_pal_handle": "",
+                        "venmo_handle": ""
+                      },
+                      "verification": {
+                        "verified": false
+                      }
+                    }
+                  },
+                  {
+                    "result": {
+                      "__typename": "User",
+                      "id": "VXNlcjoxMDc3MDMwNTQ4MTk4MDk2ODk3",
+                      "rest_id": "1077030548198096897",
+                      "affiliates_highlighted_label": {},
+                      "avatar": {
+                        "image_url": "https://pbs.twimg.com/profile_images/1680820605979963393/UlxR58FF_normal.jpg"
+                      },
+                      "core": {
+                        "created_at": "Mon Dec 24 02:37:47 +0000 2018",
+                        "name": "femmy.bsky.social",
+                        "screen_name": "Femboy_Foxxo"
+                      },
+                      "dm_permissions": {},
+                      "is_blue_verified": false,
+                      "legacy": {
+                        "default_profile": false,
+                        "default_profile_image": false,
+                        "description": "Gay|23|They/Them | \nMinors will be blocked | \nFuck: ♥♥♥ @the_mithxher ♥♥♥ | \nSpicy AD: @AdFoxxo | \nblue: https://t.co/SWp4VZeg0M",
+                        "entities": {
+                          "description": {
+                            "urls": [
+                              {
+                                "display_url": "femmy.bsky.social",
+                                "expanded_url": "http://femmy.bsky.social",
+                                "url": "https://t.co/SWp4VZeg0M",
+                                "indices": [105, 128]
+                              }
+                            ]
+                          }
+                        },
+                        "fast_followers_count": 0,
+                        "favourites_count": 29570,
+                        "followers_count": 410,
+                        "friends_count": 867,
+                        "has_custom_timelines": true,
+                        "is_translator": false,
+                        "listed_count": 2,
+                        "media_count": 522,
+                        "normal_followers_count": 410,
+                        "pinned_tweet_ids_str": ["1382109225116131335"],
+                        "possibly_sensitive": true,
+                        "profile_banner_url": "https://pbs.twimg.com/profile_banners/1077030548198096897/1579039739",
+                        "profile_interstitial_type": "",
+                        "statuses_count": 9040,
+                        "translator_type": "none",
+                        "withheld_in_countries": []
+                      },
+                      "location": {
+                        "location": "PFP: @Tiedernas"
+                      },
+                      "media_permissions": {},
+                      "parody_commentary_fan_label": "None",
+                      "profile_image_shape": "Circle",
+                      "privacy": {
+                        "protected": false
+                      },
+                      "relationship_perspectives": {},
+                      "tipjar_settings": {
+                        "is_enabled": false,
+                        "bandcamp_handle": "",
+                        "bitcoin_handle": "",
+                        "cash_app_handle": "",
+                        "ethereum_handle": "",
+                        "gofundme_handle": "",
+                        "patreon_handle": "",
+                        "pay_pal_handle": "",
+                        "venmo_handle": ""
+                      },
+                      "verification": {
+                        "verified": false
+                      }
+                    }
                   }
-                },
-                "fast_followers_count": 0,
-                "favourites_count": 4673,
-                "followers_count": 408,
-                "friends_count": 178,
-                "has_custom_timelines": false,
-                "is_translator": false,
-                "listed_count": 0,
-                "media_count": 394,
-                "normal_followers_count": 408,
-                "pinned_tweet_ids_str": [
-                  "1961849615801594350"
                 ],
-                "possibly_sensitive": false,
-                "profile_banner_url": "https://pbs.twimg.com/profile_banners/1787311459174588417/1750430516",
-                "profile_interstitial_type": "",
-                "statuses_count": 2065,
-                "translator_type": "none",
-                "withheld_in_countries": []
-              },
-              "location": {
-                "location": "ilmgf"
-              },
-              "media_permissions": {},
-              "parody_commentary_fan_label": "None",
-              "profile_image_shape": "Circle",
-              "privacy": {
-                "protected": false
-              },
-              "relationship_perspectives": {},
-              "tipjar_settings": {
-                "is_enabled": false,
-                "bandcamp_handle": "",
-                "bitcoin_handle": "",
-                "cash_app_handle": "",
-                "ethereum_handle": "",
-                "gofundme_handle": "",
-                "patreon_handle": "",
-                "pay_pal_handle": "",
-                "venmo_handle": ""
-              },
-              "verification": {
-                "verified": false
+                "moderator_count": 3,
+                "member_count": 19645,
+                "role": "NonMember",
+                "rules": [
+                  {
+                    "rest_id": "1506777270433849349",
+                    "name": "Be kind and respectful."
+                  },
+                  {
+                    "rest_id": "1506781431074279427",
+                    "name": "Fox tweets"
+                  },
+                  {
+                    "rest_id": "1506781622695256066",
+                    "name": "Keep is SFW-ish",
+                    "description": "No nude pics"
+                  }
+                ],
+                "custom_banner_media": {
+                  "media_info": {
+                    "color_info": {
+                      "palette": [
+                        {
+                          "rgb": {
+                            "red": 206,
+                            "green": 107,
+                            "blue": 83
+                          },
+                          "percentage": 42.74
+                        },
+                        {
+                          "rgb": {
+                            "red": 233,
+                            "green": 204,
+                            "blue": 194
+                          },
+                          "percentage": 32.32
+                        },
+                        {
+                          "rgb": {
+                            "red": 63,
+                            "green": 31,
+                            "blue": 48
+                          },
+                          "percentage": 16.68
+                        },
+                        {
+                          "rgb": {
+                            "red": 133,
+                            "green": 67,
+                            "blue": 63
+                          },
+                          "percentage": 4.69
+                        },
+                        {
+                          "rgb": {
+                            "red": 205,
+                            "green": 150,
+                            "blue": 100
+                          },
+                          "percentage": 0.52
+                        }
+                      ]
+                    },
+                    "original_img_url": "https://pbs.twimg.com/community_banner_img/1506780961673035778/Vd-4ArFe?format=jpg&name=orig",
+                    "original_img_width": 822,
+                    "original_img_height": 329,
+                    "salient_rect": {
+                      "left": 410,
+                      "top": 164,
+                      "width": 1,
+                      "height": 1
+                    }
+                  }
+                },
+                "default_banner_media": {
+                  "media_info": {
+                    "color_info": {
+                      "palette": [
+                        {
+                          "rgb": {
+                            "red": 205,
+                            "green": 127,
+                            "blue": 229
+                          },
+                          "percentage": 69.53
+                        },
+                        {
+                          "rgb": {
+                            "red": 141,
+                            "green": 225,
+                            "blue": 189
+                          },
+                          "percentage": 13.47
+                        },
+                        {
+                          "rgb": {
+                            "red": 209,
+                            "green": 153,
+                            "blue": 237
+                          },
+                          "percentage": 6.08
+                        },
+                        {
+                          "rgb": {
+                            "red": 180,
+                            "green": 105,
+                            "blue": 227
+                          },
+                          "percentage": 4.75
+                        },
+                        {
+                          "rgb": {
+                            "red": 182,
+                            "green": 208,
+                            "blue": 216
+                          },
+                          "percentage": 3.23
+                        }
+                      ]
+                    },
+                    "original_img_url": "https://pbs.twimg.com/media/FECQBhUVIAAmMdc.jpg",
+                    "original_img_width": 1200,
+                    "original_img_height": 480
+                  }
+                },
+                "join_requests_result": {
+                  "__typename": "CommunityJoinRequestsUnavailable"
+                }
+              }
+            },
+            "role": "Member",
+            "user_results": {
+              "result": {
+                "__typename": "User",
+                "id": "VXNlcjoxNzg3MzExNDU5MTc0NTg4NDE3",
+                "rest_id": "1787311459174588417",
+                "affiliates_highlighted_label": {},
+                "avatar": {
+                  "image_url": "https://pbs.twimg.com/profile_images/1962209901574320129/OkBXZF_p_normal.jpg"
+                },
+                "core": {
+                  "created_at": "Mon May 06 02:40:47 +0000 2024",
+                  "name": "Volt",
+                  "screen_name": "vo1twasdowned"
+                },
+                "dm_permissions": {},
+                "is_blue_verified": false,
+                "legacy": {
+                  "default_profile": true,
+                  "default_profile_image": false,
+                  "description": "23 | They/Them | Polish asf \uD83C\uDDF5\uD83C\uDDF1\uD83C\uDDF5\uD83C\uDDF1| vo1tair_shibuya on Fortnite | I like Foxes \uD83E\uDD8A| Supernatural & Zenless Zone Zero Enjoyer | Doom 3 Addict | Metalhead |",
+                  "entities": {
+                    "description": {
+                      "urls": []
+                    }
+                  },
+                  "fast_followers_count": 0,
+                  "favourites_count": 4673,
+                  "followers_count": 408,
+                  "friends_count": 178,
+                  "has_custom_timelines": false,
+                  "is_translator": false,
+                  "listed_count": 0,
+                  "media_count": 394,
+                  "normal_followers_count": 408,
+                  "pinned_tweet_ids_str": ["1961849615801594350"],
+                  "possibly_sensitive": false,
+                  "profile_banner_url": "https://pbs.twimg.com/profile_banners/1787311459174588417/1750430516",
+                  "profile_interstitial_type": "",
+                  "statuses_count": 2065,
+                  "translator_type": "none",
+                  "withheld_in_countries": []
+                },
+                "location": {
+                  "location": "ilmgf"
+                },
+                "media_permissions": {},
+                "parody_commentary_fan_label": "None",
+                "profile_image_shape": "Circle",
+                "privacy": {
+                  "protected": false
+                },
+                "relationship_perspectives": {},
+                "tipjar_settings": {
+                  "is_enabled": false,
+                  "bandcamp_handle": "",
+                  "bitcoin_handle": "",
+                  "cash_app_handle": "",
+                  "ethereum_handle": "",
+                  "gofundme_handle": "",
+                  "patreon_handle": "",
+                  "pay_pal_handle": "",
+                  "venmo_handle": ""
+                },
+                "verification": {
+                  "verified": false
+                }
               }
             }
+          },
+          "legacy": {
+            "bookmark_count": 184,
+            "bookmarked": false,
+            "created_at": "Fri Sep 05 21:52:24 +0000 2025",
+            "conversation_id_str": "1964084223871971826",
+            "display_text_range": [0, 0],
+            "entities": {
+              "hashtags": [],
+              "media": [
+                {
+                  "display_url": "pic.x.com/qRY485mz9N",
+                  "expanded_url": "https://x.com/vo1twasdowned/status/1964084223871971826/photo/1",
+                  "id_str": "1964084201302405120",
+                  "indices": [0, 23],
+                  "media_key": "3_1964084201302405120",
+                  "media_url_https": "https://pbs.twimg.com/media/G0HULMeWMAA-IGM.png",
+                  "type": "photo",
+                  "url": "https://t.co/qRY485mz9N",
+                  "ext_media_availability": {
+                    "status": "Available"
+                  },
+                  "features": {
+                    "large": {
+                      "faces": []
+                    },
+                    "medium": {
+                      "faces": []
+                    },
+                    "small": {
+                      "faces": []
+                    },
+                    "orig": {
+                      "faces": []
+                    }
+                  },
+                  "sizes": {
+                    "large": {
+                      "h": 515,
+                      "w": 736,
+                      "resize": "fit"
+                    },
+                    "medium": {
+                      "h": 515,
+                      "w": 736,
+                      "resize": "fit"
+                    },
+                    "small": {
+                      "h": 476,
+                      "w": 680,
+                      "resize": "fit"
+                    },
+                    "thumb": {
+                      "h": 150,
+                      "w": 150,
+                      "resize": "crop"
+                    }
+                  },
+                  "original_info": {
+                    "height": 515,
+                    "width": 736,
+                    "focus_rects": [
+                      {
+                        "x": 0,
+                        "y": 103,
+                        "w": 736,
+                        "h": 412
+                      },
+                      {
+                        "x": 0,
+                        "y": 0,
+                        "w": 515,
+                        "h": 515
+                      },
+                      {
+                        "x": 0,
+                        "y": 0,
+                        "w": 452,
+                        "h": 515
+                      },
+                      {
+                        "x": 36,
+                        "y": 0,
+                        "w": 258,
+                        "h": 515
+                      },
+                      {
+                        "x": 0,
+                        "y": 0,
+                        "w": 736,
+                        "h": 515
+                      }
+                    ]
+                  },
+                  "allow_download_status": {
+                    "allow_download": true
+                  },
+                  "media_results": {
+                    "result": {
+                      "media_key": "3_1964084201302405120"
+                    }
+                  }
+                }
+              ],
+              "symbols": [],
+              "timestamps": [],
+              "urls": [],
+              "user_mentions": []
+            },
+            "extended_entities": {
+              "media": [
+                {
+                  "display_url": "pic.x.com/qRY485mz9N",
+                  "expanded_url": "https://x.com/vo1twasdowned/status/1964084223871971826/photo/1",
+                  "id_str": "1964084201302405120",
+                  "indices": [0, 23],
+                  "media_key": "3_1964084201302405120",
+                  "media_url_https": "https://pbs.twimg.com/media/G0HULMeWMAA-IGM.png",
+                  "type": "photo",
+                  "url": "https://t.co/qRY485mz9N",
+                  "ext_media_availability": {
+                    "status": "Available"
+                  },
+                  "features": {
+                    "large": {
+                      "faces": []
+                    },
+                    "medium": {
+                      "faces": []
+                    },
+                    "small": {
+                      "faces": []
+                    },
+                    "orig": {
+                      "faces": []
+                    }
+                  },
+                  "sizes": {
+                    "large": {
+                      "h": 515,
+                      "w": 736,
+                      "resize": "fit"
+                    },
+                    "medium": {
+                      "h": 515,
+                      "w": 736,
+                      "resize": "fit"
+                    },
+                    "small": {
+                      "h": 476,
+                      "w": 680,
+                      "resize": "fit"
+                    },
+                    "thumb": {
+                      "h": 150,
+                      "w": 150,
+                      "resize": "crop"
+                    }
+                  },
+                  "original_info": {
+                    "height": 515,
+                    "width": 736,
+                    "focus_rects": [
+                      {
+                        "x": 0,
+                        "y": 103,
+                        "w": 736,
+                        "h": 412
+                      },
+                      {
+                        "x": 0,
+                        "y": 0,
+                        "w": 515,
+                        "h": 515
+                      },
+                      {
+                        "x": 0,
+                        "y": 0,
+                        "w": 452,
+                        "h": 515
+                      },
+                      {
+                        "x": 36,
+                        "y": 0,
+                        "w": 258,
+                        "h": 515
+                      },
+                      {
+                        "x": 0,
+                        "y": 0,
+                        "w": 736,
+                        "h": 515
+                      }
+                    ]
+                  },
+                  "allow_download_status": {
+                    "allow_download": true
+                  },
+                  "media_results": {
+                    "result": {
+                      "media_key": "3_1964084201302405120"
+                    }
+                  }
+                }
+              ]
+            },
+            "favorite_count": 2446,
+            "favorited": false,
+            "full_text": "https://t.co/qRY485mz9N",
+            "is_quote_status": false,
+            "lang": "zxx",
+            "possibly_sensitive": false,
+            "possibly_sensitive_editable": true,
+            "quote_count": 33,
+            "reply_count": 3,
+            "retweet_count": 332,
+            "retweeted": false,
+            "user_id_str": "1787311459174588417",
+            "id_str": "1964084223871971826"
           }
-        },
-        "legacy": {
-          "bookmark_count": 184,
-          "bookmarked": false,
-          "created_at": "Fri Sep 05 21:52:24 +0000 2025",
-          "conversation_id_str": "1964084223871971826",
-          "display_text_range": [
-            0,
-            0
-          ],
-          "entities": {
-            "hashtags": [],
-            "media": [{
-              "display_url": "pic.x.com/qRY485mz9N",
-              "expanded_url": "https://x.com/vo1twasdowned/status/1964084223871971826/photo/1",
-              "id_str": "1964084201302405120",
-              "indices": [
-                0,
-                23
-              ],
-              "media_key": "3_1964084201302405120",
-              "media_url_https": "https://pbs.twimg.com/media/G0HULMeWMAA-IGM.png",
-              "type": "photo",
-              "url": "https://t.co/qRY485mz9N",
-              "ext_media_availability": {
-                "status": "Available"
-              },
-              "features": {
-                "large": {
-                  "faces": []
-                },
-                "medium": {
-                  "faces": []
-                },
-                "small": {
-                  "faces": []
-                },
-                "orig": {
-                  "faces": []
-                }
-              },
-              "sizes": {
-                "large": {
-                  "h": 515,
-                  "w": 736,
-                  "resize": "fit"
-                },
-                "medium": {
-                  "h": 515,
-                  "w": 736,
-                  "resize": "fit"
-                },
-                "small": {
-                  "h": 476,
-                  "w": 680,
-                  "resize": "fit"
-                },
-                "thumb": {
-                  "h": 150,
-                  "w": 150,
-                  "resize": "crop"
-                }
-              },
-              "original_info": {
-                "height": 515,
-                "width": 736,
-                "focus_rects": [{
-                    "x": 0,
-                    "y": 103,
-                    "w": 736,
-                    "h": 412
-                  },
-                  {
-                    "x": 0,
-                    "y": 0,
-                    "w": 515,
-                    "h": 515
-                  },
-                  {
-                    "x": 0,
-                    "y": 0,
-                    "w": 452,
-                    "h": 515
-                  },
-                  {
-                    "x": 36,
-                    "y": 0,
-                    "w": 258,
-                    "h": 515
-                  },
-                  {
-                    "x": 0,
-                    "y": 0,
-                    "w": 736,
-                    "h": 515
-                  }
-                ]
-              },
-              "allow_download_status": {
-                "allow_download": true
-              },
-              "media_results": {
-                "result": {
-                  "media_key": "3_1964084201302405120"
-                }
-              }
-            }],
-            "symbols": [],
-            "timestamps": [],
-            "urls": [],
-            "user_mentions": []
-          },
-          "extended_entities": {
-            "media": [{
-              "display_url": "pic.x.com/qRY485mz9N",
-              "expanded_url": "https://x.com/vo1twasdowned/status/1964084223871971826/photo/1",
-              "id_str": "1964084201302405120",
-              "indices": [
-                0,
-                23
-              ],
-              "media_key": "3_1964084201302405120",
-              "media_url_https": "https://pbs.twimg.com/media/G0HULMeWMAA-IGM.png",
-              "type": "photo",
-              "url": "https://t.co/qRY485mz9N",
-              "ext_media_availability": {
-                "status": "Available"
-              },
-              "features": {
-                "large": {
-                  "faces": []
-                },
-                "medium": {
-                  "faces": []
-                },
-                "small": {
-                  "faces": []
-                },
-                "orig": {
-                  "faces": []
-                }
-              },
-              "sizes": {
-                "large": {
-                  "h": 515,
-                  "w": 736,
-                  "resize": "fit"
-                },
-                "medium": {
-                  "h": 515,
-                  "w": 736,
-                  "resize": "fit"
-                },
-                "small": {
-                  "h": 476,
-                  "w": 680,
-                  "resize": "fit"
-                },
-                "thumb": {
-                  "h": 150,
-                  "w": 150,
-                  "resize": "crop"
-                }
-              },
-              "original_info": {
-                "height": 515,
-                "width": 736,
-                "focus_rects": [{
-                    "x": 0,
-                    "y": 103,
-                    "w": 736,
-                    "h": 412
-                  },
-                  {
-                    "x": 0,
-                    "y": 0,
-                    "w": 515,
-                    "h": 515
-                  },
-                  {
-                    "x": 0,
-                    "y": 0,
-                    "w": 452,
-                    "h": 515
-                  },
-                  {
-                    "x": 36,
-                    "y": 0,
-                    "w": 258,
-                    "h": 515
-                  },
-                  {
-                    "x": 0,
-                    "y": 0,
-                    "w": 736,
-                    "h": 515
-                  }
-                ]
-              },
-              "allow_download_status": {
-                "allow_download": true
-              },
-              "media_results": {
-                "result": {
-                  "media_key": "3_1964084201302405120"
-                }
-              }
-            }]
-          },
-          "favorite_count": 2446,
-          "favorited": false,
-          "full_text": "https://t.co/qRY485mz9N",
-          "is_quote_status": false,
-          "lang": "zxx",
-          "possibly_sensitive": false,
-          "possibly_sensitive_editable": true,
-          "quote_count": 33,
-          "reply_count": 3,
-          "retweet_count": 332,
-          "retweeted": false,
-          "user_id_str": "1787311459174588417",
-          "id_str": "1964084223871971826"
         }
       }
-    }]
+    ]
   }
 }

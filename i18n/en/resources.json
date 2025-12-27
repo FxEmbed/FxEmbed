@@ -58,5 +58,6 @@
   "language_vi": "Vietnamese",
   "language_zh-CN": "Chinese",
   "language_zh-TW": "Chinese",
-  "threadIndicator": "🧵 Thread • {brandingName}"
+  "threadIndicator": "🧵 Thread • {brandingName}",
+  "articleIndicator": "📰 Article • {brandingName}"
 }

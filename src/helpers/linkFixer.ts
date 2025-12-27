@@ -9,7 +9,7 @@ export const linkFixer = (entities: TcoExpansion[] | undefined, text: string): s
     entities.forEach((url: TcoExpansion) => {
       let newURL = url.expanded_url ?? url.url ?? '';
 
-      if (newURL.match(/^https:\/\/twitter\.com\/i\/web\/status\/\w+/g) !== null) {
+      if (newURL.match(/^https:\/\/(x\.com|twitter\.com)\/i\/web\/status\/\w+/g) !== null) {
         newURL = '';
       }
       text = text.replace(url.url, newURL);

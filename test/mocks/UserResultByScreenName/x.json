@@ -36,10 +36,12 @@
         "private_super_following": false,
         "professional": {
           "rest_id": "1858538123375874167",
-          "category": [{
-            "id": 714,
-            "name": "Technology Company"
-          }],
+          "category": [
+            {
+              "id": 714,
+              "name": "Technology Company"
+            }
+          ],
           "professional_type": "Business"
         },
         "profile_bio": {
@@ -47,12 +49,14 @@
           "entities": {
             "description": {},
             "url": {
-              "urls": [{
-                "display_url": "x.com",
-                "expanded_url": "https://x.com",
-                "indices": [0, 23],
-                "url": "https://t.co/Xp0xJlcROt"
-              }]
+              "urls": [
+                {
+                  "display_url": "x.com",
+                  "expanded_url": "https://x.com",
+                  "indices": [0, 23],
+                  "url": "https://t.co/Xp0xJlcROt"
+                }
+              ]
             }
           },
           "withheld_in_countries": []

@@ -953,4 +953,14 @@ type TwitterArticleEntityMapEntry =
           }>;
         };
       };
+    }
+  | {
+      key: string;
+      value: {
+        type: 'TWEET';
+        mutability: 'Immutable';
+        data: {
+          tweetId: string;
+        };
+      };
     };

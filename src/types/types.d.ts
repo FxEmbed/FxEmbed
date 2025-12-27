@@ -3,7 +3,12 @@
 
 import { Context } from 'hono';
 import { DataProvider } from '../enum';
-import { BirdwatchEntity, TweetMediaFormat, TwitterApiMedia, TwitterArticleContentState } from './vendor/twitter';
+import {
+  BirdwatchEntity,
+  TweetMediaFormat,
+  TwitterApiMedia,
+  TwitterArticleContentState
+} from './vendor/twitter';
 
 declare type InputFlags = {
   standard?: boolean;

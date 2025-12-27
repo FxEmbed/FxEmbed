@@ -87,3 +87,23 @@ export const formatImageUrl = (url: string) => {
     return url;
   }
 };
+
+/**
+ * Wraps foreign links through our API to prevent Telegram Instant View from crawling them directly.
+ * This prevents IV generation failures due to external site issues.
+ */
+export const wrapForeignLinks = (url: string, apiHost: string): string => {
+  let unwrap = false;
+  const whitelistedDomains = ['twitter.com', 'x.com', 't.me', 'telegram.me', 'bsky.app'];
+  try {
+    const urlObj = new URL(url);
+
+    if (!whitelistedDomains.includes(urlObj.hostname)) {
+      unwrap = true;
+    }
+  } catch (_e) {
+    unwrap = true;
+  }
+
+  return unwrap ? `https://${apiHost}/2/hit?url=${encodeURIComponent(url)}` : url;
+};

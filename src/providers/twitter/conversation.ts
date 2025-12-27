@@ -572,6 +572,27 @@ export const constructTwitterThread = async (
 
     status = buildStatus as APITwitterStatus;
 
+    // Check if article exists but lacks content blocks (TweetResultsByIds doesn't include full article data)
+    if (
+      status.article &&
+      (!status.article.content?.blocks || status.article.content.blocks.length === 0)
+    ) {
+      console.log('Article lacks content blocks, re-fetching with TweetResultByRestId...');
+      const articleResponse = await fetchByRestId(id, c);
+      if (articleResponse?.data?.tweetResult?.result) {
+        const rebuiltStatus = await buildAPITwitterStatus(
+          c,
+          articleResponse.data.tweetResult.result as GraphQLTwitterStatus,
+          language,
+          null,
+          legacyAPI
+        );
+        if (rebuiltStatus && !(rebuiltStatus as FetchResults)?.status) {
+          status = rebuiltStatus as APITwitterStatus;
+        }
+      }
+    }
+
     // If not processing thread, return single tweet
     if (!processThread) {
       writeDataPoint(c, language, status.possibly_sensitive, '200');

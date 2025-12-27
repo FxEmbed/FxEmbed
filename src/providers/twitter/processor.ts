@@ -80,6 +80,14 @@ export const buildAPITwitterStatus = async (
   /* Sometimes, `rest_id` is undefined for some reason. Inconsistent behavior. See: https://github.com/FxEmbed/FxEmbed/issues/416 */
   const id = status.rest_id ?? status.legacy.id_str ?? status.legacy?.conversation_id_str;
 
+  if (status.legacy.entities?.urls) {
+    status.legacy.entities.urls = status.legacy.entities.urls.filter(
+      /* Yes this uses http:// not https://. Don't know why. Hesitant to also include https
+         because we just want to get rid of the extraneous article url at the end, not eliminate all article urls */
+      url => url.expanded_url.match(/^http:\/\/x\.com\/i\/article\/\w+/g) === null
+    );
+  }
+
   /* Populating a lot of the basics */
   apiStatus.url = `${Constants.TWITTER_ROOT}/${apiUser.screen_name}/status/${id}`;
   apiStatus.id = id;
@@ -488,7 +496,6 @@ export const buildAPITwitterStatus = async (
   console.log('language?', language);
 
   if (status.article) {
-    console.log('article', JSON.stringify(status.article.article_results?.result));
     apiStatus.article = {
       created_at: new Date(
         (status.article.article_results?.result?.metadata?.first_published_at_secs ?? 0) * 1000
