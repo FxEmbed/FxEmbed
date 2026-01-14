@@ -13,7 +13,7 @@ import {
   TweetResultsByRestIdsQuery
 } from './graphql/queries';
 import { graphqlRequest } from './graphql/request';
-import { tryBalancedEndpoints, BalancedEndpoint } from '../../helpers/endpointBalancing';
+import { graphQLOrchestrator } from './graphql/orchestrator';
 
 const writeDataPoint = (
   c: Context,
@@ -408,89 +408,116 @@ const filterBucketStatuses = (tweets: GraphQLTwitterStatus[], original: GraphQLT
   );
 };
 
+/**
+ * Fetches a single status using the orchestrator with dynamic endpoint selection
+ * @param id - Status ID to fetch
+ * @param c - Hono context
+ * @param processThread - Whether this is for thread processing (affects TweetDetail priority)
+ * @returns The status response or null
+ */
 const fetchSingleStatus = async (
   id: string,
-  c: Context
+  c: Context,
+  processThread = false
 ): Promise<
-  TweetResultByRestIdResponse | TweetResultsByIdsResponse | TweetResultsByRestIdsResponse | null
+  | TweetDetailResponse
+  | TweetResultByRestIdResponse
+  | TweetResultsByIdsResponse
+  | TweetResultsByRestIdsResponse
+  | null
 > => {
-  const endpoints: BalancedEndpoint<
-    TweetResultByRestIdResponse | TweetResultsByIdsResponse | TweetResultsByRestIdsResponse
-  >[] = [
-    {
-      name: 'TweetResultByRestId',
-      weight: 50,
-      handler: () => fetchByRestId(id, c),
-      resultCheck: (
-        response:
-          | TweetResultByRestIdResponse
-          | TweetResultsByIdsResponse
-          | TweetResultsByRestIdsResponse
-      ) => Boolean((response as TweetResultByRestIdResponse)?.data?.tweetResult?.result?.__typename)
-    },
-    {
-      name: 'TweetResultsByIds',
-      weight: 500,
-      handler: () => fetchByIds([id], c),
-      resultCheck: (
-        response:
-          | TweetResultByRestIdResponse
-          | TweetResultsByIdsResponse
-          | TweetResultsByRestIdsResponse
-      ) => {
-        const r = (response as TweetResultsByIdsResponse)?.data?.tweet_results?.[0]?.result as
-          | GraphQLTwitterStatus
-          | TweetStub
-          | undefined;
-        return Boolean((r as GraphQLTwitterStatus)?.__typename || (r as TweetStub)?.reason);
-      }
-    },
-    {
-      name: 'TweetResultsByRestIds',
-      weight: 500,
-      handler: () => fetchByRestIds([id], c),
-      resultCheck: (
-        response:
-          | TweetResultByRestIdResponse
-          | TweetResultsByIdsResponse
-          | TweetResultsByRestIdsResponse
-      ) => {
-        const r = (response as TweetResultsByRestIdsResponse)?.data?.tweetResult?.[0]?.result as
-          | GraphQLTwitterStatus
-          | TweetStub
-          | undefined;
-        return Boolean((r as GraphQLTwitterStatus)?.__typename || (r as TweetStub)?.reason);
-      }
-    }
-  ];
-
-  try {
-    const url = new URL(c.req.url);
-    if (Constants.API_HOST_LIST.includes(url.hostname)) {
-      for (const endpoint of endpoints) {
-        if (endpoint.name === 'TweetResultsByIds') {
-          endpoint.weight = 0;
-        }
-      }
-    }
-  } catch (e) {
-    console.error(e);
-  }
-
-  if (
-    !experimentCheck(Experiment.ELONGATOR_BY_DEFAULT, typeof c.env?.TwitterProxy !== 'undefined')
-  ) {
-    const single = endpoints.find(e => e.name === 'TweetResultByRestId');
-    if (!single) return null;
+  // Determine weights based on context
+  const isApiHost = (() => {
     try {
-      const response = await single.handler();
-      return single.resultCheck(response) ? response : null;
+      const url = new URL(c.req.url);
+      return Constants.API_HOST_LIST.includes(url.hostname);
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
+  })();
+
+  const hasElongator = experimentCheck(
+    Experiment.ELONGATOR_BY_DEFAULT,
+    typeof c.env?.TwitterProxy !== 'undefined'
+  );
+
+  // If elongator is not enabled, only use TweetResultByRestId
+  if (!hasElongator) {
+    try {
+      return await fetchByRestId(id, c);
     } catch (_e) {
       return null;
     }
   }
 
-  return tryBalancedEndpoints(endpoints);
+  // Build methods with dynamic weights
+  const results = await graphQLOrchestrator(c, [
+    {
+      key: 'status',
+      methods: [
+        {
+          name: 'TweetDetail',
+          query: TweetDetailQuery,
+          weight: processThread ? 1000 : 10,
+          fallbackOnly: !processThread,
+          variables: { focalTweetId: id },
+          validator: (response: unknown) => {
+            const conversation = response as TweetDetailResponse;
+            const instructions =
+              conversation?.data?.threaded_conversation_with_injections_v2?.instructions;
+            return Boolean(instructions && Array.isArray(instructions));
+          }
+        },
+        {
+          name: 'TweetResultByRestId',
+          query: TweetResultByRestIdQuery,
+          weight: 50,
+          fallbackOnly: processThread,
+          variables: { tweetId: id },
+          validator: (response: unknown) => {
+            const r = response as TweetResultByRestIdResponse;
+            return Boolean(r?.data?.tweetResult?.result?.__typename);
+          }
+        },
+        {
+          name: 'TweetResultsByIds',
+          query: TweetResultsByIdsQuery,
+          weight: 500,
+          fallbackOnly: processThread || isApiHost,
+          variables: { rest_ids: [id] },
+          validator: (response: unknown) => {
+            const r = (response as TweetResultsByIdsResponse)?.data?.tweet_results?.[0]?.result as
+              | GraphQLTwitterStatus
+              | TweetStub
+              | undefined;
+            return Boolean((r as GraphQLTwitterStatus)?.__typename || (r as TweetStub)?.reason);
+          }
+        },
+        {
+          name: 'TweetResultsByRestIds',
+          query: TweetResultsByRestIdsQuery,
+          weight: 500,
+          fallbackOnly: processThread,
+          variables: { tweetIds: [id] },
+          validator: (response: unknown) => {
+            const r = (response as TweetResultsByRestIdsResponse)?.data?.tweetResult?.[0]
+              ?.result as GraphQLTwitterStatus | TweetStub | undefined;
+            return Boolean((r as GraphQLTwitterStatus)?.__typename || (r as TweetStub)?.reason);
+          }
+        }
+      ],
+      required: true
+    }
+  ]);
+
+  return results.status?.success
+    ? (results.status.data as
+        | TweetDetailResponse
+        | TweetResultByRestIdResponse
+        | TweetResultsByIdsResponse
+        | TweetResultsByRestIdsResponse)
+    : null;
 };
 
 /* Fetch and construct a Twitter thread */
@@ -512,76 +539,17 @@ export const constructTwitterThread = async (
     | null = null;
   let status: APITwitterStatus;
 
-  // Try TweetDetail first under these conditions
-  const tryTweetDetailFirst = typeof c.env?.TwitterProxy !== 'undefined' && processThread;
-  let triedTweetDetail = false;
+  // Fetch status using orchestrator with appropriate method prioritization
+  response = await fetchSingleStatus(id, c, processThread);
 
-  // First attempt with preferred API
-  if (tryTweetDetailFirst) {
-    triedTweetDetail = true;
-    console.log('Using TweetDetail for primary request...');
-    try {
-      response = (await fetchTweetDetail(c, id)) as TweetDetailResponse;
-    } catch (e) {
-      console.log('Error fetching TweetDetail', e);
-    }
-
-    // If TweetDetail failed, try one of the single status queries as fallback
-    if (!response?.data) {
-      console.log('TweetDetail failed, falling back to single status...');
-      response = await fetchSingleStatus(id, c);
-
-      // If both APIs failed, return 404
-      if (!getResultFromResponse(response)) {
-        console.log('Single status failed, returning 404');
-        writeDataPoint(c, language, null, '404');
-        return { status: null, thread: null, author: null, code: 404 };
-      }
-
-      let result: GraphQLTwitterStatus | null = null;
-      result = getResultFromResponse(response);
-      if (!result) {
-        writeDataPoint(c, language, null, '404');
-        return { status: null, thread: null, author: null, code: 404 };
-      }
-
-      const buildStatus = await buildAPITwitterStatus(c, result, language, null, legacyAPI);
-      if (buildStatus === null) {
-        writeDataPoint(c, language, null, '404');
-        return { status: null, thread: null, author: null, code: 404 };
-      }
-
-      status = buildStatus as APITwitterStatus;
-
-      // If not processing thread, return single tweet
-      return { status: status, thread: null, author: status.author, code: 200 };
-    }
-  } else {
-    // Start with TweetResultByRestId
-    // console.log('Using TweetResultByRestId for primary request...');
-    // response = (await fetchByRestId(id, c)) as TweetResultByRestIdResponse;
-    response = (await fetchSingleStatus(id, c)) as TweetResultByRestIdResponse;
-
-    let result: GraphQLTwitterStatus | null = null;
-    result = getResultFromResponse(response);
-    // console.log('result', JSON.stringify(result));
-    // If TweetResultByRestId failed and we have TwitterProxy available, try TweetDetail as fallback
-    if (!result && typeof c.env?.TwitterProxy !== 'undefined') {
-      // console.log('TweetResultByRestId failed, falling back to TweetDetail...');
-      console.log('Single tweet fetch failed');
-      // response = (await fetchTweetDetail(c, id)) as TweetDetailResponse;
-      // triedTweetDetail = true;
-      // If both APIs failed, return 404
-      // if (!response?.data) {
-      writeDataPoint(c, language, null, '404');
-      return { status: null, thread: null, author: null, code: 404 };
-      // }
-    } else if (!result) {
-      // No fallback available or both failed
-      writeDataPoint(c, language, null, '404');
-      return { status: null, thread: null, author: null, code: 404 };
-    }
+  if (!response) {
+    writeDataPoint(c, language, null, '404');
+    return { status: null, thread: null, author: null, code: 404 };
   }
+
+  // Check if we got TweetDetail response (for thread processing)
+  const triedTweetDetail = !!(response as TweetDetailResponse)?.data
+    ?.threaded_conversation_with_injections_v2;
 
   if (response && response.data && !triedTweetDetail) {
     let result: GraphQLTwitterStatus | null = null;
@@ -603,6 +571,27 @@ export const constructTwitterThread = async (
     }
 
     status = buildStatus as APITwitterStatus;
+
+    // Check if article exists but lacks content blocks (TweetResultsByIds doesn't include full article data)
+    if (
+      status.article &&
+      (!status.article.content?.blocks || status.article.content.blocks.length === 0)
+    ) {
+      console.log('Article lacks content blocks, re-fetching with TweetResultByRestId...');
+      const articleResponse = await fetchByRestIds([id], c);
+      if (articleResponse?.data?.tweetResult?.[0]?.result) {
+        const rebuiltStatus = await buildAPITwitterStatus(
+          c,
+          articleResponse.data.tweetResult[0].result as GraphQLTwitterStatus,
+          language,
+          null,
+          legacyAPI
+        );
+        if (rebuiltStatus && !(rebuiltStatus as FetchResults)?.status) {
+          status = rebuiltStatus as APITwitterStatus;
+        }
+      }
+    }
 
     // If not processing thread, return single tweet
     if (!processThread) {

@@ -1,7 +1,12 @@
 {
   "translatedFrom": "Traducido del {language}",
+  "quotedFrom": "Citando a {name} (@{screen_name})",
   "replyingTo": "Respondiendo a @{screen_name}",
   "threadPartHeader": "Una parte del hilo de @{screen_name}",
+  "ivAuthorActionReply": "<a href=\"{statusUrl}\">Respuesta</a> de <b>{authorName}</b> (<a href=\"{authorUrl}\">@{authorScreenName}</a>):",
+  "ivAuthorActionOriginal": "<a href=\"{statusUrl}\">Original</a> de <b>{authorName}</b> (<a href=\"{authorUrl}\">@{authorScreenName}</a>):",
+  "ivAuthorActionFollowUp": "<a href=\"{statusUrl}\">Seguimiento</a> de <b>{authorName}</b> (<a href=\"{authorUrl}\">@{authorScreenName}</a>):",
+  "ivQuoteHeader": "<a href=\"{url}\">Citando</a> a {authorName} (<a href=\"{authorURL}\">@{authorHandle}</a>)",
   "photoCount": "Foto {number} / {total}",
   "videoCount": "Video {number} / {total}",
   "mediaCount": "Media {number} / {total}",
@@ -10,10 +15,15 @@
   "ivOriginalText": "Texto original",
   "ivViewOriginal": "Ver hilo completo",
   "ivAboutAuthor": "Acerca del autor",
+  "ivProfileFollowing": "{numFollowing, plural,\none {Siguiendo}\nother {Siguiendo}\n}",
+  "ivProfileFollowers": "{numFollowers, plural,\none {Seguidor}\nother {Seguidores}\n}",
+  "ivProfileStatuses": "{numStatuses, plural,\none {Publicación}\nother {Publicaciones}\n}",
   "ivProfilePictureAlt": "Imagen de perfil de {author}",
   "ivFallbackText": "Si puedes ver esto, tu navegador está haciendo algo extraño con tu agente de usuario.",
   "ivInternetArchiveText": "Archivo {brandingName}",
   "pollFinalResults": "Resultados finales",
+  "pollVotes": "{voteCount, plural,\none {# voto}\nother {# votos}\n} · {timeLeft}",
+  "ivPollChoice": "{voteCount, plural,\none {# voto}\nother {# votos}\n}, {percentage}%",
   "ivCommunityNoteHeader": "Los usuarios añadieron contexto que pensaban que la gente podría querer saber",
   "surveyHeader": "¿Fue útil?",
   "surveyYes": "Sí 😁",
@@ -47,5 +57,6 @@
   "language_uk": "ucraniano",
   "language_vi": "vietnamita",
   "language_zh-CN": "chino",
-  "language_zh-TW": "chino"
+  "language_zh-TW": "chino",
+  "threadIndicator": "🧵 Hilo • {brandingName}"
 }

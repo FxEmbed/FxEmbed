@@ -1,13 +1,13 @@
 import { Constants } from '../constants';
 import { DataProvider } from '../enum';
-import { APIStatus, APITwitterStatus } from '../types/types';
+import { APIStatus, APITikTokStatus, APITwitterStatus } from '../types/types';
 import { formatNumber } from './utils';
 
 export const getSocialProof = (status: APIStatus): string | null => {
   let views = 0;
 
-  if (status.provider === DataProvider.Twitter) {
-    views = (status as APITwitterStatus).views || 0;
+  if (status.provider === DataProvider.Twitter || status.provider === DataProvider.TikTok) {
+    views = (status as APITwitterStatus | APITikTokStatus).views || 0;
   }
   /* Build out reply, repost, like counts */
   if (status.likes > 0 || status.reposts > 0 || status.replies > 0 || (views ? views > 0 : false)) {
@@ -35,8 +35,8 @@ export const getSocialProof = (status: APIStatus): string | null => {
 export const getActivitySocialProof = (status: APIStatus): string | null => {
   let views = 0;
 
-  if (status.provider === DataProvider.Twitter) {
-    views = (status as APITwitterStatus).views || 0;
+  if (status.provider === DataProvider.Twitter || status.provider === DataProvider.TikTok) {
+    views = (status as APITwitterStatus | APITikTokStatus).views || 0;
   }
   /* Build out reply, repost, like counts */
   if (status.likes > 0 || status.reposts > 0 || status.replies > 0 || (views ? views > 0 : false)) {

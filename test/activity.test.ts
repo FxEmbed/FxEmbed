@@ -1,7 +1,7 @@
 import { ActivityStatus } from '../src/types/types';
 import { app } from '../src/worker';
 import { expect, test } from 'vitest';
-import envWrapper from './helpers/env-wrapper';
+import harness from './helpers/harness';
 import { botHeaders, twitterBaseUrl } from './helpers/data';
 
 test('Status activity basic status', async () => {
@@ -11,7 +11,7 @@ test('Status activity basic status', async () => {
       headers: botHeaders
     }),
     undefined,
-    envWrapper
+    harness
   );
   expect(result.status).toEqual(200);
   const response = (await result.json()) as ActivityStatus;
@@ -64,7 +64,7 @@ test('Status activity video status', async () => {
       }
     ),
     undefined,
-    envWrapper
+    harness
   );
   expect(result.status).toEqual(200);
   const response = (await result.json()) as ActivityStatus;
@@ -114,7 +114,7 @@ test('Status activity mosaic status', async () => {
       }
     ),
     undefined,
-    envWrapper
+    harness
   );
   expect(result.status).toEqual(200);
   const response = (await result.json()) as ActivityStatus;
@@ -154,7 +154,7 @@ test('Status activity native multi-image status', async () => {
       }
     ),
     undefined,
-    envWrapper
+    harness
   );
   expect(result.status).toEqual(200);
   const response = (await result.json()) as ActivityStatus;
@@ -202,7 +202,7 @@ test('Status activity select image 1', async () => {
       }
     ),
     undefined,
-    envWrapper
+    harness
   );
   expect(result.status).toEqual(200);
   const response = (await result.json()) as ActivityStatus;
@@ -242,7 +242,7 @@ test('Status activity select non-existing image', async () => {
       }
     ),
     undefined,
-    envWrapper
+    harness
   );
   expect(result.status).toEqual(200);
   const response = (await result.json()) as ActivityStatus;
@@ -290,7 +290,7 @@ test('Status activity poll', async () => {
       }
     ),
     undefined,
-    envWrapper
+    harness
   );
   expect(result.status).toEqual(200);
   const response = (await result.json()) as ActivityStatus;
@@ -327,7 +327,7 @@ test('Status activity quote and video', async () => {
       }
     ),
     undefined,
-    envWrapper
+    harness
   );
   expect(result.status).toEqual(200);
   const response = (await result.json()) as ActivityStatus;

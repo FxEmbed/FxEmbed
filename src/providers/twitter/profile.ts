@@ -2,9 +2,13 @@ import { Context } from 'hono';
 import { Constants } from '../../constants';
 import { linkFixer } from '../../helpers/linkFixer';
 import { APIUser, UserAPIResponse } from '../../types/types';
-import { UserByScreenNameQuery, UserResultByScreenNameQuery } from './graphql/queries';
-import { graphqlRequest } from './graphql/request';
-import { tryBalancedEndpoints, BalancedEndpoint } from '../../helpers/endpointBalancing';
+import {
+  UserByScreenNameQuery,
+  UserResultByScreenNameQuery,
+  AboutAccountQuery
+} from './graphql/queries';
+import { validateAboutAccountQuery } from './graphql/validators';
+import { graphQLOrchestrator } from './graphql/orchestrator';
 
 export const convertToApiUser = (user: GraphQLUser, legacyAPI = false): APIUser => {
   const apiUser = {} as APIUser;
@@ -69,6 +73,10 @@ export const convertToApiUser = (user: GraphQLUser, legacyAPI = false): APIUser 
         Number(user.verification_info.verified_since_msec)
       ).toISOString();
     }
+    /* TODO: figure out why one of the user endpoints doesn't have this  */
+    if (user.verification_info?.is_identity_verified !== undefined) {
+      // apiUser.verification.identity_verified = user.verification_info.is_identity_verified;
+    }
   } else {
     apiUser.verification = {
       verified: false,
@@ -78,6 +86,53 @@ export const convertToApiUser = (user: GraphQLUser, legacyAPI = false): APIUser 
   }
 
   return apiUser;
+};
+
+/**
+ * Merges AboutAccountQuery data into an APIUser object
+ */
+export const mergeAboutAccountData = (
+  user: APIUser,
+  aboutAccount: AboutAccountQueryResponse
+): APIUser => {
+  const result = aboutAccount?.data?.user_result_by_screen_name?.result;
+
+  if (!result) {
+    return user;
+  }
+
+  if (result.about_profile) {
+    user.about_account = user.about_account ?? ({} as APIUser['about_account']);
+
+    if (result.about_profile?.account_based_in) {
+      user.about_account!.based_in = result.about_profile.account_based_in;
+    }
+
+    if (result.about_profile?.location_accurate) {
+      user.about_account!.location_accurate = result.about_profile.location_accurate;
+    }
+
+    if (result.about_profile?.created_country_accurate) {
+      user.about_account!.created_country_accurate = result.about_profile.created_country_accurate;
+    }
+
+    if (result.about_profile?.source) {
+      user.about_account!.source = result.about_profile.source;
+    }
+
+    // Merge username_changes
+    if (result.about_profile?.username_changes) {
+      const usernameChanges = result.about_profile.username_changes;
+      user.about_account!.username_changes = {
+        count: parseInt(usernameChanges.count || '0', 10),
+        last_changed_at: usernameChanges.last_changed_at_msec
+          ? new Date(Number(usernameChanges.last_changed_at_msec)).toISOString()
+          : null
+      };
+    }
+  }
+
+  return user;
 };
 
 /* This function does the heavy lifting of processing data from Twitter API
@@ -96,59 +151,73 @@ const populateUserProperties = async (
   return null;
 };
 
-const fetchByScreenName = async (c: Context, screenName: string): Promise<GraphQLUserResponse> => {
-  return (await graphqlRequest(c, {
-    query: UserByScreenNameQuery,
-    variables: { screen_name: screenName },
-    validator: (response: unknown) => {
-      const userResponse = response as GraphQLUserResponse;
-      const result = userResponse?.data?.user?.result;
-      return Boolean(result && (result.__typename === 'User' || result.rest_id || result.core));
-    }
-  })) as GraphQLUserResponse;
-};
-
-const fetchResultByScreenName = async (
+/**
+ * Fetches user data with AboutAccountQuery in parallel using graphQLOrchestrator
+ * Uses weighted endpoint methods for rate limit leveling on user endpoints
+ */
+const fetchUserWithAboutAccount = async (
   c: Context,
   screenName: string
-): Promise<UserResultByScreenNameResponse> => {
-  return (await graphqlRequest(c, {
-    query: UserResultByScreenNameQuery,
-    variables: { screen_name: screenName },
-    validator: (response: unknown) => {
-      const userResponse = response as UserResultByScreenNameResponse;
-      const result = userResponse?.data?.user_results?.result;
-      return Boolean(result && result.__typename === 'User' && (result.legacy || result.rest_id));
-    }
-  })) as UserResultByScreenNameResponse;
-};
-
-const fetchUserBalanced = async (
-  c: Context,
-  screenName: string
-): Promise<GraphQLUserResponse | UserResultByScreenNameResponse | null> => {
-  const endpoints: BalancedEndpoint<GraphQLUserResponse | UserResultByScreenNameResponse>[] = [
+): Promise<{
+  userResponse: GraphQLUserResponse | UserResultByScreenNameResponse | null;
+  aboutAccountResponse: AboutAccountQueryResponse | null;
+}> => {
+  // Use orchestrator to run requests in parallel with endpoint methods
+  const results = await graphQLOrchestrator(c, [
     {
-      name: 'UserByScreenName',
-      weight: 150,
-      handler: () => fetchByScreenName(c, screenName),
-      resultCheck: (response: GraphQLUserResponse | UserResultByScreenNameResponse) => {
-        const result = (response as GraphQLUserResponse)?.data?.user?.result;
-        return Boolean(result && (result.__typename === 'User' || result.rest_id || result.core));
-      }
+      key: 'user',
+      methods: [
+        {
+          name: 'UserByScreenName',
+          query: UserByScreenNameQuery,
+          weight: 150,
+          validator: (response: unknown) => {
+            const userResponse = response as GraphQLUserResponse;
+            const result = userResponse?.data?.user?.result;
+            return Boolean(
+              result && (result.__typename === 'User' || result.rest_id || result.core)
+            );
+          }
+        },
+        {
+          name: 'UserResultByScreenName',
+          query: UserResultByScreenNameQuery,
+          weight: 500,
+          validator: (response: unknown) => {
+            const userResponse = response as UserResultByScreenNameResponse;
+            const result = userResponse?.data?.user_results?.result;
+            return Boolean(
+              result && result.__typename === 'User' && (result.legacy || result.rest_id)
+            );
+          }
+        }
+      ],
+      variables: { screen_name: screenName },
+      required: true
     },
     {
-      name: 'UserResultByScreenName',
-      weight: 500,
-      handler: () => fetchResultByScreenName(c, screenName),
-      resultCheck: (response: GraphQLUserResponse | UserResultByScreenNameResponse) => {
-        const result = (response as UserResultByScreenNameResponse)?.data?.user_results?.result;
-        return Boolean(result && result.__typename === 'User' && (result.legacy || result.rest_id));
-      }
+      key: 'aboutAccount',
+      query: AboutAccountQuery,
+      variables: { screenName },
+      validator: validateAboutAccountQuery,
+      required: false // Supplementary request - failure is OK
     }
-  ];
+  ]);
 
-  return tryBalancedEndpoints(endpoints);
+  // Extract user response
+  const userData = results.user?.success
+    ? (results.user.data as GraphQLUserResponse | UserResultByScreenNameResponse)
+    : null;
+
+  // Extract about account response
+  const aboutAccountData = results.aboutAccount?.success
+    ? (results.aboutAccount.data as AboutAccountQueryResponse)
+    : null;
+
+  return {
+    userResponse: userData,
+    aboutAccountResponse: aboutAccountData
+  };
 };
 
 /* API for Twitter profiles (Users)
@@ -158,16 +227,24 @@ export const userAPI = async (
   c: Context
   // flags?: InputFlags
 ): Promise<UserAPIResponse> => {
-  const userResponse = await fetchUserBalanced(c, username);
+  // Fetch user data and AboutAccountQuery in parallel
+  const { userResponse, aboutAccountResponse } = await fetchUserWithAboutAccount(c, username);
+
   if (!userResponse || !Object.keys(userResponse).length) {
     return {
       code: 404,
       message: 'User not found'
     };
   }
+
   /* Creating the response objects */
   const response: UserAPIResponse = { code: 200, message: 'OK' } as UserAPIResponse;
-  const apiUser: APIUser = (await populateUserProperties(userResponse, true)) as APIUser;
+  let apiUser: APIUser = (await populateUserProperties(userResponse, true)) as APIUser;
+
+  /* Merge AboutAccountQuery data if available */
+  if (aboutAccountResponse) {
+    apiUser = mergeAboutAccountData(apiUser, aboutAccountResponse);
+  }
 
   /* Finally, staple the User to the response and return it */
   response.user = apiUser;

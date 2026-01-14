@@ -10,6 +10,7 @@ export default defineConfig({
     FORCE_MOSAIC_DOMAINS: JSON.stringify('m.fxtwitter.com,m.twittpr.com,m.fixupx.com'),
     OLD_EMBED_DOMAINS: JSON.stringify('o.fxtwitter.com,o.twittpr.com,o.fixupx.com'),
     STANDARD_DOMAIN_LIST: JSON.stringify('fxtwitter.com,fixupx.com,twittpr.com'),
+    STANDARD_TIKTOK_DOMAIN_LIST: JSON.stringify('dxtiktok.com,cocktiktok.com'),
     STANDARD_BSKY_DOMAIN_LIST: JSON.stringify('fxbsky.app'),
     DIRECT_MEDIA_DOMAINS: JSON.stringify(
       'd.fxtwitter.com,dl.fxtwitter.com,d.fixupx.com,dl.fixupx.com'

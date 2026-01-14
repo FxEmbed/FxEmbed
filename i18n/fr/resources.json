@@ -57,5 +57,6 @@
   "language_uk": "Ukrainien",
   "language_vi": "Vietnamien",
   "language_zh-CN": "Chinois",
-  "language_zh-TW": "Chinois"
+  "language_zh-TW": "Chinois",
+  "threadIndicator": "🧵 Thread • {brandingName}"
 }

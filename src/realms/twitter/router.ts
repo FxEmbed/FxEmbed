@@ -50,37 +50,40 @@ const _profileRequest = async (c: Context) => await profileRequest(c);
 
 twitter.use(trimTrailingSlash());
 twitter.get('/api/v1/statuses/:id', activityRequest);
-twitter.get('/:endpoint{status(es)?}/:id', twitterStatusRequest);
-twitter.get('/:endpoint{status(es)?}/:id/:language', twitterStatusRequest);
-twitter.get('/i/web/:endpoint{status(es)?}/:id', twitterStatusRequest);
-twitter.get('/i/web/:endpoint{status(es)?}/:id/:language', twitterStatusRequest);
-twitter.get('/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?}/:id/:language', twitterStatusRequest);
-twitter.get('/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?}/:id', twitterStatusRequest);
+twitter.get('/:endpoint{status(es)?|article}/:id', twitterStatusRequest);
+twitter.get('/:endpoint{status(es)?|article}/:id/:language', twitterStatusRequest);
+twitter.get('/i/web/:endpoint{status(es)?|article}/:id', twitterStatusRequest);
+twitter.get('/i/web/:endpoint{status(es)?|article}/:id/:language', twitterStatusRequest);
 twitter.get(
-  '/:prefix{(dir|dl)}/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?}/:id/:language',
+  '/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?|article}/:id/:language',
+  twitterStatusRequest
+);
+twitter.get('/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?|article}/:id', twitterStatusRequest);
+twitter.get(
+  '/:prefix{(dir|dl)}/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?|article}/:id/:language',
   twitterStatusRequest
 );
 twitter.get(
-  '/:prefix{(dir|dl)}/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?}/:id',
+  '/:prefix{(dir|dl)}/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?|article}/:id',
   twitterStatusRequest
 );
 twitter.get(
-  '/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?}/:id/:mediaType{(photos?|videos?)}/:mediaNumber{[1-4]}',
+  '/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?|article}/:id/:mediaType{(photos?|videos?)}/:mediaNumber{[1-4]}',
   twitterStatusRequest
 );
 twitter.get(
-  '/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?}/:id/:mediaType{(photos?|videos?)}/:mediaNumber{[1-4]}/:language',
+  '/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?|article}/:id/:mediaType{(photos?|videos?)}/:mediaNumber{[1-4]}/:language',
   twitterStatusRequest
 );
 twitter.get(
-  '/:prefix{(dir|dl)}/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?}/:id/:mediaType{(photos?|videos?)}/:mediaNumber{[1-4]}',
+  '/:prefix{(dir|dl)}/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?|article}/:id/:mediaType{(photos?|videos?)}/:mediaNumber{[1-4]}',
   twitterStatusRequest
 );
 twitter.get(
-  '/:prefix{(dir|dl)}/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?}/:id/:mediaType{(photos?|videos?)}/:mediaNumber{[1-4]}/:language',
+  '/:prefix{(dir|dl)}/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?|article}/:id/:mediaType{(photos?|videos?)}/:mediaNumber{[1-4]}/:language',
   twitterStatusRequest
 );
-twitter.get('/:handle/:endpoint{status(es)?}/:id/*', twitterStatusRequest);
+twitter.get('/:handle/:endpoint{status(es)?|article}/:id/*', twitterStatusRequest);
 
 twitter.get('/version', c => versionRoute(c));
 twitter.get('/set_base_redirect', setRedirectRequest);

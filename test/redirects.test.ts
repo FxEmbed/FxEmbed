@@ -1,6 +1,6 @@
 import { test, expect } from 'vitest';
 import { app } from '../src/worker';
-import envWrapper from './helpers/env-wrapper';
+import harness from './helpers/harness';
 import { botHeaders, githubUrl, humanHeaders, twitterBaseUrl } from './helpers/data';
 
 test('Home page redirect', async () => {
@@ -10,7 +10,7 @@ test('Home page redirect', async () => {
       headers: botHeaders
     }),
     undefined,
-    envWrapper
+    harness
   );
   const resultHuman = await app.request(
     new Request('https://fxtwitter.com', {
@@ -18,7 +18,7 @@ test('Home page redirect', async () => {
       headers: humanHeaders
     }),
     undefined,
-    envWrapper
+    harness
   );
   expect(result.status).toEqual(302);
   expect(result.headers.get('location')).toEqual(githubUrl);
@@ -33,7 +33,7 @@ test('Status redirect human', async () => {
       headers: humanHeaders
     }),
     undefined,
-    envWrapper
+    harness
   );
   expect(result.status).toEqual(302);
   expect(result.headers.get('location')).toEqual('https://x.com/jack/status/20');
@@ -46,7 +46,7 @@ test('Status redirect human trailing slash', async () => {
       headers: humanHeaders
     }),
     undefined,
-    envWrapper
+    harness
   );
   expect(result.status).toEqual(302);
   expect(result.headers.get('location')).toEqual('https://x.com/jack/status/20');
@@ -62,7 +62,7 @@ test('Status redirect human custom base redirect', async () => {
       }
     }),
     undefined,
-    envWrapper
+    harness
   );
   expect(result.status).toEqual(302);
   expect(result.headers.get('location')).toEqual('https://nitter.net/jack/status/20');
@@ -78,7 +78,7 @@ test('Twitter moment redirect', async () => {
       }
     ),
     undefined,
-    envWrapper
+    harness
   );
   expect(result.status).toEqual(302);
   expect(result.headers.get('location')).toEqual(`${twitterBaseUrl}/i/events/1572638642127966214`);

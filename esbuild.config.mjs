@@ -10,6 +10,9 @@ config();
 // check if no-sentry-upload command line argument is set
 const noSentryUpload = process.argv.includes('--no-sentry-upload');
 
+// check if we're in wrangler dev mode (wrangler sets WRANGLER_COMMAND=dev)
+const isWranglerDev = process.env.WRANGLER_COMMAND === 'dev';
+
 const gitCommit = execSync('git rev-parse --short HEAD').toString().trim();
 const gitUrl = execSync('git remote get-url origin').toString().trim();
 const gitBranch = execSync('git rev-parse --abbrev-ref HEAD')
@@ -37,6 +40,7 @@ const releaseName = `${workerName}-${gitBranch}-${gitCommit}-${new Date()
 let envVariables = [
   'STANDARD_DOMAIN_LIST',
   'STANDARD_BSKY_DOMAIN_LIST',
+  'STANDARD_TIKTOK_DOMAIN_LIST',
   'DIRECT_MEDIA_DOMAINS',
   'TEXT_ONLY_DOMAINS',
   'INSTANT_VIEW_DOMAINS',
@@ -62,7 +66,7 @@ defines['RELEASE_NAME'] = `"${releaseName}"`;
 
 const plugins = [];
 
-if (process.env.SENTRY_DSN && !noSentryUpload) {
+if (process.env.SENTRY_DSN && !noSentryUpload && !isWranglerDev) {
   plugins.push(
     sentryEsbuildPlugin({
       org: process.env.SENTRY_ORG,

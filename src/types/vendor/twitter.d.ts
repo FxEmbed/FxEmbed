@@ -51,7 +51,7 @@ type TweetMediaSize = {
   resize: 'crop' | 'fit';
 };
 
-type TweetMediaFormat = {
+type TweetMediaVariant = {
   bitrate: number;
   content_type: string;
   url: string;
@@ -89,7 +89,7 @@ type TweetMedia = {
   video_info?: {
     aspect_ratio: [number, number];
     duration_millis: number;
-    variants: TweetMediaFormat[];
+    variants: TweetMediaVariant[];
   };
 };
 
@@ -588,6 +588,11 @@ type GraphQLTwitterStatus = {
       };
     };
   };
+  article?: {
+    article_results?: {
+      result?: TwitterArticleEntity;
+    };
+  };
 };
 
 type GraphQLTwitterCard = {
@@ -804,3 +809,158 @@ interface GraphQLProcessBucket {
   allStatuses: GraphQLTwitterStatus[];
   cursors: GraphQLTimelineCursor[];
 }
+
+interface AboutAccountQueryResponse {
+  data?: {
+    user_result_by_screen_name?: {
+      result?: {
+        about_profile?: {
+          created_country_accurate?: boolean;
+          account_based_in?: string;
+          location_accurate?: boolean;
+          source?: string;
+          username_changes?: {
+            count?: string; // returned as string for some reason
+            last_changed_at_msec?: string;
+          };
+        };
+      };
+    };
+  };
+}
+
+export type TwitterArticleEntity = {
+  rest_id: string;
+  id: string;
+  title: string;
+  preview_text: string;
+  cover_media?: TwitterApiMedia; // Twitter API be consistent challenge (impossible)
+  cover_media_results?: TwitterApiMedia;
+  content_state?: TwitterArticleContentState;
+  media_entities: TwitterApiMedia[];
+  lifecycle_state?: {
+    modified_at_secs: number;
+  };
+  metadata?: {
+    first_published_at_secs: number;
+  };
+};
+
+export type TwitterApiMedia = {
+  id: string;
+  media_key: string;
+  media_id: string;
+  media_info: TwitterApiImage | TwitterApiVideo;
+};
+
+export type TwitterApiImage = {
+  __typename: 'ApiImage';
+  original_img_height: number;
+  original_img_width: number;
+  original_img_url: string;
+  color_info: {
+    palette: Array<{
+      percentage: number;
+      rgb: { red: number; green: number; blue: number };
+    }>;
+  };
+};
+
+export type TwitterApiVideo = {
+  __typename: 'ApiVideo' | 'ApiGif';
+  type: 'video' | 'animated_gif';
+  id: string;
+  id_str: string;
+  ext_alt_text: string | null;
+  ext_media_color: {
+    palette: Array<{
+      percentage: number;
+      rgb: { red: number; green: number; blue: number };
+    }>;
+  };
+  media_url: string;
+  media_url_https: string;
+  url: string;
+  display_url: string;
+  expanded_url: string;
+  original_info: {
+    height: number;
+    width: number;
+  };
+  sizes: {
+    original: {
+      h: number;
+      resize: 'fit';
+      w: number;
+    };
+  };
+  video_info: {
+    aspect_ratio: [number, number];
+    duration_millis: number;
+    variants: {
+      bitrate: number;
+      content_type: string;
+      url: string;
+    }[];
+  };
+};
+
+export type TwitterArticleContentState = {
+  blocks: TwitterArticleContentBlock[];
+  entityMap: TwitterArticleEntityMapEntry[];
+};
+
+export type TwitterArticleContentBlock = {
+  key: string;
+  data: Record<string, unknown>;
+  entityRanges: Array<{
+    key: number;
+    length: number;
+    offset: number;
+  }>;
+  inlineStyleRanges: Array<{
+    length: number;
+    offset: number;
+    style: string; // e.g. "Bold", "Italic"
+  }>;
+  text: string;
+  type: string; // e.g. "header-one", "unstyled", "ordered-list-item", "atomic"
+};
+
+type TwitterArticleEntityMapEntry =
+  | {
+      key: string;
+      value: {
+        type: 'MARKDOWN';
+        mutability: 'Mutable';
+        data: {
+          entityKey: string;
+          markdown: string;
+        };
+      };
+    }
+  | {
+      key: string;
+      value: {
+        type: 'MEDIA';
+        mutability: 'Immutable';
+        data: {
+          entityKey: string;
+          mediaItems: Array<{
+            localMediaId: string;
+            mediaCategory: string;
+            mediaId: string;
+          }>;
+        };
+      };
+    }
+  | {
+      key: string;
+      value: {
+        type: 'TWEET';
+        mutability: 'Immutable';
+        data: {
+          tweetId: string;
+        };
+      };
+    };

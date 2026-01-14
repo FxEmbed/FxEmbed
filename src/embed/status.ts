@@ -29,6 +29,44 @@ import {
 } from '../types/types';
 import { shouldTranscodeGif } from '../helpers/giftranscode';
 import { normalizeLanguage } from '../helpers/language';
+import { constructTikTokVideo } from '../providers/tiktok/conversation';
+import { TwitterApiImage } from '../types/vendor/twitter';
+
+/**
+ * Check if the tweet text is essentially just an article URL with no meaningful additional content.
+ * Returns true if we should use the article as the main preview.
+ */
+const isArticleOnlyTweet = (status: APITwitterStatus): boolean => {
+  if (!status.article) {
+    return false;
+  }
+
+  // Get the raw text, trimmed
+  const text = status.text.trim();
+
+  // Check if text is empty or just whitespace
+  if (!text) {
+    return true;
+  }
+
+  // Article URLs look like: https://x.com/i/article/<id> or https://twitter.com/i/article/<id>
+  // Also check for t.co shortened links
+  const articleUrlPattern = /^https?:\/\/(x\.com|twitter\.com)\/i\/article\/\d+\/?$/;
+  const tcoPattern = /^https?:\/\/t\.co\/\w+$/;
+
+  // If text is just the article URL or a t.co link, treat as article-only
+  if (articleUrlPattern.test(text) || tcoPattern.test(text)) {
+    return true;
+  }
+
+  // Check if the text is just the article title (sometimes people just tweet the title)
+  if (text === status.article.title) {
+    return true;
+  }
+
+  return false;
+};
+
 export const returnError = (c: Context, error: string): Response => {
   const branding = getBranding(c);
   return c.html(
@@ -107,6 +145,11 @@ export const handleStatus = async (
       c,
       useActivity ? undefined : useLanguage
     );
+  } else if (provider === DataProvider.TikTok) {
+    // Get proxy base URL from the current request for TikTok video proxy
+    const requestUrl = new URL(c.req.url);
+    const proxyBase = `${requestUrl.protocol}//${requestUrl.host}`;
+    thread = await constructTikTokVideo(statusId, proxyBase, userAgent);
   } else {
     return returnError(c, Strings.ERROR_API_FAIL);
   }
@@ -195,6 +238,7 @@ export const handleStatus = async (
         status.media?.mosaic ||
         status.quote ||
         flags?.forceInstantView ||
+        (status as APITwitterStatus)?.article ||
         (thread?.thread?.length ?? 0) > 1
       );
   }
@@ -243,9 +287,11 @@ export const handleStatus = async (
         redirectUrl = (selectedMedia as APIPhoto).transcode_url ?? redirectUrl;
       }
 
+      // Apply video redirect workaround, but NOT for TikTok (needs its own proxy)
       if (
         selectedMedia?.type === 'video' &&
-        experimentCheck(Experiment.VIDEO_REDIRECT_WORKAROUND, !!Constants.API_HOST_LIST)
+        experimentCheck(Experiment.VIDEO_REDIRECT_WORKAROUND, !!Constants.API_HOST_LIST) &&
+        status.provider !== DataProvider.TikTok
       ) {
         redirectUrl = `https://${Constants.API_HOST_LIST[0]}/2/go?url=${encodeURIComponent(redirectUrl)}`;
       }
@@ -271,7 +317,9 @@ export const handleStatus = async (
   const originalSiteName = getBranding(c).name;
   let siteName = originalSiteName;
 
-  if (thread.thread && thread.thread.length > 1 && isTelegram && useIV) {
+  if ((status as APITwitterStatus).article && isTelegram && useIV) {
+    siteName = i18next.t('articleIndicator', { brandingName: siteName });
+  } else if (thread.thread && thread.thread.length > 1 && isTelegram && useIV) {
     siteName = i18next.t('threadIndicator', { brandingName: siteName });
   }
 
@@ -534,8 +582,13 @@ export const handleStatus = async (
   }
 
   const avatar = status.author.avatar_url;
+  const twitterStatus = status as APITwitterStatus;
 
-  /* If we have no media to display, instead we'll display the user profile picture in the embed */
+  // Check if this is an article-only tweet (text is just the article URL)
+  const articleOnly = twitterStatus.article && isArticleOnlyTweet(twitterStatus);
+
+  /* If we have no media to display, instead we'll display the user profile picture in the embed,
+     OR if this is an article-only tweet, use the article cover image */
   if (
     !status.media?.videos &&
     !status.media?.photos &&
@@ -543,14 +596,29 @@ export const handleStatus = async (
     !status.quote?.media?.videos &&
     !flags?.textOnly
   ) {
-    /* Use a slightly higher resolution image for profile pics */
-    if (!useIV) {
+    // Check if we have an article with cover media to use instead
+    if (articleOnly && twitterStatus.article?.cover_media?.media_info?.__typename === 'ApiImage') {
+      const coverImage = twitterStatus.article.cover_media.media_info as TwitterApiImage;
       headers.push(
-        `<meta property="og:image" content="${avatar}"/>`,
-        `<meta property="twitter:image" content="0"/>`
+        `<meta property="og:image" content="${coverImage.original_img_url}"/>`,
+        `<meta property="og:image:width" content="${coverImage.original_img_width}"/>`,
+        `<meta property="og:image:height" content="${coverImage.original_img_height}"/>`
       );
+      if (!useIV) {
+        headers.push(`<meta property="twitter:image" content="0"/>`);
+      }
+      // Update embed card type to show large image
+      status.embed_card = 'summary_large_image';
     } else {
-      headers.push(`<meta property="twitter:image" content="${avatar}"/>`);
+      /* Use a slightly higher resolution image for profile pics */
+      if (!useIV) {
+        headers.push(
+          `<meta property="og:image" content="${avatar}"/>`,
+          `<meta property="twitter:image" content="0"/>`
+        );
+      } else {
+        headers.push(`<meta property="twitter:image" content="${avatar}"/>`);
+      }
     }
   }
 
@@ -564,7 +632,14 @@ export const handleStatus = async (
      
      A possible explanation for this weird behavior is due to the Medium template we are forced to use because Telegram IV is not an open platform
      and we have to pretend to be Medium in order to get working IV, but haven't figured if the template is causing issues.  */
-  const text = useIV ? sanitizeText(newText).replace(/\n/g, '<br>') : sanitizeText(newText);
+  let text = useIV ? sanitizeText(newText).replace(/\n/g, '<br>') : sanitizeText(newText);
+
+  // For article-only tweets, use article title and preview text
+  let ogTitle = `${status.author.name} (@${status.author.screen_name})`;
+  if (articleOnly && twitterStatus.article && isTelegram) {
+    ogTitle = sanitizeText(twitterStatus.article.title);
+    text = sanitizeText(twitterStatus.article.preview_text);
+  }
 
   const useCard = status.embed_card === 'tweet' ? status.quote?.embed_card : status.embed_card;
 
@@ -573,7 +648,7 @@ export const handleStatus = async (
   /* Push basic headers relating to author, Tweet text, and site name */
   if (!flags.gallery) {
     headers.push(
-      `<meta property="og:title" content="${status.author.name} (@${status.author.screen_name})"/>`,
+      `<meta property="og:title" content="${ogTitle}"/>`,
       `<meta property="og:description" content="${text}"/>`
     );
     if (!useActivity) {
@@ -681,11 +756,18 @@ export const handleStatus = async (
     }
     const snowflake = encodeSnowcode(data);
     console.log('snowflake', snowflake);
-    /* Convince Discord that you are actually a Mastodon link lol */
-    let base =
-      status.provider === DataProvider.Bsky
-        ? Constants.STANDARD_BSKY_DOMAIN_LIST[0]
-        : Constants.STANDARD_DOMAIN_LIST[0];
+    let base: string;
+    switch (status.provider) {
+      case DataProvider.Bsky:
+        base = Constants.STANDARD_BSKY_DOMAIN_LIST[0];
+        break;
+      case DataProvider.TikTok:
+        base = Constants.STANDARD_TIKTOK_DOMAIN_LIST[0];
+        break;
+      default:
+        base = Constants.STANDARD_DOMAIN_LIST[0];
+        break;
+    }
 
     try {
       base = new URL(c.req.url).hostname;
@@ -693,6 +775,7 @@ export const handleStatus = async (
       console.log('couldnt parse hostname for some reason', e);
     }
 
+    /* Convince Discord that you are actually a Mastodon link lol */
     headers.push(
       `<link href='{base}/users/{author}/statuses/{status}' rel='alternate' type='application/activity+json'>`.format(
         {

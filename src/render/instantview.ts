@@ -2,9 +2,10 @@
 import i18next from 'i18next';
 import { Constants } from '../constants';
 import { getSocialTextIV } from '../helpers/socialproof';
-import { sanitizeText } from '../helpers/utils';
+import { sanitizeText, wrapForeignLinks as wrapForeignLinksUtil } from '../helpers/utils';
 import { DataProvider } from '../enum';
 import { getBranding } from '../helpers/branding';
+import { renderArticleToHtml } from '../helpers/article';
 import {
   APIPhoto,
   APIPoll,
@@ -14,6 +15,35 @@ import {
   RenderProperties,
   ResponseInstructions
 } from '../types/types';
+
+/**
+ * Check if the tweet text is essentially just an article URL with no meaningful additional content.
+ */
+const isArticleOnlyTweet = (status: APITwitterStatus): boolean => {
+  if (!status.article) {
+    return false;
+  }
+
+  const text = status.text.trim();
+
+  if (!text) {
+    return true;
+  }
+
+  // Article URLs look like: https://x.com/i/article/<id>
+  const articleUrlPattern = /^https?:\/\/(x\.com|twitter\.com)\/i\/article\/\d+\/?$/;
+  const tcoPattern = /^https?:\/\/t\.co\/\w+$/;
+
+  if (articleUrlPattern.test(text) || tcoPattern.test(text)) {
+    return true;
+  }
+
+  if (text === status.article.title) {
+    return true;
+  }
+
+  return false;
+};
 
 enum AuthorActionType {
   Reply = 'Reply',
@@ -179,21 +209,7 @@ const generateInlineAuthorHeader = (
 };
 
 const wrapForeignLinks = (url: string) => {
-  let unwrap = false;
-  const whitelistedDomains = ['twitter.com', 'x.com', 't.me', 'telegram.me', 'bsky.app'];
-  try {
-    const urlObj = new URL(url);
-
-    if (!whitelistedDomains.includes(urlObj.hostname)) {
-      unwrap = true;
-    }
-  } catch (_e) {
-    unwrap = true;
-  }
-
-  return unwrap
-    ? `https://${Constants.API_HOST_LIST[0]}/2/hit?url=${encodeURIComponent(url)}`
-    : url;
+  return wrapForeignLinksUtil(url, Constants.API_HOST_LIST[0]);
 };
 
 const generateStatusFooter = (
@@ -213,6 +229,7 @@ const generateStatusFooter = (
     <p>{socialText}</p>
     <br>{viewOriginal}
     <!-- Embed profile picture, display name, and screen name in table -->
+    <hr/>
     {aboutSection}
     `.format({
     socialText: getSocialTextIV(status as APITwitterStatus) || '',
@@ -312,15 +329,47 @@ const generateStatus = (
   isQuote = false,
   authorActionType: AuthorActionType | null
 ): string => {
+  const twitterStatus = status as APITwitterStatus;
+
+  // Check if this is a Twitter article
+  let articleHtml = '';
+  let articleCoverMedia = '';
+  if (twitterStatus.article) {
+    const articleResult = renderArticleToHtml(twitterStatus.article.content, {
+      maxLength: undefined, // No limit for Telegram
+      fullRenderer: true, // Render inline media for Telegram
+      mediaEntities: twitterStatus.article.media_entities,
+      apiHost: Constants.API_HOST_LIST[0] // For wrapping foreign links
+    });
+
+    // Render cover media if available
+    if (twitterStatus.article.cover_media) {
+      const coverMedia = twitterStatus.article.cover_media;
+      if (coverMedia.media_info.__typename === 'ApiImage') {
+        const image = coverMedia.media_info;
+        articleCoverMedia = `<img src="${image.original_img_url}" alt="${twitterStatus.article.title}" />`;
+      }
+    }
+
+    // Build article HTML (title is already in the main h1 header for Telegram)
+    articleHtml = `
+    ${articleCoverMedia}
+    ${articleResult.html}
+    <hr/>
+    `;
+  }
+
   let text = paragraphify(sanitizeText(status.text), isQuote);
   text = htmlifyLinks(text);
   text = htmlifyHashtags(text, status);
   text = populateUserLinks(text, status);
 
-  const translatedText = getTranslatedText(status as APITwitterStatus, isQuote);
+  const translatedText = getTranslatedText(twitterStatus, isQuote);
 
   return `<!-- Telegram Instant View -->
   {quoteHeader}
+  <!-- Embed article (if applicable) -->
+  ${articleHtml || notApplicableComment}
   <!-- Embed media -->
   ${generateStatusMedia(status)} 
   <!-- Translated text (if applicable) -->
@@ -330,7 +379,7 @@ const generateStatus = (
   <!-- Embed Status text -->
   ${text}
   <!-- Embed Community Note -->
-  ${generateCommunityNote(status as APITwitterStatus)}
+  ${generateCommunityNote(twitterStatus)}
   <!-- Embed poll -->
   ${status.poll ? generatePoll(status.poll, status.lang ?? 'en') : notApplicableComment}
   <!-- Embedded quote status -->
@@ -364,6 +413,9 @@ export const renderInstantView = (properties: RenderProperties): ResponseInstruc
     throw new Error('Status is undefined');
   }
 
+  const twitterStatus = status as APITwitterStatus;
+  const articleOnly = twitterStatus.article && isArticleOnlyTweet(twitterStatus);
+
   /* Use ISO date for Medium template */
   const statusDate = new Date(status.created_at).toISOString();
 
@@ -380,6 +432,16 @@ export const renderInstantView = (properties: RenderProperties): ResponseInstruc
       : ``
   ];
 
+  // For article-only tweets, use article title as main heading and skip "View full thread" at top
+  const mainHeading =
+    articleOnly && twitterStatus.article
+      ? twitterStatus.article.title
+      : `${status.author.name} (@${status.author.screen_name})`;
+
+  const topSection = articleOnly
+    ? '' // No top "View full thread" for article-only tweets
+    : `<sub><a href="${status.url}">${i18next.t('ivViewOriginal')}</a></sub>`;
+
   instructions.text = `
     <section class="section-backgroundImage">
       <figure class="graf--layoutFillWidth"></figure>
@@ -393,8 +455,9 @@ export const renderInstantView = (properties: RenderProperties): ResponseInstruc
     } <a href="${status.url}">${i18next.t('ivViewOriginal')}</a>
     </section>
     <article>
-    <sub><a href="${status.url}">${i18next.t('ivViewOriginal')}</a></sub>
-    <h1>${status.author.name} (@${status.author.screen_name})</h1>
+    ${topSection}
+    <h1>${mainHeading}</h1>
+        ${articleOnly ? `<h2>${status.author.name} (@${status.author.screen_name})</h2>` : ''}
 
     ${useThread
       .map(status => {

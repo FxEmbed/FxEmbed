@@ -1,0 +1,19 @@
+{
+  "data": {
+    "user_result_by_screen_name": {
+      "result": {
+        "__typename": "User",
+        "about_profile": {
+          "created_country_accurate": true,
+          "account_based_in": "United States",
+          "location_accurate": true,
+          "source": "United States App Store",
+          "username_changes": {
+            "count": "3",
+            "last_changed_at_msec": "1609459200000"
+          }
+        }
+      }
+    }
+  }
+}

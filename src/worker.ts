@@ -11,6 +11,7 @@ import { cacheMiddleware } from './caches';
 import { ContentfulStatusCode } from 'hono/utils/http-status';
 import { bsky } from './realms/bluesky/router';
 import { getBranding } from './helpers/branding';
+import { tiktok } from './realms/tiktok/router';
 
 const noCache = 'max-age=0, no-cache, no-store, must-revalidate';
 const embeddingClientRegex =
@@ -49,7 +50,14 @@ export const app = new Hono<{
     } else if (Constants.STANDARD_BSKY_DOMAIN_LIST.includes(baseHostName)) {
       realm = 'bsky';
       console.log('Bluesky realm');
-    } else if (baseHostName.includes('workers.dev')) {
+    } else if (Constants.STANDARD_TIKTOK_DOMAIN_LIST.includes(baseHostName)) {
+      realm = 'tiktok';
+      console.log('TikTok realm');
+    } else if (
+      baseHostName.includes('workers.dev') ||
+      baseHostName.includes('localhost') ||
+      baseHostName.includes('127.0.0.1')
+    ) {
       realm = '';
       console.log(
         `Domain not assigned to realm, falling back to root as we are on workers.dev: ${url.hostname}`
@@ -154,6 +162,7 @@ app.use('*', timing({ enabled: false }));
 app.route(`/api`, api);
 app.route(`/twitter`, twitter);
 app.route(`/bsky`, bsky);
+app.route(`/tiktok`, tiktok);
 
 app.all('/error', async c => {
   c.header('cache-control', noCache);

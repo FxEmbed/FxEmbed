@@ -1,4 +1,5 @@
 export enum DataProvider {
   Twitter = 'twitter',
-  Bsky = 'bsky'
+  Bsky = 'bsky',
+  TikTok = 'tiktok'
 }

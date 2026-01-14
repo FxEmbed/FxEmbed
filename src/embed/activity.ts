@@ -24,6 +24,94 @@ import {
 import { Context } from 'hono';
 import { shouldTranscodeGif } from '../helpers/giftranscode';
 import { normalizeLanguage } from '../helpers/language';
+import { constructTikTokVideo } from '../providers/tiktok/conversation';
+import { renderArticleToHtml, DISCORD_ARTICLE_MAX_LENGTH } from '../helpers/article';
+import { TwitterApiMedia, TwitterApiImage, TwitterApiVideo } from '../types/vendor/twitter';
+
+const convertArticleMediaToAttachment = (
+  media: TwitterApiMedia
+): ActivityMediaAttachment | null => {
+  if (media.media_info.__typename === 'ApiImage') {
+    const image = media.media_info as TwitterApiImage;
+    return {
+      id: media.media_id,
+      type: 'image',
+      url: image.original_img_url,
+      preview_url: null,
+      remote_url: null,
+      preview_remote_url: null,
+      text_url: null,
+      description: null,
+      meta: {
+        original: {
+          width: image.original_img_width,
+          height: image.original_img_height,
+          size: `${image.original_img_width}x${image.original_img_height}`,
+          aspect: image.original_img_width / image.original_img_height
+        }
+      }
+    } as ActivityMediaAttachment;
+  } else if (
+    media.media_info.__typename === 'ApiVideo' ||
+    media.media_info.__typename === 'ApiGif'
+  ) {
+    const video = media.media_info as TwitterApiVideo;
+    const videoUrl = video.video_info?.variants?.[0]?.url || video.media_url_https;
+    let sizeMultiplier = 1;
+    const width = video.original_info.width;
+    const height = video.original_info.height;
+
+    if (width > 1920 || height > 1920) {
+      sizeMultiplier = 0.5;
+    }
+    if (width < 400 || height < 400) {
+      sizeMultiplier = 2;
+    }
+
+    if (experimentCheck(Experiment.VIDEO_REDIRECT_WORKAROUND, !!Constants.API_HOST_LIST)) {
+      const redirectedUrl = `https://${Constants.API_HOST_LIST[0]}/2/go?url=${encodeURIComponent(videoUrl)}`;
+      return {
+        id: media.media_id,
+        type: 'video',
+        url: redirectedUrl,
+        preview_url: video.media_url_https,
+        remote_url: null,
+        preview_remote_url: null,
+        text_url: null,
+        description: video.ext_alt_text ?? undefined,
+        meta: {
+          original: {
+            width: width * sizeMultiplier,
+            height: height * sizeMultiplier,
+            size: `${width * sizeMultiplier}x${height * sizeMultiplier}`,
+            aspect: width / height
+          }
+        }
+      } as ActivityMediaAttachment;
+    }
+
+    return {
+      id: media.media_id,
+      type: 'video',
+      url: videoUrl,
+      preview_url: video.media_url_https,
+      remote_url: null,
+      preview_remote_url: null,
+      text_url: null,
+      description: video.ext_alt_text ?? undefined,
+      meta: {
+        original: {
+          width: width * sizeMultiplier,
+          height: height * sizeMultiplier,
+          size: `${width * sizeMultiplier}x${height * sizeMultiplier}`,
+          aspect: width / height
+        }
+      }
+    } as ActivityMediaAttachment;
+  }
+
+  return null;
+};
 
 const generatePoll = (poll: APIPoll): string => {
   let str = '<blockquote>';
@@ -45,12 +133,35 @@ const generatePoll = (poll: APIPoll): string => {
   return str + '</blockquote>';
 };
 
-const getStatusText = (status: APIStatus) => {
+interface StatusTextResult {
+  text: string;
+  articleMedia: TwitterApiMedia[];
+}
+
+const getStatusText = (status: APIStatus): StatusTextResult => {
   let text = '';
+
+  // Check if is Twitter so we can detect article
+  if (status.provider === DataProvider.Twitter) {
+    const twitterStatus = status as APITwitterStatus;
+    if (twitterStatus.article) {
+      const articleResult = renderArticleToHtml(twitterStatus.article.content, {
+        maxLength: DISCORD_ARTICLE_MAX_LENGTH,
+        fullRenderer: false,
+        mediaEntities: twitterStatus.article.media_entities
+      });
+
+      // Prepend article title
+      text = `<b>📰 ${twitterStatus.article.title}</b>${articleResult.html}`;
+
+      return { text, articleMedia: articleResult.collectedMedia };
+    }
+  }
+
   const convertedStatusText = status.text.trim().replace(/\n/g, '<br>︀︀');
-  if ((status as APITwitterStatus).translation) {
-    console.log('translation', JSON.stringify((status as APITwitterStatus).translation));
-    const { translation } = status as APITwitterStatus;
+  if (status.translation) {
+    console.log('translation', JSON.stringify(status.translation));
+    const { translation } = status;
 
     const formatText = `<b>📑 {translation}</b>`.format({
       translation: i18next.t('translatedFrom').format({
@@ -82,22 +193,30 @@ const getStatusText = (status: APIStatus) => {
   if (socialProof) {
     text += socialProof;
   }
-  return text;
+  return { text, articleMedia: [] };
 };
 
 const linkifyMentions = (text: string, status: APIStatus) => {
-  const baseUrl =
-    status.provider === DataProvider.Bsky
-      ? `${Constants.BSKY_ROOT}/profile`
-      : `${Constants.TWITTER_ROOT}`;
+  let baseUrl = '';
+  switch (status.provider) {
+    case DataProvider.Bsky:
+      baseUrl = `${Constants.BSKY_ROOT}/profile/`;
+      break;
+    case DataProvider.Twitter:
+      baseUrl = `${Constants.TWITTER_ROOT}/`;
+      break;
+    case DataProvider.TikTok:
+      baseUrl = `${Constants.TIKTOK_ROOT}/@`;
+      break;
+  }
   const matches = text.match(/(?<!https?:\/\/[\w.\-_%$@&?!:;/'()*]+)@([\w.]+)(?=\W|$)/g);
 
   console.log('matches', matches);
   // deduplicate mentions
   [...new Set(matches ?? [])]?.forEach(mention => {
     text = text.replace(
-      new RegExp(`(?<!https?:\\/\\/[\\w.:/]+)${mention}(?=\\W|$)`, 'g'),
-      `<a href="${baseUrl}/${mention.slice(1)}">${mention}</a>`
+      new RegExp(`(?<!https?:\\/\\/[\\w.:/]+)${escapeRegex(mention)}(?=\\W|$)`, 'g'),
+      `<a href="${baseUrl}${mention.slice(1)}">${mention}</a>`
     );
   });
   console.log('text', text);
@@ -105,10 +224,18 @@ const linkifyMentions = (text: string, status: APIStatus) => {
 };
 
 const linkifyHashtags = (text: string, status: APIStatus) => {
-  const baseUrl =
-    status.provider === DataProvider.Bsky
-      ? `${Constants.BSKY_ROOT}/hashtag`
-      : `${Constants.TWITTER_ROOT}/hashtag`;
+  let baseUrl = '';
+  switch (status.provider) {
+    case DataProvider.Bsky:
+      baseUrl = `${Constants.BSKY_ROOT}/hashtag`;
+      break;
+    case DataProvider.Twitter:
+      baseUrl = `${Constants.TWITTER_ROOT}/hashtag`;
+      break;
+    case DataProvider.TikTok:
+      baseUrl = `${Constants.TIKTOK_ROOT}/tag`;
+      break;
+  }
   const matches = text.match(/(?<!https?:\/\/[\w.\-_%$@&?!:;/'()*]+)#([\w.]+)(?=\W|$)/g);
   console.log('matches', matches);
   // deduplicate hashtags
@@ -141,15 +268,27 @@ const formatStatus = (text: string, status: APIStatus) => {
   if (status.raw_text && enableFacets) {
     text = status.raw_text.text;
 
-    const baseHashtagUrl =
-      status.provider === DataProvider.Bsky
-        ? `${Constants.BSKY_ROOT}/hashtag`
-        : `${Constants.TWITTER_ROOT}/hashtag`;
-    const baseSymbolUrl = `${Constants.TWITTER_ROOT}/search?q=%24`;
-    const baseMentionUrl =
-      status.provider === DataProvider.Bsky
-        ? `${Constants.BSKY_ROOT}/profile`
-        : `${Constants.TWITTER_ROOT}`;
+    let baseHashtagUrl = '';
+    let baseSymbolUrl = '';
+    let baseMentionUrl = '';
+
+    switch (status.provider) {
+      case DataProvider.Bsky:
+        baseHashtagUrl = `${Constants.BSKY_ROOT}/hashtag`;
+        baseSymbolUrl = `${Constants.TWITTER_ROOT}/search?q=%24`;
+        baseMentionUrl = `${Constants.BSKY_ROOT}/profile/`;
+        break;
+      case DataProvider.Twitter:
+        baseHashtagUrl = `${Constants.TWITTER_ROOT}/hashtag`;
+        baseSymbolUrl = `${Constants.TWITTER_ROOT}/search?q=%24`;
+        baseMentionUrl = `${Constants.TWITTER_ROOT}/`;
+        break;
+      case DataProvider.TikTok:
+        baseHashtagUrl = `${Constants.TIKTOK_ROOT}/tag`;
+        baseSymbolUrl = `${Constants.TIKTOK_ROOT}/search?q=%24`;
+        baseMentionUrl = `${Constants.TIKTOK_ROOT}/@`;
+        break;
+    }
     let offset = 0;
     status.raw_text.facets.forEach(facet => {
       let newFacet = '';
@@ -208,7 +347,7 @@ const formatStatus = (text: string, status: APIStatus) => {
           offset += newFacet.length - (facet.indices[1] - facet.indices[0]);
           break;
         case 'mention':
-          newFacet = `<a href="${baseMentionUrl}/${facet.original}">@${facet.original}</a>`;
+          newFacet = `<a href="${baseMentionUrl}${facet.original}">@${facet.original}</a>`;
           text =
             text.slice(0, facet.indices[0] + offset) +
             newFacet +
@@ -270,6 +409,11 @@ export const handleActivity = async (
       c,
       language ?? undefined
     );
+  } else if (provider === DataProvider.TikTok) {
+    // Get proxy base URL from the current request for TikTok video proxy
+    const requestUrl = new URL(c.req.url);
+    const proxyBase = `${requestUrl.protocol}//${requestUrl.host}`;
+    thread = await constructTikTokVideo(statusId, proxyBase);
   } else {
     return returnError(c, Strings.ERROR_API_FAIL);
   }
@@ -284,6 +428,11 @@ export const handleActivity = async (
     return returnError(c, Strings.ERROR_API_FAIL);
   }
 
+  // Get status text and article media
+  const statusResult = getStatusText(thread.status);
+  const statusText = statusResult.text;
+  const articleMedia = statusResult.articleMedia;
+
   // Map FxEmbed API to Mastodon API v1
   const response: ActivityStatus = {
     id: statusId,
@@ -295,8 +444,7 @@ export const handleActivity = async (
     in_reply_to_id: thread.status.replying_to?.post,
     in_reply_to_account_id: null,
     language: thread.status.lang,
-    // TODO: Do formatting
-    content: getStatusText(thread.status),
+    content: statusText,
     spoiler_text: '',
     visibility: 'public',
     application: {
@@ -311,16 +459,18 @@ export const handleActivity = async (
       acct: thread.status.author.screen_name,
       url: thread.status.url,
       uri: thread.status.url,
-      created_at: new Date(thread.status.author.joined).toISOString(),
+      created_at: thread.status.author.joined
+        ? new Date(thread.status.author.joined).toISOString()
+        : new Date().toISOString(),
       locked: false,
       bot: false,
       discoverable: true,
       indexable: false,
       group: false,
-      avatar: thread.status.author.avatar_url,
-      avatar_static: thread.status.author.avatar_url,
-      header: thread.status.author.banner_url,
-      header_static: thread.status.author.banner_url,
+      avatar: thread.status.author.avatar_url ?? undefined,
+      avatar_static: thread.status.author.avatar_url ?? undefined,
+      header: thread.status.author.banner_url ?? undefined,
+      header_static: thread.status.author.banner_url ?? undefined,
       followers_count: thread.status.author.followers,
       following_count: thread.status.author.following,
       statuses_count: thread.status.author.statuses,
@@ -339,6 +489,11 @@ export const handleActivity = async (
 
   console.log('regular media', thread.status.media?.all);
   console.log('quote media', thread.status.quote?.media?.all);
+
+  // Convert article media to attachments format
+  const articleAttachments = articleMedia
+    .map((media: TwitterApiMedia) => convertArticleMediaToAttachment(media))
+    .filter(Boolean) as ActivityMediaAttachment[];
 
   const rawMediaList =
     (thread.status.media?.all?.length ?? 0) > 0
@@ -431,8 +586,10 @@ export const handleActivity = async (
               if (video.width < 400 || video.height < 400) {
                 sizeMultiplier = 2;
               }
+              // Apply video redirect workaround, but NOT for TikTok (needs its own proxy)
               if (
-                experimentCheck(Experiment.VIDEO_REDIRECT_WORKAROUND, !!Constants.API_HOST_LIST)
+                experimentCheck(Experiment.VIDEO_REDIRECT_WORKAROUND, !!Constants.API_HOST_LIST) &&
+                thread.status?.provider !== DataProvider.TikTok
               ) {
                 video.url = `https://${Constants.API_HOST_LIST[0]}/2/go?url=${encodeURIComponent(video.url)}`;
               }
@@ -459,6 +616,11 @@ export const handleActivity = async (
           }
         })
         .filter(Boolean) as ActivityMediaAttachment[];
+
+      // Merge article media attachments, excluding duplicates by id
+      const existingIds = new Set(response.media_attachments.map(a => a.id));
+      const uniqueArticleAttachments = articleAttachments.filter(a => !existingIds.has(a.id));
+      response.media_attachments.push(...uniqueArticleAttachments);
     } else if (thread.status.media?.external) {
       const external = thread.status.media.external;
       // Cast the response media attachments to correct type
@@ -482,6 +644,9 @@ export const handleActivity = async (
           }
         } as ActivityMediaAttachment
       ];
+    } else if (articleAttachments.length > 0) {
+      // If no regular media but we have article media, use article media
+      response.media_attachments = articleAttachments;
     }
   }
 

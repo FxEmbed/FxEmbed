@@ -3,6 +3,12 @@
 
 import { Context } from 'hono';
 import { DataProvider } from '../enum';
+import {
+  BirdwatchEntity,
+  TweetMediaVariant,
+  TwitterApiMedia,
+  TwitterArticleContentState
+} from './vendor/twitter';
 
 declare type InputFlags = {
   standard?: boolean;
@@ -135,6 +141,7 @@ declare interface APIPoll {
 
 declare interface APIMedia {
   id?: string;
+  format?: string;
   type: string;
   url: string;
   width: number;
@@ -150,10 +157,21 @@ declare interface APIPhoto extends APIMedia {
 declare interface APIVideo extends APIMedia {
   type: 'video' | 'gif';
   thumbnail_url: string;
-  format: string;
   duration: number;
-  variants: TweetMediaFormat[];
+  filesize?: number; // File size in bytes (when available, e.g., from TikTok)
+  variants?: TweetMediaVariant[]; // Legacy API only - use formats internally
+  formats: APIVideoFormat[];
 }
+
+type APIVideoFormat = {
+  container?: 'mp4' | 'webm' | 'm3u8';
+  codec?: 'h264' | 'hevc' | 'vp9' | 'av1';
+  bitrate?: number;
+  url: string;
+  size?: number; // File size in bytes (when available, e.g., from TikTok)
+  height?: number;
+  width?: number;
+};
 
 declare interface APIMosaicPhoto extends APIMedia {
   type: 'mosaic_photo';
@@ -226,7 +244,16 @@ declare interface APITwitterStatus extends APIStatus {
   views?: number | null;
   bookmarks?: number | null;
   community?: APITwitterCommunity;
-
+  article?: {
+    created_at: string;
+    modified_at?: string;
+    id: string;
+    title: string;
+    preview_text: string;
+    cover_media: TwitterApiMedia;
+    content: TwitterArticleContentState;
+    media_entities: TwitterApiMedia[];
+  };
   is_note_tweet: boolean;
   community_note: APITwitterCommunityNote | null;
   provider: DataProvider.Twitter;
@@ -234,6 +261,11 @@ declare interface APITwitterStatus extends APIStatus {
 
 declare interface APIBlueskyStatus extends APIStatus {
   provider: DataProvider.Bsky;
+}
+
+declare interface APITikTokStatus extends APIStatus {
+  provider: DataProvider.TikTok;
+  views?: number | null;
 }
 
 declare interface APIUser {
@@ -267,6 +299,17 @@ declare interface APIUser {
     verified: boolean;
     type: 'organization' | 'government' | 'individual' | null;
     verified_at?: string | null;
+    identity_verified?: boolean;
+  };
+  about_account?: {
+    based_in?: string | null;
+    location_accurate?: boolean;
+    created_country_accurate?: boolean | null;
+    source?: string | null;
+    username_changes?: {
+      count: number;
+      last_changed_at: string | null;
+    };
   };
 }
 

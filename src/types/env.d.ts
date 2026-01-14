@@ -1,5 +1,6 @@
 declare const STANDARD_DOMAIN_LIST: string;
 declare const STANDARD_BSKY_DOMAIN_LIST: string;
+declare const STANDARD_TIKTOK_DOMAIN_LIST: string;
 declare const DIRECT_MEDIA_DOMAINS: string;
 declare const TEXT_ONLY_DOMAINS: string;
 declare const INSTANT_VIEW_DOMAINS: string;

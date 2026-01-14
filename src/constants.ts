@@ -2,6 +2,7 @@ export const Constants = {
   /* These constants are populated by variables in .env, then set by Webpack */
   STANDARD_DOMAIN_LIST: STANDARD_DOMAIN_LIST.split(','),
   STANDARD_BSKY_DOMAIN_LIST: STANDARD_BSKY_DOMAIN_LIST.split(','),
+  STANDARD_TIKTOK_DOMAIN_LIST: STANDARD_TIKTOK_DOMAIN_LIST.split(','),
   DIRECT_MEDIA_DOMAINS: DIRECT_MEDIA_DOMAINS.split(','),
   TEXT_ONLY_DOMAINS: TEXT_ONLY_DOMAINS.split(','),
   INSTANT_VIEW_DOMAINS: INSTANT_VIEW_DOMAINS.split(','),
@@ -24,6 +25,8 @@ export const Constants = {
   BSKY_ROOT: 'https://bsky.app',
   BSKY_VIDEO_BASE: 'https://video.bsky.app',
   BSKY_API_ROOT: 'https://public.api.bsky.app',
+  TIKTOK_ROOT: 'https://www.tiktok.com',
+  TIKTOK_API_HOST: 'https://api16-normal-c-useast1a.tiktokv.com',
   NATIVE_MULTI_IMAGE_UA_REGEX: /discordbot\/|matrixpreviewbot/gi,
   BOT_UA_REGEX:
     /bot|facebook|embed|got|firefox\/92|firefox\/38|curl|wget|go-http|yahoo|generator|whatsapp|revoltchat|preview|link|proxy|vkshare|images|analyzer|index|crawl|spider|python|node|deno|mastodon|http\.rb|ruby|bun\/|fiddler|iframely|steamchaturllookup|bluesky|matrix-media-repo|cardyb|resolver|util/gi,

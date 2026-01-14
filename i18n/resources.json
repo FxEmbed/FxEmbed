@@ -36,7 +36,7 @@
 
       "gifIndicator": "GIF - {brandingName}",
       "threadIndicator": "🧵 Thread • {brandingName}",
-
+      "articleIndicator": "📰 Article • {brandingName}",
       "language_af": "Afrikaans",
       "language_ar": "Arabic",
       "language_ca": "Catalan",

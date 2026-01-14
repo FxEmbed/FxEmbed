@@ -329,3 +329,13 @@ export const UserResultByScreenNameQuery: GraphQLQuery = {
     immersive_video_status_linkable_timestamps: true
   }
 };
+
+export const AboutAccountQuery: GraphQLQuery = {
+  httpMethod: 'GET',
+  queryId: 'zs_jFPFT78rBpXv9Z3U2YQ',
+  queryName: 'AboutAccountQuery',
+  requiresAccount: true,
+  variables: {
+    screenName: ''
+  }
+};

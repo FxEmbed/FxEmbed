@@ -1,57 +1,8 @@
 import { test, expect } from 'vitest';
-import { UserAPIResponse, APIUser, TweetAPIResponse, APITwitterStatus } from '../src/types/types';
+import { TweetAPIResponse, APITwitterStatus } from '../src/types/types';
 import { app } from '../src/worker';
 import { botHeaders, twitterBaseUrl } from './helpers/data';
-import envWrapper from './helpers/env-wrapper';
-
-test('API fetch user', async () => {
-  const result = await app.request(
-    new Request('https://api.fxtwitter.com/x', {
-      method: 'GET',
-      headers: botHeaders
-    }),
-    undefined,
-    envWrapper
-  );
-  expect(result.status).toEqual(200);
-  const response = (await result.json()) as UserAPIResponse;
-  expect(response).toBeTruthy();
-  expect(response.code).toEqual(200);
-  expect(response.message).toEqual('OK');
-
-  const user = response.user as APIUser;
-  expect(user).toBeTruthy();
-  expect(user.url).toEqual(`${twitterBaseUrl}/X`);
-  expect(user.id).toEqual('783214');
-  expect(user.screen_name).toEqual('X');
-  expect(user.followers).toEqual(expect.any(Number));
-  expect(user.following).toEqual(expect.any(Number));
-  // The official twitter account will never be following as many people as it has followers
-  expect(user.following).not.toEqual(user.followers);
-  expect(user.likes).toEqual(expect.any(Number));
-  // expect(user.verified).toEqual('business');
-  expect(user.joined).toEqual('Tue Feb 20 14:35:54 +0000 2007');
-  // expect(user.birthday.day).toEqual(21);
-  // expect(user.birthday.month).toEqual(3);
-  // expect(user.birthday.year).toBeUndefined();
-});
-
-test('API fetch user that does not exist', async () => {
-  const result = await app.request(
-    new Request('https://api.fxtwitter.com/notfound3842342', {
-      method: 'GET',
-      headers: botHeaders
-    }),
-    undefined,
-    envWrapper
-  );
-  expect(result.status).toEqual(404);
-  const response = (await result.json()) as UserAPIResponse;
-  expect(response).toBeTruthy();
-  expect(response.code).toEqual(404);
-  expect(response.message).toEqual('User not found');
-  expect(response.user).toBeUndefined();
-});
+import harness from './helpers/harness';
 
 test('API fetch basic Status', async () => {
   const result = await app.request(
@@ -60,7 +11,7 @@ test('API fetch basic Status', async () => {
       headers: botHeaders
     }),
     undefined,
-    envWrapper
+    harness
   );
   expect(result.status).toEqual(200);
   const response = (await result.json()) as TweetAPIResponse;
@@ -99,7 +50,7 @@ test('API fetch Status with community', async () => {
       headers: botHeaders
     }),
     undefined,
-    envWrapper
+    harness
   );
   expect(result.status).toEqual(200);
   const response = (await result.json()) as TweetAPIResponse;

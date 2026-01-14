@@ -10,7 +10,7 @@ export const activityRequest = async (c: Context) => {
   const { id } = c.req.param();
   const baseUrl = getBaseRedirectUrl(c);
 
-  /* This throws the necessary data to handleStatus (in status.ts) */
+  /* This throws the necessary data to handleActivity (in activity.ts) */
   const statusResponse = await handleActivity(c, id ?? '0', DataProvider.Twitter);
   /* Do not cache if using a custom redirect */
   const cacheControl = baseUrl !== Constants.TWITTER_ROOT ? 'max-age=0' : undefined;

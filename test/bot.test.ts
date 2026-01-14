@@ -1,7 +1,7 @@
 import { test, expect } from 'vitest';
 import { app } from '../src/worker';
 import { botHeaders } from './helpers/data';
-import envWrapper from './helpers/env-wrapper';
+import harness from './helpers/harness';
 
 test('Status response robot', async () => {
   const result = await app.request(
@@ -10,7 +10,7 @@ test('Status response robot', async () => {
       headers: botHeaders
     }),
     undefined,
-    envWrapper
+    harness
   );
   expect(result.status).toEqual(200);
 });
@@ -22,7 +22,7 @@ test('Status response robot (trailing slash/query string and extra characters)',
       headers: botHeaders
     }),
     undefined,
-    envWrapper
+    harness
   );
   expect(result.status).toEqual(200);
 });

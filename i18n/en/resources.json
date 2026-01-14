@@ -29,7 +29,6 @@
   "surveyYes": "Yes 😁",
   "surveyNo": "No 💀",
   "gifIndicator": "GIF - {brandingName}",
-  "threadIndicator": "🧵 Thread • {brandingName}",
   "language_af": "Afrikaans",
   "language_ar": "Arabic",
   "language_ca": "Catalan",
@@ -58,5 +57,7 @@
   "language_uk": "Ukrainian",
   "language_vi": "Vietnamese",
   "language_zh-CN": "Chinese",
-  "language_zh-TW": "Chinese"
+  "language_zh-TW": "Chinese",
+  "threadIndicator": "🧵 Thread • {brandingName}",
+  "articleIndicator": "📰 Article • {brandingName}"
 }
