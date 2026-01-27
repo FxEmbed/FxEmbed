@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@hono/sentry": "^1.2.2",
-    "hono": "^4.11.6",
+    "hono": "^4.11.7",
     "i18next": "^25.8.0",
     "i18next-icu": "^2.4.2"
   }
