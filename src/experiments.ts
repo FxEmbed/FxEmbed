@@ -66,7 +66,7 @@ const Experiments: { [key in Experiment]: ExperimentConfig } = {
   [Experiment.KITCHENSINK_MEDIA]: {
     name: 'KitchenSink transcoder',
     description: 'Use KitchenSink transcoder server',
-    percentage: 1
+    percentage: 0
   }
 };
 
