@@ -65,7 +65,10 @@ type TcoExpansion = {
 };
 
 type TweetMedia = {
-  additional_media_info: { monetizable: boolean };
+  additional_media_info: {
+    monetizable: boolean;
+    source_user?: { user_results: { result: GraphQLUser } };
+  };
   display_url: string;
   expanded_url: string;
   ext_media_color?: {

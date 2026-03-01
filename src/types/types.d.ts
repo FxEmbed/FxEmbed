@@ -161,6 +161,7 @@ declare interface APIVideo extends APIMedia {
   filesize?: number; // File size in bytes (when available, e.g., from TikTok)
   variants?: TweetMediaVariant[]; // Legacy API only - use formats internally
   formats: APIVideoFormat[];
+  video_from: APIUser | null;
 }
 
 type APIVideoFormat = {
