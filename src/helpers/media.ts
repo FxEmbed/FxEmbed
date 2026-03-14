@@ -4,6 +4,7 @@ import { Constants } from '../constants';
 import { getGIFTranscodeDomain, shouldTranscodeGif } from './giftranscode';
 import { formatImageUrl, isParamTruthy } from './utils';
 import { Experiment, experimentCheck } from '../experiments';
+import { convertToApiUser } from '../providers/twitter/profile';
 
 /**
  * Convert Twitter's TweetMediaVariant to our APIVideoFormat
@@ -139,7 +140,10 @@ export const processMedia = (c: Context, media: TweetMedia): APIPhoto | APIVideo
       height: media.original_info?.height,
       format: content_type,
       type: media.type === 'animated_gif' ? 'gif' : 'video',
-      formats: formats
+      formats: formats,
+      video_from: media.additional_media_info.source_user
+        ? convertToApiUser(media.additional_media_info.source_user.user_results.result)
+        : null
     };
   }
   return null;
