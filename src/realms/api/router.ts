@@ -3,7 +3,12 @@ import { statusRequest } from '../twitter/routes/status';
 import { profileRequest } from '../twitter/routes/profile';
 import { Strings } from '../../strings';
 import { Constants } from '../../constants';
-import { profileAPIRequest, statusAPIRequest, threadAPIRequest } from './routes/twitter';
+import {
+  profileAPIRequest,
+  searchAPIRequest,
+  statusAPIRequest,
+  threadAPIRequest
+} from './routes/twitter';
 import { oembed } from './routes/oembed';
 import { linkHitRequest, linkGoRequest } from './hit';
 import { trimTrailingSlash } from 'hono/trailing-slash';
@@ -31,6 +36,7 @@ api.get('/2/go', linkGoRequest);
 api.get('/2/status/:id', statusAPIRequest);
 api.get('/2/thread/:id', threadAPIRequest);
 api.get('/2/profile/:handle', profileAPIRequest);
+api.get('/2/search', searchAPIRequest);
 api.get('/2/owoembed', oembed);
 
 /* Current v1 API endpoints. Currently, these still go through the Twitter embed requests. API v2+ won't do this. */

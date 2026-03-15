@@ -15,15 +15,6 @@ type TimelineContent = {
   };
 };
 
-type TimelineInstruction = {
-  addEntries?: {
-    entries: {
-      content: TimelineContent;
-      entryId: string;
-    }[];
-  };
-};
-
 type TwitterAPIError = {
   code: number;
   message: string;
@@ -709,7 +700,7 @@ type GraphQLConversationThread = {
 
 type GraphQLTimelineEntry = GraphQLTimelineTweetEntry | GraphQLConversationThread | unknown;
 
-type ThreadInstruction =
+type TimelineInstruction =
   | TimelineAddEntriesInstruction
   | TimelineTerminateTimelineInstruction
   | TimelineAddModulesInstruction;
@@ -758,7 +749,7 @@ type TweetDetailResponse = {
   errors?: unknown[];
   data: {
     threaded_conversation_with_injections_v2: {
-      instructions: ThreadInstruction[];
+      instructions: TimelineInstruction[];
     };
   };
 };
@@ -964,3 +955,15 @@ type TwitterArticleEntityMapEntry =
         };
       };
     };
+
+type TwitterSearchTimelineResponse = {
+  data: {
+    search_by_raw_query: {
+      search_timeline: {
+        timeline: {
+          instructions: TimelineInstruction[];
+        };
+      };
+    };
+  };
+};

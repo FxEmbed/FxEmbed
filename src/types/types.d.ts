@@ -334,7 +334,7 @@ declare interface OEmbed {
 }
 
 // Mastodon API V1 Interfaces
-export interface ActivityStatus {
+interface ActivityStatus {
   id: string;
   url: string;
   uri: string;
@@ -360,7 +360,7 @@ export interface ActivityStatus {
   poll: null;
 }
 
-export interface ActivityAccount {
+interface ActivityAccount {
   id: string;
   display_name: string;
   username: string;
@@ -387,7 +387,7 @@ export interface ActivityAccount {
   fields: [];
 }
 
-export interface ActivityMediaAttachment {
+interface ActivityMediaAttachment {
   id: string;
   type: 'image' | 'video' | 'gifv' | 'audio' | string;
   url: string;
@@ -447,4 +447,13 @@ declare interface APITwitterCommunity {
   join_policy: 'Open' | 'Closed';
   invites_policy: 'MemberInvitesAllowed' | 'MemberInvitesDisabled';
   is_pinned: boolean;
+}
+
+declare interface APISearchResults {
+  code: number;
+  results: (APIStatus | APITwitterStatus)[];
+  cursor: {
+    top: string | null;
+    bottom: string | null;
+  };
 }

@@ -102,6 +102,24 @@ export default {
             console.error('Error loading mock:', error);
             return new Response(JSON.stringify({ data: {} }));
           }
+        case 'SearchTimeline':
+          const rawQuery = variables.rawQuery ?? 'neo';
+          const searchFilename = String(rawQuery).replace(/[^a-zA-Z0-9_-]/g, '_');
+          try {
+            const mock = await import(`../mocks/SearchTimeline/${searchFilename}.json`);
+            return new Response(JSON.stringify(mock));
+          } catch (error) {
+            console.error('Error loading SearchTimeline mock:', error);
+            return new Response(
+              JSON.stringify({
+                data: {
+                  search_by_raw_query: {
+                    search_timeline: { timeline: { instructions: [] } }
+                  }
+                }
+              })
+            );
+          }
         default:
           throw new Error('Invalid request');
       }
