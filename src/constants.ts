@@ -21,6 +21,10 @@ export const Constants = {
   VIDEO_TRANSCODE_BSKY_DOMAIN_LIST: VIDEO_TRANSCODE_BSKY_DOMAIN_LIST.split(','),
   API_DOCS_URL: `https://github.com/FxEmbed/FxEmbed/wiki/API-Home`,
   TWITTER_ROOT: TWITTER_ROOT || 'https://x.com',
+  PBS_PROXY:
+    !PBS_PROXY || PBS_PROXY === 'undefined' || PBS_PROXY.trim() === ''
+      ? undefined
+      : PBS_PROXY.trim(),
   TWITTER_API_ROOT: 'https://api.x.com',
   TWITTER_VIDEO_BASE: 'https://video.twimg.com',
   BSKY_ROOT: 'https://bsky.app',

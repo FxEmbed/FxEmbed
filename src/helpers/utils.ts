@@ -1,3 +1,5 @@
+import { Experiment, experimentCheck } from '../experiments';
+
 export const sanitizeText = (text: string) => {
   return text
     .replace(/"/g, '&#34;')
@@ -75,6 +77,18 @@ export const generateSnowflake = () => {
 
 export const escapeRegex = (text: string) => {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
+/** Rewrite Twitter CDN image URLs for Telegram when PBS_PROXY (.env) is set and experiment passes. */
+export const proxyPbsUrl = (
+  url: string,
+  proxyDomain: string | undefined,
+  isTelegram: boolean
+): string => {
+  if (!experimentCheck(Experiment.PBS_MEDIA_PROXY, isTelegram && !!proxyDomain)) {
+    return url;
+  }
+  return url.replace('https://pbs.twimg.com', `https://${proxyDomain}`);
 };
 
 export const formatImageUrl = (url: string, name = 'orig') => {

@@ -4,7 +4,7 @@ import i18next from 'i18next';
 import icu from 'i18next-icu';
 import { Constants } from '../constants';
 import { handleQuote } from '../helpers/quote';
-import { formatImageUrl, sanitizeText, truncateWithEllipsis } from '../helpers/utils';
+import { formatImageUrl, proxyPbsUrl, sanitizeText, truncateWithEllipsis } from '../helpers/utils';
 import { Strings } from '../strings';
 import { getSocialProof } from '../helpers/socialproof';
 import { renderPhoto } from '../render/photo';
@@ -543,7 +543,9 @@ export const handleStatus = async (
         `<meta property="og:video:height" content="${external.height}">`
       );
       if (external.thumbnail_url && !status.media.photos?.length) {
-        headers.push(`<meta property="og:image" content="${external.thumbnail_url}">`);
+        headers.push(
+          `<meta property="og:image" content="${proxyPbsUrl(external.thumbnail_url, Constants.PBS_PROXY, isTelegram && provider === DataProvider.Twitter)}">`
+        );
       }
     }
   }
@@ -590,7 +592,10 @@ export const handleStatus = async (
     newText += `\n${quoteText}`;
   }
 
-  const avatar = status.author.avatar_url;
+  const avatar =
+    status.author.avatar_url && provider === DataProvider.Twitter
+      ? proxyPbsUrl(status.author.avatar_url, Constants.PBS_PROXY, isTelegram)
+      : status.author.avatar_url;
   const twitterStatus = status as APITwitterStatus;
 
   // Check if this is an article-only tweet (text is just the article URL)
@@ -609,7 +614,7 @@ export const handleStatus = async (
     if (articleOnly && twitterStatus.article?.cover_media?.media_info?.__typename === 'ApiImage') {
       const coverImage = twitterStatus.article.cover_media.media_info as TwitterApiImage;
       headers.push(
-        `<meta property="og:image" content="${coverImage.original_img_url}"/>`,
+        `<meta property="og:image" content="${proxyPbsUrl(coverImage.original_img_url, Constants.PBS_PROXY, isTelegram && provider === DataProvider.Twitter)}"/>`,
         `<meta property="og:image:width" content="${coverImage.original_img_width}"/>`,
         `<meta property="og:image:height" content="${coverImage.original_img_height}"/>`
       );

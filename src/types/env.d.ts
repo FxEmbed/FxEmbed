@@ -16,6 +16,7 @@ declare const GIF_TRANSCODE_DOMAIN_LIST: string;
 declare const VIDEO_TRANSCODE_DOMAIN_LIST: string;
 declare const VIDEO_TRANSCODE_BSKY_DOMAIN_LIST: string;
 declare const TWITTER_ROOT: string;
+declare const PBS_PROXY: string;
 
 declare const SENTRY_DSN: string;
 declare const RELEASE_NAME: string;

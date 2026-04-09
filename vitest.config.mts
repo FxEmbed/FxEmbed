@@ -50,7 +50,8 @@ export default defineConfig({
     VIDEO_TRANSCODE_DOMAIN_LIST: JSON.stringify('video.fxtwitter.com'),
     VIDEO_TRANSCODE_BSKY_DOMAIN_LIST: JSON.stringify('video.fxbsky.app'),
     SENTRY_DSN: null,
-    TWITTER_ROOT: JSON.stringify('https://x.com')
+    TWITTER_ROOT: JSON.stringify('https://x.com'),
+    PBS_PROXY: JSON.stringify('pbs.fxtwitter.com')
   },
   test: {
     include: ['test/*.ts'],

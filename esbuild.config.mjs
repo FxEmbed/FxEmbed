@@ -56,7 +56,8 @@ let envVariables = [
   'VIDEO_TRANSCODE_DOMAIN_LIST',
   'VIDEO_TRANSCODE_BSKY_DOMAIN_LIST',
   'OLD_EMBED_DOMAINS',
-  'TWITTER_ROOT'
+  'TWITTER_ROOT',
+  'PBS_PROXY'
 ];
 
 // Create defines for all environment variables

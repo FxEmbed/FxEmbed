@@ -9,7 +9,8 @@ export enum Experiment {
   BROADCAST_STREAM_API = 'BROADCAST_STREAM_API',
   KITCHENSINK_VIDEO = 'KITCHENSINK_VIDEO',
   KITCHENSINK_GIF = 'KITCHENSINK_GIF',
-  USE_HORIZON_WEB = 'USE_HORIZON_WEB'
+  USE_HORIZON_WEB = 'USE_HORIZON_WEB',
+  PBS_MEDIA_PROXY = 'PBS_MEDIA_PROXY'
 }
 
 type ExperimentConfig = {
@@ -73,13 +74,18 @@ const Experiments: { [key in Experiment]: ExperimentConfig } = {
     name: 'Use Horizon Web',
     description: 'Use Horizon Web to load X/Twitter pages',
     percentage: 0
+  },
+  [Experiment.PBS_MEDIA_PROXY]: {
+    name: 'PBS media proxy (Telegram)',
+    description: 'Rewrite pbs.twimg.com image URLs to PBS_PROXY for Telegram embeds',
+    percentage: 1
   }
 };
 
 export const experimentCheck = (experiment: Experiment, condition = true) => {
   const experimentEnabled = Experiments[experiment].percentage > Math.random() && condition;
-  // console.log(
-  //   `Experiment check: ${experiment} (resolved to ${experimentEnabled ? 'true' : 'false'})`
-  // );
+  console.log(
+    `Experiment check: ${experiment} (resolved to ${experimentEnabled ? 'true' : 'false'})`
+  );
   return experimentEnabled;
 };

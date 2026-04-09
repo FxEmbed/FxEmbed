@@ -8,6 +8,7 @@ import { APIMedia, APIVideo, RenderProperties, ResponseInstructions } from '../t
 import { getBranding } from '../helpers/branding';
 import { getGIFTranscodeDomain, shouldTranscodeGif } from '../helpers/giftranscode';
 import { getVideoTranscodeDomain, getVideoTranscodeDomainBluesky } from '../helpers/transcode';
+import { proxyPbsUrl } from '../helpers/utils';
 
 export const renderVideo = (
   properties: RenderProperties,
@@ -96,6 +97,12 @@ export const renderVideo = (
     url = `https://${Constants.API_HOST_LIST[0]}/2/go?url=${encodeURIComponent(url)}`;
   }
 
+  const isTelegramUa = (userAgent?.indexOf('TelegramBot') ?? 0) > -1;
+  const thumbnailUrl =
+    status.provider === DataProvider.Twitter
+      ? proxyPbsUrl(video.thumbnail_url, Constants.PBS_PROXY, isTelegramUa)
+      : video.thumbnail_url;
+
   /* Push the raw video-related headers */
   instructions.addHeaders = [
     `<meta property="twitter:player:height" content="${video.height * sizeMultiplier}"/>`,
@@ -107,7 +114,7 @@ export const renderVideo = (
     `<meta property="og:video:height" content="${video.height * sizeMultiplier}"/>`,
     `<meta property="og:video:width" content="${video.width * sizeMultiplier}"/>`,
     `<meta property="og:video:type" content="${video.format}"/>`,
-    `<meta property="og:image" content="${video.thumbnail_url}"/>`,
+    `<meta property="og:image" content="${thumbnailUrl}"/>`,
     `<meta property="twitter:image" content="0"/>`
   ];
 

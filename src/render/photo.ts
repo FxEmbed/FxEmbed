@@ -1,6 +1,9 @@
 import i18next from 'i18next';
+import { DataProvider } from '../enum';
 import { Strings } from '../strings';
 import { getBranding } from '../helpers/branding';
+import { proxyPbsUrl } from '../helpers/utils';
+import { Constants } from '../constants';
 
 export const renderPhoto = (
   properties: RenderProperties,
@@ -8,6 +11,7 @@ export const renderPhoto = (
 ): ResponseInstructions => {
   const { status, engagementText, authorText, isOverrideMedia, userAgent } = properties;
   const instructions: ResponseInstructions = { addHeaders: [] };
+  const isTelegram = (userAgent?.indexOf('TelegramBot') ?? 0) > -1;
 
   if ((status.media?.photos?.length || 0) > 1 && (!status.media?.mosaic || isOverrideMedia)) {
     const all = status.media?.all as APIMedia[];
@@ -20,8 +24,6 @@ export const renderPhoto = (
       number: String(all.indexOf(photo) + 1),
       total: String(all.length)
     });
-
-    const isTelegram = (userAgent?.indexOf('TelegramBot') ?? 0) > -1;
 
     if (authorText === Strings.DEFAULT_AUTHOR_TEXT || isTelegram) {
       instructions.authorText = photoCounter;
@@ -38,16 +40,28 @@ export const renderPhoto = (
 
   console.log('photo!', photo);
 
+  const pbsProxy = Constants.PBS_PROXY;
+  const photoContentUrl =
+    status.provider === DataProvider.Twitter
+      ? proxyPbsUrl(
+          photo.type === 'mosaic_photo' ? photo.formats.jpeg : (photo as APIPhoto).url,
+          pbsProxy,
+          isTelegram
+        )
+      : photo.type === 'mosaic_photo'
+        ? photo.formats.jpeg
+        : (photo as APIPhoto).url;
+
   if (photo.type === 'mosaic_photo' && !isOverrideMedia) {
     instructions.addHeaders = [
-      `<meta property="twitter:image" content="${photo.formats.jpeg}"/>`,
-      `<meta property="og:image" content="${photo.formats.jpeg}"/>`
+      `<meta property="twitter:image" content="${photoContentUrl}"/>`,
+      `<meta property="og:image" content="${photoContentUrl}"/>`
     ];
   } else {
     photo = photo as APIPhoto;
     instructions.addHeaders = [
-      `<meta property="twitter:image" content="${photo.url}"/>`,
-      `<meta property="og:image" content="${photo.url}"/>`,
+      `<meta property="twitter:image" content="${photoContentUrl}"/>`,
+      `<meta property="og:image" content="${photoContentUrl}"/>`,
       `<meta property="twitter:image:width" content="${photo.width}"/>`,
       `<meta property="twitter:image:height" content="${photo.height}"/>`,
       `<meta property="og:image:width" content="${photo.width}"/>`,

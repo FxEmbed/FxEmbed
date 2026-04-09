@@ -1,5 +1,5 @@
 import { Constants } from '../constants';
-import { sanitizeText, truncateWithEllipsis, wrapForeignLinks } from './utils';
+import { proxyPbsUrl, sanitizeText, truncateWithEllipsis, wrapForeignLinks } from './utils';
 
 const DISCORD_ARTICLE_MAX_LENGTH = 10000;
 
@@ -8,6 +8,8 @@ interface ArticleRenderOptions {
   fullRenderer?: boolean; // true for Telegram, false for Discord
   mediaEntities: TwitterApiMedia[];
   apiHost?: string; // Required for Telegram to wrap foreign links
+  /** Telegram Instant View: rewrite pbs.twimg.com in inline images */
+  rewritePbsForTelegram?: boolean;
 }
 
 interface ArticleRenderResult {
@@ -301,7 +303,10 @@ const renderBlock = (
             let mediaHtml: string;
             if (media.media_info.__typename === 'ApiImage') {
               const image = media.media_info as TwitterApiImage;
-              mediaHtml = `<img src="${image.original_img_url}" alt="" />`;
+              const imgSrc = options.rewritePbsForTelegram
+                ? proxyPbsUrl(image.original_img_url, Constants.PBS_PROXY, true)
+                : image.original_img_url;
+              mediaHtml = `<img src="${imgSrc}" alt="" />`;
             } else {
               const video = media.media_info as TwitterApiVideo;
               // Article videos have variants directly on media_info, regular videos have them under video_info

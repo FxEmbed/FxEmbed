@@ -2,7 +2,11 @@
 import i18next from 'i18next';
 import { Constants } from '../constants';
 import { getSocialTextIV } from '../helpers/socialproof';
-import { sanitizeText, wrapForeignLinks as wrapForeignLinksUtil } from '../helpers/utils';
+import {
+  proxyPbsUrl,
+  sanitizeText,
+  wrapForeignLinks as wrapForeignLinksUtil
+} from '../helpers/utils';
 import { DataProvider } from '../enum';
 import { getBranding } from '../helpers/branding';
 import { renderArticleToHtml } from '../helpers/article';
@@ -67,7 +71,7 @@ const populateUserLinks = (text: string, status: APIStatus): string => {
   return text;
 };
 
-const generateStatusMedia = (status: APIStatus): string => {
+const generateStatusMedia = (status: APIStatus, isTelegram: boolean): string => {
   let media = '';
   if (status.media?.all?.length) {
     status.media.all.forEach(mediaItem => {
@@ -84,6 +88,9 @@ const generateStatusMedia = (status: APIStatus): string => {
         case 'photo':
           // eslint-disable-next-line no-case-declarations
           const { altText } = mediaItem as APIPhoto;
+          if (status.provider === DataProvider.Twitter) {
+            url = proxyPbsUrl(url, Constants.PBS_PROXY, isTelegram);
+          }
           media += `<img src="{url}" {altText}/>`.format({
             altText: altText ? `alt="${altText}"` : '',
             url: url
@@ -221,7 +228,9 @@ const generateStatusFooter = (
   status: APIStatus,
   isQuote = false,
   author: APIUser,
-  language: string
+  language: string,
+  pbsProxy?: string,
+  isTelegram = false
 ): string => {
   let description = author.description;
   description = htmlifyLinks(description);
@@ -256,7 +265,14 @@ const generateStatusFooter = (
           {followers} <b>${i18next.t('ivProfileFollowers', { numFollowers: author.followers })}</b> 
           {statuses} <b>${i18next.t('ivProfileStatuses', { numStatuses: author.statuses })}</b>
         </p>`.format({
-            pfp: `<img src="${author.avatar_url?.replace('_200x200', '_400x400')}" alt="${i18next.t('ivProfilePictureAlt', { author: author.name })}" />`,
+            pfp: (() => {
+              const rawPfp = author.avatar_url?.replace('_200x200', '_400x400');
+              const pfpUrl =
+                rawPfp && status.provider === DataProvider.Twitter
+                  ? proxyPbsUrl(rawPfp, pbsProxy, isTelegram)
+                  : (rawPfp ?? '');
+              return `<img src="${pfpUrl}" alt="${i18next.t('ivProfilePictureAlt', { author: author.name })}" />`;
+            })(),
             location: author.location ? `📌 ${author.location}` : '',
             website: author.website
               ? `🔗 <a rel="nofollow" href="${wrapForeignLinks(author.website.url)}">${author.website.display_url}</a>`
@@ -326,7 +342,8 @@ const generateStatus = (
   author: APIUser,
   language: string,
   isQuote = false,
-  authorActionType: AuthorActionType | null
+  authorActionType: AuthorActionType | null,
+  isTelegram: boolean
 ): string => {
   const twitterStatus = status as APITwitterStatus;
 
@@ -338,7 +355,8 @@ const generateStatus = (
       maxLength: undefined, // No limit for Telegram
       fullRenderer: true, // Render inline media for Telegram
       mediaEntities: twitterStatus.article.media_entities,
-      apiHost: Constants.API_HOST_LIST[0] // For wrapping foreign links
+      apiHost: Constants.API_HOST_LIST[0], // For wrapping foreign links
+      rewritePbsForTelegram: isTelegram
     });
 
     // Render cover media if available
@@ -346,7 +364,8 @@ const generateStatus = (
       const coverMedia = twitterStatus.article.cover_media;
       if (coverMedia.media_info.__typename === 'ApiImage') {
         const image = coverMedia.media_info;
-        articleCoverMedia = `<img src="${image.original_img_url}" alt="${twitterStatus.article.title}" />`;
+        const coverSrc = proxyPbsUrl(image.original_img_url, Constants.PBS_PROXY, isTelegram);
+        articleCoverMedia = `<img src="${coverSrc}" alt="${twitterStatus.article.title}" />`;
       }
     }
 
@@ -370,7 +389,7 @@ const generateStatus = (
   <!-- Embed article (if applicable) -->
   ${articleHtml || notApplicableComment}
   <!-- Embed media -->
-  ${generateStatusMedia(status)} 
+  ${generateStatusMedia(status, isTelegram)} 
   <!-- Translated text (if applicable) -->
   ${translatedText ? translatedText : notApplicableComment}
   <!-- Inline author (if applicable) -->
@@ -382,7 +401,7 @@ const generateStatus = (
   <!-- Embed poll -->
   ${status.poll ? generatePoll(status.poll, status.lang ?? 'en') : notApplicableComment}
   <!-- Embedded quote status -->
-  ${!isQuote && status.quote ? generateStatus(status.quote, author, language, true, null) : notApplicableComment}`.format(
+  ${!isQuote && status.quote ? generateStatus(status.quote, author, language, true, null, isTelegram) : notApplicableComment}`.format(
     {
       quoteHeader: isQuote
         ? '<h4>' +
@@ -414,6 +433,8 @@ export const renderInstantView = (properties: RenderProperties): ResponseInstruc
 
   const twitterStatus = status as APITwitterStatus;
   const articleOnly = twitterStatus.article && isArticleOnlyTweet(twitterStatus);
+
+  const isTelegram = (properties.context.req.header('user-agent') ?? '').includes('TelegramBot');
 
   /* Use ISO date for Medium template */
   const statusDate = new Date(status.created_at).toISOString();
@@ -500,11 +521,19 @@ export const renderInstantView = (properties: RenderProperties): ResponseInstruc
           status.author ?? thread?.author,
           properties?.targetLanguage ?? 'en',
           false,
-          authorAction
+          authorAction,
+          isTelegram
         );
       })
       .join('')}
-    ${generateStatusFooter(status, false, thread?.author ?? status.author, properties?.targetLanguage ?? 'en')}
+    ${generateStatusFooter(
+      status,
+      false,
+      thread?.author ?? status.author,
+      properties?.targetLanguage ?? 'en',
+      Constants.PBS_PROXY,
+      isTelegram
+    )}
     <br>${`<a href="${status.url}">${i18next.t('ivViewOriginal')}</a>`}
   </article>`;
 
