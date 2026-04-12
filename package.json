@@ -48,7 +48,7 @@
   "dependencies": {
     "@hono/sentry": "^1.2.2",
     "@hono/zod-openapi": "^1.2.4",
-    "cheerio": "^1.0.0",
+    "cheerio": "^1.2.0",
     "hono": "^4.12.12",
     "zod": "^4.3.6",
     "i18next": "^26.0.4",
