@@ -1,0 +1,116 @@
+---
+title: Self-Hosting
+description: Deploy your own instance of FxEmbed on Cloudflare Workers.
+---
+
+FxEmbed is designed to run on [Cloudflare Workers](https://developers.cloudflare.com/workers/), which are free for up to 100,000 requests per day per account. Because Workers run on Cloudflare's global edge network, your instance will automatically be distributed worldwide for low latency.
+
+:::note
+FxEmbed is built with [Hono](https://hono.dev/), so it may be possible to run on other web-standards-compliant runtimes. However, only Cloudflare Workers deployment is officially supported and documented at this time.
+:::
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) (LTS recommended)
+- A [Cloudflare account](https://dash.cloudflare.com/sign-up) (free tier works)
+- Your [Cloudflare Account ID](https://developers.cloudflare.com/fundamentals/get-started/basic-tasks/find-account-and-zone-ids/)
+
+## Steps
+
+### 1. Clone and Install
+
+```bash
+git clone https://github.com/FxEmbed/FxEmbed.git
+cd FxEmbed
+npm install
+```
+
+### 2. Configure Wrangler
+
+Copy the example Wrangler config and fill in your details:
+
+```bash
+cp wrangler.example.toml wrangler.toml
+```
+
+Edit `wrangler.toml` and set your Cloudflare Account ID:
+
+```toml
+name = "fxembed"
+account_id = "YOUR_ACCOUNT_ID_HERE"
+main = "./dist/worker.js"
+compatibility_date = "2026-04-11"
+```
+
+If you don't need Cloudflare Analytics Engine, remove the `analytics_engine_datasets` section.
+
+### 3. Configure Environment Variables
+
+Copy the example environment file and customize it:
+
+```bash
+cp .env.example .env
+```
+
+See the [Configuration guide](/deployment/configuration/) for details on each variable.
+
+### 4. Configure Branding (Optional)
+
+Copy and edit the branding configuration:
+
+```bash
+cp branding.example.json branding.json
+```
+
+This controls the name, colors, icons, and redirect URLs for each domain zone. See [Configuration](/deployment/configuration/#branding) for details.
+
+### 5. Authenticate and Deploy
+
+Log in to Cloudflare and deploy:
+
+```bash
+npx wrangler login
+npm run deploy
+```
+
+This builds the worker with esbuild and deploys it via `wrangler deploy --no-bundle`.
+
+### 6. Set Up Custom Domain
+
+Once your worker is running on `*.workers.dev`, [add it to your custom domain](https://developers.cloudflare.com/workers/platform/routing/custom-domains/) through the Cloudflare dashboard.
+
+## Building Locally
+
+To build without deploying (useful for testing):
+
+```bash
+npm run build-local
+```
+
+This runs esbuild without the Sentry upload step.
+
+## Viewing Logs
+
+To tail real-time logs from your deployed worker:
+
+```bash
+npm run log
+```
+
+This runs `wrangler tail` to stream logs to your terminal.
+
+## Updating
+
+Pull the latest changes and redeploy:
+
+```bash
+git pull
+npm install
+npm run deploy
+```
+
+## Further Reading
+
+- [Cloudflare Workers Getting Started](https://developers.cloudflare.com/workers/get-started/guide/)
+- [Configuration Reference](/deployment/configuration/)
+- [Credentials Setup](/deployment/credentials/)

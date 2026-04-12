@@ -1,0 +1,3987 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "FxTwitter API",
+    "version": "2.0.0",
+    "description": "FxTwitter API v2"
+  },
+  "servers": [
+    {
+      "url": "https://api.fxtwitter.com",
+      "description": "FxTwitter API host"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "SocialThread": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number",
+            "description": "HTTP-style status; mirrors response status code"
+          },
+          "status": {
+            "$ref": "#/components/schemas/APITwitterStatus"
+          },
+          "thread": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/APITwitterStatus"
+            }
+          },
+          "author": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/APIUser"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "status",
+          "thread",
+          "author"
+        ]
+      },
+      "APITwitterStatus": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "created_timestamp": {
+            "type": "number"
+          },
+          "likes": {
+            "type": "number"
+          },
+          "reposts": {
+            "type": "number"
+          },
+          "quotes": {
+            "type": "number"
+          },
+          "replies": {
+            "type": "number"
+          },
+          "quote": {
+            "$ref": "#/components/schemas/APITwitterStatus"
+          },
+          "poll": {
+            "type": "object",
+            "properties": {
+              "choices": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "number"
+                    },
+                    "percentage": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "count",
+                    "percentage"
+                  ]
+                }
+              },
+              "total_votes": {
+                "type": "number"
+              },
+              "ends_at": {
+                "type": "string"
+              },
+              "time_left_en": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "choices",
+              "total_votes",
+              "ends_at",
+              "time_left_en"
+            ]
+          },
+          "author": {
+            "$ref": "#/components/schemas/APIUser"
+          },
+          "media": {
+            "type": "object",
+            "properties": {
+              "external": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "video"
+                    ]
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "thumbnail_url": {
+                    "type": "string"
+                  },
+                  "height": {
+                    "type": "number"
+                  },
+                  "width": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "type",
+                  "url"
+                ]
+              },
+              "photos": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "format": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "photo",
+                        "gif"
+                      ]
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "number"
+                    },
+                    "height": {
+                      "type": "number"
+                    },
+                    "transcode_url": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "altText": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "url",
+                    "width",
+                    "height"
+                  ]
+                }
+              },
+              "videos": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "format": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "video",
+                        "gif"
+                      ]
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "number"
+                    },
+                    "height": {
+                      "type": "number"
+                    },
+                    "thumbnail_url": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "transcode_url": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "duration": {
+                      "type": "number"
+                    },
+                    "filesize": {
+                      "type": "number"
+                    },
+                    "formats": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "container": {
+                            "type": "string",
+                            "enum": [
+                              "mp4",
+                              "webm",
+                              "m3u8"
+                            ]
+                          },
+                          "codec": {
+                            "type": "string",
+                            "enum": [
+                              "h264",
+                              "hevc",
+                              "vp9",
+                              "av1"
+                            ]
+                          },
+                          "bitrate": {
+                            "type": "number"
+                          },
+                          "url": {
+                            "type": "string"
+                          },
+                          "size": {
+                            "type": "number"
+                          },
+                          "height": {
+                            "type": "number"
+                          },
+                          "width": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      }
+                    },
+                    "publisher": {
+                      "allOf": [
+                        {
+                          "$ref": "#/components/schemas/APIUser"
+                        },
+                        {
+                          "nullable": true
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "url",
+                    "width",
+                    "height",
+                    "duration",
+                    "formats"
+                  ]
+                }
+              },
+              "all": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "format": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "photo",
+                            "gif"
+                          ]
+                        },
+                        "url": {
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "number"
+                        },
+                        "height": {
+                          "type": "number"
+                        },
+                        "transcode_url": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "altText": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "url",
+                        "width",
+                        "height"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "format": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "video",
+                            "gif"
+                          ]
+                        },
+                        "url": {
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "number"
+                        },
+                        "height": {
+                          "type": "number"
+                        },
+                        "thumbnail_url": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "transcode_url": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "duration": {
+                          "type": "number"
+                        },
+                        "filesize": {
+                          "type": "number"
+                        },
+                        "formats": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "container": {
+                                "type": "string",
+                                "enum": [
+                                  "mp4",
+                                  "webm",
+                                  "m3u8"
+                                ]
+                              },
+                              "codec": {
+                                "type": "string",
+                                "enum": [
+                                  "h264",
+                                  "hevc",
+                                  "vp9",
+                                  "av1"
+                                ]
+                              },
+                              "bitrate": {
+                                "type": "number"
+                              },
+                              "url": {
+                                "type": "string"
+                              },
+                              "size": {
+                                "type": "number"
+                              },
+                              "height": {
+                                "type": "number"
+                              },
+                              "width": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "url"
+                            ]
+                          }
+                        },
+                        "publisher": {
+                          "allOf": [
+                            {
+                              "$ref": "#/components/schemas/APIUser"
+                            },
+                            {
+                              "nullable": true
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "url",
+                        "width",
+                        "height",
+                        "duration",
+                        "formats"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "format": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "mosaic_photo"
+                          ]
+                        },
+                        "url": {
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "number"
+                        },
+                        "height": {
+                          "type": "number"
+                        },
+                        "formats": {
+                          "type": "object",
+                          "properties": {
+                            "webp": {
+                              "type": "string"
+                            },
+                            "jpeg": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "webp",
+                            "jpeg"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "url",
+                        "width",
+                        "height",
+                        "formats"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "format": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "url": {
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "number"
+                        },
+                        "height": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "url",
+                        "width",
+                        "height"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "mosaic": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "format": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "mosaic_photo"
+                    ]
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "width": {
+                    "type": "number"
+                  },
+                  "height": {
+                    "type": "number"
+                  },
+                  "formats": {
+                    "type": "object",
+                    "properties": {
+                      "webp": {
+                        "type": "string"
+                      },
+                      "jpeg": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "webp",
+                      "jpeg"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "url",
+                  "width",
+                  "height",
+                  "formats"
+                ]
+              },
+              "broadcast": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "width": {
+                    "type": "number"
+                  },
+                  "height": {
+                    "type": "number"
+                  },
+                  "state": {
+                    "type": "string",
+                    "enum": [
+                      "LIVE",
+                      "ENDED"
+                    ]
+                  },
+                  "broadcaster": {
+                    "type": "object",
+                    "properties": {
+                      "username": {
+                        "type": "string"
+                      },
+                      "display_name": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "username",
+                      "display_name",
+                      "id"
+                    ]
+                  },
+                  "stream": {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "url"
+                    ]
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string"
+                  },
+                  "orientation": {
+                    "type": "string",
+                    "enum": [
+                      "landscape",
+                      "portrait"
+                    ]
+                  },
+                  "broadcast_id": {
+                    "type": "string"
+                  },
+                  "media_id": {
+                    "type": "string"
+                  },
+                  "media_key": {
+                    "type": "string"
+                  },
+                  "is_high_latency": {
+                    "type": "boolean"
+                  },
+                  "thumbnail": {
+                    "type": "object",
+                    "properties": {
+                      "original": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      },
+                      "small": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      },
+                      "medium": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      },
+                      "large": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      },
+                      "x_large": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "original"
+                    ]
+                  }
+                },
+                "required": [
+                  "url",
+                  "width",
+                  "height",
+                  "state",
+                  "broadcaster",
+                  "title",
+                  "source",
+                  "orientation",
+                  "broadcast_id",
+                  "media_id",
+                  "media_key",
+                  "is_high_latency",
+                  "thumbnail"
+                ]
+              }
+            }
+          },
+          "raw_text": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "display_text_range": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "facets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "Facet kind: e.g. url, mention, hashtag, bold, media, custom_emoji (Mastodon custom emoji image)"
+                    },
+                    "indices": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "description": "Start and end UTF-16 indices"
+                    },
+                    "original": {
+                      "type": "string"
+                    },
+                    "replacement": {
+                      "type": "string"
+                    },
+                    "display": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "indices"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "text",
+              "display_text_range",
+              "facets"
+            ]
+          },
+          "lang": {
+            "type": "string",
+            "nullable": true
+          },
+          "translation": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "source_lang": {
+                "type": "string"
+              },
+              "source_lang_en": {
+                "type": "string"
+              },
+              "target_lang": {
+                "type": "string"
+              },
+              "provider": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "source_lang",
+              "source_lang_en",
+              "target_lang",
+              "provider"
+            ]
+          },
+          "possibly_sensitive": {
+            "type": "boolean"
+          },
+          "replying_to": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "screen_name": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "screen_name",
+              "status"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "nullable": true
+          },
+          "embed_card": {
+            "type": "string",
+            "enum": [
+              "tweet",
+              "summary",
+              "summary_large_image",
+              "player"
+            ]
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "twitter"
+            ]
+          },
+          "views": {
+            "type": "number",
+            "nullable": true
+          },
+          "bookmarks": {
+            "type": "number",
+            "nullable": true
+          },
+          "community": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "created_at": {
+                "type": "string"
+              },
+              "search_tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "is_nsfw": {
+                "type": "boolean"
+              },
+              "topic": {
+                "type": "string",
+                "nullable": true
+              },
+              "admin": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/APIUser"
+                  },
+                  {
+                    "nullable": true
+                  }
+                ]
+              },
+              "creator": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/APIUser"
+                  },
+                  {
+                    "nullable": true
+                  }
+                ]
+              },
+              "join_policy": {
+                "type": "string",
+                "enum": [
+                  "Open",
+                  "Closed"
+                ]
+              },
+              "invites_policy": {
+                "type": "string",
+                "enum": [
+                  "MemberInvitesAllowed",
+                  "MemberInvitesDisabled"
+                ]
+              },
+              "is_pinned": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "description",
+              "created_at",
+              "search_tags",
+              "is_nsfw",
+              "topic",
+              "join_policy",
+              "invites_policy",
+              "is_pinned"
+            ]
+          },
+          "article": {
+            "type": "object",
+            "properties": {
+              "created_at": {
+                "type": "string"
+              },
+              "modified_at": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "preview_text": {
+                "type": "string"
+              },
+              "cover_media": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "media_key": {
+                    "type": "string"
+                  },
+                  "media_id": {
+                    "type": "string"
+                  },
+                  "media_info": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "__typename": {
+                            "type": "string",
+                            "enum": [
+                              "ApiImage"
+                            ]
+                          },
+                          "original_img_height": {
+                            "type": "number"
+                          },
+                          "original_img_width": {
+                            "type": "number"
+                          },
+                          "original_img_url": {
+                            "type": "string"
+                          },
+                          "color_info": {
+                            "type": "object",
+                            "properties": {
+                              "palette": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "percentage": {
+                                      "type": "number"
+                                    },
+                                    "rgb": {
+                                      "type": "object",
+                                      "properties": {
+                                        "red": {
+                                          "type": "number"
+                                        },
+                                        "green": {
+                                          "type": "number"
+                                        },
+                                        "blue": {
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": [
+                                        "red",
+                                        "green",
+                                        "blue"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "percentage",
+                                    "rgb"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "palette"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "__typename",
+                          "original_img_height",
+                          "original_img_width",
+                          "original_img_url",
+                          "color_info"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "__typename": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "ApiVideo"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "ApiGif"
+                                ]
+                              }
+                            ]
+                          },
+                          "type": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "video"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "animated_gif"
+                                ]
+                              }
+                            ]
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "id_str": {
+                            "type": "string"
+                          },
+                          "ext_alt_text": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "ext_media_color": {
+                            "type": "object",
+                            "properties": {
+                              "palette": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "percentage": {
+                                      "type": "number"
+                                    },
+                                    "rgb": {
+                                      "type": "object",
+                                      "properties": {
+                                        "red": {
+                                          "type": "number"
+                                        },
+                                        "green": {
+                                          "type": "number"
+                                        },
+                                        "blue": {
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": [
+                                        "red",
+                                        "green",
+                                        "blue"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "percentage",
+                                    "rgb"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "palette"
+                            ]
+                          },
+                          "media_url": {
+                            "type": "string"
+                          },
+                          "media_url_https": {
+                            "type": "string"
+                          },
+                          "url": {
+                            "type": "string"
+                          },
+                          "display_url": {
+                            "type": "string"
+                          },
+                          "expanded_url": {
+                            "type": "string"
+                          },
+                          "original_info": {
+                            "type": "object",
+                            "properties": {
+                              "height": {
+                                "type": "number"
+                              },
+                              "width": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "height",
+                              "width"
+                            ]
+                          },
+                          "sizes": {
+                            "type": "object",
+                            "properties": {
+                              "original": {
+                                "type": "object",
+                                "properties": {
+                                  "h": {
+                                    "type": "number"
+                                  },
+                                  "resize": {
+                                    "type": "string",
+                                    "enum": [
+                                      "fit"
+                                    ]
+                                  },
+                                  "w": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "h",
+                                  "resize",
+                                  "w"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "original"
+                            ]
+                          },
+                          "video_info": {
+                            "type": "object",
+                            "properties": {
+                              "aspect_ratio": {
+                                "type": "array",
+                                "items": {
+                                  "type": "number"
+                                },
+                                "minItems": 2,
+                                "maxItems": 2
+                              },
+                              "duration_millis": {
+                                "type": "number"
+                              },
+                              "variants": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "bitrate": {
+                                      "type": "number"
+                                    },
+                                    "content_type": {
+                                      "type": "string"
+                                    },
+                                    "url": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "bitrate",
+                                    "content_type",
+                                    "url"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "aspect_ratio",
+                              "duration_millis",
+                              "variants"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "__typename",
+                          "type",
+                          "id",
+                          "id_str",
+                          "ext_alt_text",
+                          "ext_media_color",
+                          "media_url",
+                          "media_url_https",
+                          "url",
+                          "display_url",
+                          "expanded_url",
+                          "original_info",
+                          "sizes",
+                          "video_info"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "media_key",
+                  "media_id",
+                  "media_info"
+                ]
+              },
+              "content": {
+                "type": "object",
+                "properties": {
+                  "blocks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "type": "string"
+                        },
+                        "data": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "nullable": true
+                          }
+                        },
+                        "entityRanges": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "key": {
+                                "type": "number"
+                              },
+                              "length": {
+                                "type": "number"
+                              },
+                              "offset": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "key",
+                              "length",
+                              "offset"
+                            ]
+                          }
+                        },
+                        "inlineStyleRanges": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "length": {
+                                "type": "number"
+                              },
+                              "offset": {
+                                "type": "number"
+                              },
+                              "style": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "length",
+                              "offset",
+                              "style"
+                            ]
+                          }
+                        },
+                        "text": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "data",
+                        "entityRanges",
+                        "inlineStyleRanges",
+                        "text",
+                        "type"
+                      ]
+                    },
+                    "default": []
+                  },
+                  "entityMap": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "key": {
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "MARKDOWN"
+                                  ]
+                                },
+                                "mutability": {
+                                  "type": "string",
+                                  "enum": [
+                                    "Mutable"
+                                  ]
+                                },
+                                "data": {
+                                  "type": "object",
+                                  "properties": {
+                                    "entityKey": {
+                                      "type": "string"
+                                    },
+                                    "markdown": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "entityKey",
+                                    "markdown"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "mutability",
+                                "data"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "key",
+                            "value"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "key": {
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "MEDIA"
+                                  ]
+                                },
+                                "mutability": {
+                                  "type": "string",
+                                  "enum": [
+                                    "Immutable"
+                                  ]
+                                },
+                                "data": {
+                                  "type": "object",
+                                  "properties": {
+                                    "entityKey": {
+                                      "type": "string"
+                                    },
+                                    "mediaItems": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "localMediaId": {
+                                            "type": "string"
+                                          },
+                                          "mediaCategory": {
+                                            "type": "string"
+                                          },
+                                          "mediaId": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "localMediaId",
+                                          "mediaCategory",
+                                          "mediaId"
+                                        ]
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "entityKey",
+                                    "mediaItems"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "mutability",
+                                "data"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "key",
+                            "value"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "key": {
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "TWEET"
+                                  ]
+                                },
+                                "mutability": {
+                                  "type": "string",
+                                  "enum": [
+                                    "Immutable"
+                                  ]
+                                },
+                                "data": {
+                                  "type": "object",
+                                  "properties": {
+                                    "tweetId": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "tweetId"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "mutability",
+                                "data"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "key",
+                            "value"
+                          ]
+                        }
+                      ]
+                    },
+                    "default": []
+                  }
+                }
+              },
+              "media_entities": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "media_key": {
+                      "type": "string"
+                    },
+                    "media_id": {
+                      "type": "string"
+                    },
+                    "media_info": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "__typename": {
+                              "type": "string",
+                              "enum": [
+                                "ApiImage"
+                              ]
+                            },
+                            "original_img_height": {
+                              "type": "number"
+                            },
+                            "original_img_width": {
+                              "type": "number"
+                            },
+                            "original_img_url": {
+                              "type": "string"
+                            },
+                            "color_info": {
+                              "type": "object",
+                              "properties": {
+                                "palette": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "percentage": {
+                                        "type": "number"
+                                      },
+                                      "rgb": {
+                                        "type": "object",
+                                        "properties": {
+                                          "red": {
+                                            "type": "number"
+                                          },
+                                          "green": {
+                                            "type": "number"
+                                          },
+                                          "blue": {
+                                            "type": "number"
+                                          }
+                                        },
+                                        "required": [
+                                          "red",
+                                          "green",
+                                          "blue"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "percentage",
+                                      "rgb"
+                                    ]
+                                  }
+                                }
+                              },
+                              "required": [
+                                "palette"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "__typename",
+                            "original_img_height",
+                            "original_img_width",
+                            "original_img_url",
+                            "color_info"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "__typename": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ApiVideo"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ApiGif"
+                                  ]
+                                }
+                              ]
+                            },
+                            "type": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "video"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "animated_gif"
+                                  ]
+                                }
+                              ]
+                            },
+                            "id": {
+                              "type": "string"
+                            },
+                            "id_str": {
+                              "type": "string"
+                            },
+                            "ext_alt_text": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "ext_media_color": {
+                              "type": "object",
+                              "properties": {
+                                "palette": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "percentage": {
+                                        "type": "number"
+                                      },
+                                      "rgb": {
+                                        "type": "object",
+                                        "properties": {
+                                          "red": {
+                                            "type": "number"
+                                          },
+                                          "green": {
+                                            "type": "number"
+                                          },
+                                          "blue": {
+                                            "type": "number"
+                                          }
+                                        },
+                                        "required": [
+                                          "red",
+                                          "green",
+                                          "blue"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "percentage",
+                                      "rgb"
+                                    ]
+                                  }
+                                }
+                              },
+                              "required": [
+                                "palette"
+                              ]
+                            },
+                            "media_url": {
+                              "type": "string"
+                            },
+                            "media_url_https": {
+                              "type": "string"
+                            },
+                            "url": {
+                              "type": "string"
+                            },
+                            "display_url": {
+                              "type": "string"
+                            },
+                            "expanded_url": {
+                              "type": "string"
+                            },
+                            "original_info": {
+                              "type": "object",
+                              "properties": {
+                                "height": {
+                                  "type": "number"
+                                },
+                                "width": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "height",
+                                "width"
+                              ]
+                            },
+                            "sizes": {
+                              "type": "object",
+                              "properties": {
+                                "original": {
+                                  "type": "object",
+                                  "properties": {
+                                    "h": {
+                                      "type": "number"
+                                    },
+                                    "resize": {
+                                      "type": "string",
+                                      "enum": [
+                                        "fit"
+                                      ]
+                                    },
+                                    "w": {
+                                      "type": "number"
+                                    }
+                                  },
+                                  "required": [
+                                    "h",
+                                    "resize",
+                                    "w"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "original"
+                              ]
+                            },
+                            "video_info": {
+                              "type": "object",
+                              "properties": {
+                                "aspect_ratio": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "number"
+                                  },
+                                  "minItems": 2,
+                                  "maxItems": 2
+                                },
+                                "duration_millis": {
+                                  "type": "number"
+                                },
+                                "variants": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "bitrate": {
+                                        "type": "number"
+                                      },
+                                      "content_type": {
+                                        "type": "string"
+                                      },
+                                      "url": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "bitrate",
+                                      "content_type",
+                                      "url"
+                                    ]
+                                  }
+                                }
+                              },
+                              "required": [
+                                "aspect_ratio",
+                                "duration_millis",
+                                "variants"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "__typename",
+                            "type",
+                            "id",
+                            "id_str",
+                            "ext_alt_text",
+                            "ext_media_color",
+                            "media_url",
+                            "media_url_https",
+                            "url",
+                            "display_url",
+                            "expanded_url",
+                            "original_info",
+                            "sizes",
+                            "video_info"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "media_key",
+                    "media_id",
+                    "media_info"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "created_at",
+              "id",
+              "title",
+              "preview_text",
+              "cover_media",
+              "content",
+              "media_entities"
+            ]
+          },
+          "is_note_tweet": {
+            "type": "boolean"
+          },
+          "community_note": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "facets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "Facet kind: e.g. url, mention, hashtag, bold, media, custom_emoji (Mastodon custom emoji image)"
+                    },
+                    "indices": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "description": "Start and end UTF-16 indices"
+                    },
+                    "original": {
+                      "type": "string"
+                    },
+                    "replacement": {
+                      "type": "string"
+                    },
+                    "display": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "indices"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "text",
+              "facets"
+            ]
+          },
+          "reposted_by": {
+            "$ref": "#/components/schemas/APIRepostedBy"
+          },
+          "card": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "domain": {
+                "type": "string"
+              },
+              "card_name": {
+                "type": "string"
+              },
+              "image": {
+                "type": "object",
+                "properties": {
+                  "width": {
+                    "type": "number"
+                  },
+                  "height": {
+                    "type": "number"
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "alt": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "url"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "text",
+          "created_at",
+          "created_timestamp",
+          "likes",
+          "reposts",
+          "quotes",
+          "replies",
+          "author",
+          "media",
+          "raw_text",
+          "lang",
+          "possibly_sensitive",
+          "replying_to",
+          "source",
+          "embed_card",
+          "provider",
+          "is_note_tweet",
+          "community_note",
+          "reposted_by"
+        ],
+        "nullable": true
+      },
+      "APIUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "screen_name": {
+            "type": "string"
+          },
+          "avatar_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "banner_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string"
+          },
+          "raw_description": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "facets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "Facet kind: e.g. url, mention, hashtag, bold, media, custom_emoji (Mastodon custom emoji image)"
+                    },
+                    "indices": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "description": "Start and end UTF-16 indices"
+                    },
+                    "original": {
+                      "type": "string"
+                    },
+                    "replacement": {
+                      "type": "string"
+                    },
+                    "display": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "indices"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "text",
+              "facets"
+            ]
+          },
+          "location": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "protected": {
+            "type": "boolean"
+          },
+          "followers": {
+            "type": "number"
+          },
+          "following": {
+            "type": "number"
+          },
+          "statuses": {
+            "type": "number"
+          },
+          "media_count": {
+            "type": "number"
+          },
+          "likes": {
+            "type": "number"
+          },
+          "joined": {
+            "type": "string"
+          },
+          "website": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "display_url": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "url",
+              "display_url"
+            ]
+          },
+          "birthday": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "day": {
+                "type": "number"
+              },
+              "month": {
+                "type": "number"
+              },
+              "year": {
+                "type": "number"
+              }
+            }
+          },
+          "verification": {
+            "type": "object",
+            "properties": {
+              "verified": {
+                "type": "boolean"
+              },
+              "type": {
+                "type": "string",
+                "nullable": true,
+                "enum": [
+                  "organization",
+                  "government",
+                  "individual",
+                  null
+                ]
+              },
+              "verified_at": {
+                "type": "string",
+                "nullable": true
+              },
+              "identity_verified": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "verified",
+              "type"
+            ]
+          },
+          "about_account": {
+            "$ref": "#/components/schemas/APIAboutAccount"
+          },
+          "profile_embed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "screen_name",
+          "avatar_url",
+          "banner_url",
+          "description",
+          "raw_description",
+          "location",
+          "url",
+          "protected",
+          "followers",
+          "following",
+          "statuses",
+          "media_count",
+          "likes",
+          "joined",
+          "website"
+        ]
+      },
+      "APIAboutAccount": {
+        "type": "object",
+        "properties": {
+          "based_in": {
+            "type": "string",
+            "nullable": true
+          },
+          "location_accurate": {
+            "type": "boolean"
+          },
+          "created_country_accurate": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "source": {
+            "type": "string",
+            "nullable": true
+          },
+          "username_changes": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "number"
+              },
+              "last_changed_at": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "required": [
+              "count",
+              "last_changed_at"
+            ]
+          }
+        }
+      },
+      "APIRepostedBy": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "screen_name": {
+            "type": "string"
+          },
+          "avatar_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "screen_name"
+        ]
+      },
+      "ApiQueryError": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number",
+            "enum": [
+              400
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "APIUserListResults": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/APIUser"
+            }
+          },
+          "cursor": {
+            "type": "object",
+            "properties": {
+              "top": {
+                "type": "string",
+                "nullable": true
+              },
+              "bottom": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "required": [
+              "top",
+              "bottom"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "results",
+          "cursor"
+        ]
+      },
+      "APISearchResults": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/APITwitterStatus"
+            }
+          },
+          "cursor": {
+            "type": "object",
+            "properties": {
+              "top": {
+                "type": "string",
+                "nullable": true
+              },
+              "bottom": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "required": [
+              "top",
+              "bottom"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "results",
+          "cursor"
+        ]
+      },
+      "SocialConversation": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number",
+            "description": "HTTP-style status; mirrors response status code"
+          },
+          "status": {
+            "$ref": "#/components/schemas/APITwitterStatus"
+          },
+          "thread": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/APITwitterStatus"
+            }
+          },
+          "replies": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/APITwitterStatus"
+            }
+          },
+          "author": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/APIUser"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "cursor": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "bottom": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "required": [
+              "bottom"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "status",
+          "thread",
+          "replies",
+          "author",
+          "cursor"
+        ]
+      },
+      "ProfileAboutAPIResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number"
+          },
+          "message": {
+            "type": "string"
+          },
+          "about_account": {
+            "$ref": "#/components/schemas/APIAboutAccount"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "APIProfileRelationshipList": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/APIUser"
+            }
+          },
+          "cursor": {
+            "type": "object",
+            "properties": {
+              "top": {
+                "type": "string",
+                "nullable": true
+              },
+              "bottom": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "required": [
+              "top",
+              "bottom"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "results",
+          "cursor"
+        ]
+      },
+      "UserAPIResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number"
+          },
+          "message": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/APIUser"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "APITypeaheadResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number"
+          },
+          "query": {
+            "type": "string"
+          },
+          "num_results": {
+            "type": "number"
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/APIUser"
+            }
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/APITypeaheadTopic"
+            }
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/APITypeaheadEvent"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "query",
+          "num_results",
+          "users",
+          "topics",
+          "events"
+        ]
+      },
+      "APITypeaheadTopic": {
+        "type": "object",
+        "properties": {
+          "topic": {
+            "type": "string"
+          },
+          "result_context": {
+            "type": "object",
+            "properties": {
+              "display_string": {
+                "type": "string"
+              },
+              "redirect_url": {
+                "type": "string"
+              },
+              "types": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "topic"
+        ]
+      },
+      "APITypeaheadEvent": {
+        "type": "object",
+        "properties": {
+          "topic": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "supporting_text": {
+            "type": "string"
+          },
+          "primary_image": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "width": {
+                "type": "number"
+              },
+              "height": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "url"
+            ]
+          }
+        },
+        "required": [
+          "topic"
+        ]
+      },
+      "APITrendsResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number"
+          },
+          "message": {
+            "type": "string"
+          },
+          "timeline_type": {
+            "type": "string"
+          },
+          "trends": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "rank": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "context": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "grouped_topics": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "rank",
+                "context"
+              ]
+            }
+          },
+          "cursor": {
+            "type": "object",
+            "properties": {
+              "top": {
+                "type": "string",
+                "nullable": true
+              },
+              "bottom": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "required": [
+              "top",
+              "bottom"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "timeline_type",
+          "trends",
+          "cursor"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/2/status/{id}": {
+      "get": {
+        "summary": "Get a single post",
+        "description": "Returns one X/Twitter post by snowflake ID. Optional `about_account` / `aboutAccount` adds account metadata when present.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Tweet/post snowflake ID",
+              "example": "20"
+            },
+            "required": true,
+            "description": "Tweet/post snowflake ID",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "If truthy, include `about_account` on author when available",
+              "example": "1"
+            },
+            "required": false,
+            "description": "If truthy, include `about_account` on author when available",
+            "name": "about_account",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Alias for about_account"
+            },
+            "required": false,
+            "description": "Alias for about_account",
+            "name": "aboutAccount",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target language (ISO 639-1 or 639-5, e.g. `en`, `es`, `zh-cn`) for inline X translations when available; falls back to translation API if missing",
+              "example": "es"
+            },
+            "required": false,
+            "description": "Target language (ISO 639-1 or 639-5, e.g. `en`, `es`, `zh-cn`) for inline X translations when available; falls back to translation API if missing",
+            "name": "lang",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Post payload (check `code` for upstream errors mirrored as HTTP status)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialThread"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Private or unavailable post",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialThread"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialThread"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server or upstream failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialThread"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/status/{id}/reposts": {
+      "get": {
+        "summary": "List accounts that reposted a post",
+        "description": "Returns users who reposted the given post. Use `cursor.bottom` from the prior response to fetch the next page.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Tweet/post snowflake ID",
+              "example": "20"
+            },
+            "required": true,
+            "description": "Tweet/post snowflake ID",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Page size (default 20)"
+            },
+            "required": false,
+            "description": "Page size (default 20)",
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Pagination cursor from prior response"
+            },
+            "required": false,
+            "description": "Pagination cursor from prior response",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User list page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIUserListResults"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Timeline unavailable or empty",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIUserListResults"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIUserListResults"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/status/{id}/quotes": {
+      "get": {
+        "summary": "List posts that quote this post",
+        "description": "Returns posts whose text quotes the given post (X search operator `quoted_tweet_id`). Uses the Latest search tab. Use `cursor.bottom` from the prior response to fetch the next page.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Tweet/post snowflake ID",
+              "example": "20"
+            },
+            "required": true,
+            "description": "Tweet/post snowflake ID",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Page size (default 20)"
+            },
+            "required": false,
+            "description": "Page size (default 20)",
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Pagination cursor from prior response"
+            },
+            "required": false,
+            "description": "Pagination cursor from prior response",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target language (ISO 639-1 or 639-5, e.g. `en`, `es`, `zh-cn`) for inline X translations when available; falls back to translation API if missing",
+              "example": "es"
+            },
+            "required": false,
+            "description": "Target language (ISO 639-1 or 639-5, e.g. `en`, `es`, `zh-cn`) for inline X translations when available; falls back to translation API if missing",
+            "name": "lang",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quote posts page (same shape as `/2/search`)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResults"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No results or timeline unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResults"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResults"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/thread/{id}": {
+      "get": {
+        "summary": "Get a post and its reply thread",
+        "description": "Same as `/2/status/{id}` but includes the conversation thread when available. Supports `about_account` / `aboutAccount`.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Root tweet/post snowflake ID"
+            },
+            "required": true,
+            "description": "Root tweet/post snowflake ID",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "If truthy, include `about_account` on author when available",
+              "example": "1"
+            },
+            "required": false,
+            "description": "If truthy, include `about_account` on author when available",
+            "name": "about_account",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Alias for about_account"
+            },
+            "required": false,
+            "description": "Alias for about_account",
+            "name": "aboutAccount",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target language (ISO 639-1 or 639-5, e.g. `en`, `es`, `zh-cn`) for inline X translations when available; falls back to translation API if missing",
+              "example": "es"
+            },
+            "required": false,
+            "description": "Target language (ISO 639-1 or 639-5, e.g. `en`, `es`, `zh-cn`) for inline X translations when available; falls back to translation API if missing",
+            "name": "lang",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thread payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialThread"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Private or unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialThread"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialThread"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server or upstream failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialThread"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/conversation/{id}": {
+      "get": {
+        "summary": "Get a post with its full thread and replies",
+        "description": "Returns a post, its full thread chain (walking all the way to the root), and replies from other users. Replies are sorted by the chosen ranking mode (default: Likes). Use the returned bottom cursor to paginate through more replies.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Focal tweet/post snowflake ID"
+            },
+            "required": true,
+            "description": "Focal tweet/post snowflake ID",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "likes",
+                "recency"
+              ],
+              "default": "likes",
+              "description": "How replies are ranked (default: likes)"
+            },
+            "required": false,
+            "description": "How replies are ranked (default: likes)",
+            "name": "ranking_mode",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Pagination cursor from a prior response"
+            },
+            "required": false,
+            "description": "Pagination cursor from a prior response",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "If truthy, include `about_account` on author when available",
+              "example": "1"
+            },
+            "required": false,
+            "description": "If truthy, include `about_account` on author when available",
+            "name": "about_account",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Alias for about_account"
+            },
+            "required": false,
+            "description": "Alias for about_account",
+            "name": "aboutAccount",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target language (ISO 639-1 or 639-5, e.g. `en`, `es`, `zh-cn`) for inline X translations when available; falls back to translation API if missing",
+              "example": "es"
+            },
+            "required": false,
+            "description": "Target language (ISO 639-1 or 639-5, e.g. `en`, `es`, `zh-cn`) for inline X translations when available; falls back to translation API if missing",
+            "name": "lang",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation payload with thread, replies, and pagination cursor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialConversation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Private or unavailable post",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialConversation"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialConversation"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server or upstream failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialConversation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/profile/{handle}/statuses": {
+      "get": {
+        "summary": "List posts for a user",
+        "description": "Optional `since` (Unix time): when used without `cursor`, returns **204 No Content** if no posts in the page are newer than that instant; otherwise returns the normal JSON timeline. Values ≥ 1e12 are treated as milliseconds; smaller values as seconds.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Username without @, or numeric user id as `id:<rest_id>` (e.g. `id:783214`). Case-insensitive `id:` prefix."
+            },
+            "required": true,
+            "description": "Username without @, or numeric user id as `id:<rest_id>` (e.g. `id:783214`). Case-insensitive `id:` prefix.",
+            "name": "handle",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Page size (default 20)"
+            },
+            "required": false,
+            "description": "Page size (default 20)",
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Pagination cursor from prior response"
+            },
+            "required": false,
+            "description": "Pagination cursor from prior response",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "nullable": true,
+              "minimum": 0,
+              "description": "Unix timestamp (seconds, or ms if ≥ 1e12). Without `cursor`, 204 if no post is strictly newer than this time."
+            },
+            "required": false,
+            "description": "Unix timestamp (seconds, or ms if ≥ 1e12). Without `cursor`, 204 if no post is strictly newer than this time.",
+            "name": "since",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "If truthy (`1`, `true`, `yes`, `on`, or empty), include replies using alternate upstream timelines"
+            },
+            "required": false,
+            "description": "If truthy (`1`, `true`, `yes`, `on`, or empty), include replies using alternate upstream timelines",
+            "name": "with_replies",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target language (ISO 639-1 or 639-5, e.g. `en`, `es`, `zh-cn`) for inline X translations when available; falls back to translation API if missing",
+              "example": "es"
+            },
+            "required": false,
+            "description": "Target language (ISO 639-1 or 639-5, e.g. `en`, `es`, `zh-cn`) for inline X translations when available; falls back to translation API if missing",
+            "name": "lang",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Timeline page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResults"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No posts newer than `since` (only when `since` is set and `cursor` is omitted; same conditions as 200 otherwise)"
+          },
+          "400": {
+            "description": "Invalid path or query parameters (e.g. `count` out of range)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found or empty timeline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResults"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResults"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/profile/{handle}/articles": {
+      "get": {
+        "summary": "List article posts for a user",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Username without @, or numeric user id as `id:<rest_id>` (e.g. `id:783214`). Case-insensitive `id:` prefix."
+            },
+            "required": true,
+            "description": "Username without @, or numeric user id as `id:<rest_id>` (e.g. `id:783214`). Case-insensitive `id:` prefix.",
+            "name": "handle",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Page size (default 20)"
+            },
+            "required": false,
+            "description": "Page size (default 20)",
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Pagination cursor from prior response"
+            },
+            "required": false,
+            "description": "Pagination cursor from prior response",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target language (ISO 639-1 or 639-5, e.g. `en`, `es`, `zh-cn`) for inline X translations when available; falls back to translation API if missing",
+              "example": "es"
+            },
+            "required": false,
+            "description": "Target language (ISO 639-1 or 639-5, e.g. `en`, `es`, `zh-cn`) for inline X translations when available; falls back to translation API if missing",
+            "name": "lang",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Articles timeline page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResults"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or query parameters (e.g. `count` out of range)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found or empty timeline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResults"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResults"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/profile/{handle}/about": {
+      "get": {
+        "summary": "Get profile “about this account” metadata",
+        "description": "Returns the same `about_account` object as `/2/profile/{handle}` with `about_account` / `aboutAccount` enabled, without fetching the full profile.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Username without @, or numeric user id as `id:<rest_id>` (e.g. `id:783214`). Case-insensitive `id:` prefix.",
+              "example": "X"
+            },
+            "required": true,
+            "description": "Username without @, or numeric user id as `id:<rest_id>` (e.g. `id:783214`). Case-insensitive `id:` prefix.",
+            "name": "handle",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "About metadata (check `code`); `about_account` omitted when upstream has none",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileAboutAPIResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileAboutAPIResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/profile/{handle}/media": {
+      "get": {
+        "summary": "List posts with media (photos and videos) for a user",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Username without @, or numeric user id as `id:<rest_id>` (e.g. `id:783214`). Case-insensitive `id:` prefix."
+            },
+            "required": true,
+            "description": "Username without @, or numeric user id as `id:<rest_id>` (e.g. `id:783214`). Case-insensitive `id:` prefix.",
+            "name": "handle",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Page size (default 20)"
+            },
+            "required": false,
+            "description": "Page size (default 20)",
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Pagination cursor from prior response"
+            },
+            "required": false,
+            "description": "Pagination cursor from prior response",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target language (ISO 639-1 or 639-5, e.g. `en`, `es`, `zh-cn`) for inline X translations when available; falls back to translation API if missing",
+              "example": "es"
+            },
+            "required": false,
+            "description": "Target language (ISO 639-1 or 639-5, e.g. `en`, `es`, `zh-cn`) for inline X translations when available; falls back to translation API if missing",
+            "name": "lang",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Media timeline page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResults"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or query parameters (e.g. `count` out of range)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found or empty timeline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResults"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResults"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/profile/{handle}/followers": {
+      "get": {
+        "summary": "List followers of a user",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Username without @, or numeric user id as `id:<rest_id>` (e.g. `id:783214`). Case-insensitive `id:` prefix."
+            },
+            "required": true,
+            "description": "Username without @, or numeric user id as `id:<rest_id>` (e.g. `id:783214`). Case-insensitive `id:` prefix.",
+            "name": "handle",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Page size (default 20)"
+            },
+            "required": false,
+            "description": "Page size (default 20)",
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Pagination cursor from prior response"
+            },
+            "required": false,
+            "description": "Pagination cursor from prior response",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Followers page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIProfileRelationshipList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or query parameters (e.g. `count` out of range)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found or list unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIProfileRelationshipList"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIProfileRelationshipList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/profile/{handle}/following": {
+      "get": {
+        "summary": "List accounts a user follows",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Username without @, or numeric user id as `id:<rest_id>` (e.g. `id:783214`). Case-insensitive `id:` prefix."
+            },
+            "required": true,
+            "description": "Username without @, or numeric user id as `id:<rest_id>` (e.g. `id:783214`). Case-insensitive `id:` prefix.",
+            "name": "handle",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Page size (default 20)"
+            },
+            "required": false,
+            "description": "Page size (default 20)",
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Pagination cursor from prior response"
+            },
+            "required": false,
+            "description": "Pagination cursor from prior response",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Following page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIProfileRelationshipList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or query parameters (e.g. `count` out of range)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found or list unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIProfileRelationshipList"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIProfileRelationshipList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/profile/{handle}": {
+      "get": {
+        "summary": "Get user profile",
+        "description": "Returns profile fields for a user. Optional `about_account` / `aboutAccount` (truthy) adds `about_account` on the user when available.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Username without @, or numeric user id as `id:<rest_id>` (e.g. `id:783214`). Case-insensitive `id:` prefix.",
+              "example": "X"
+            },
+            "required": true,
+            "description": "Username without @, or numeric user id as `id:<rest_id>` (e.g. `id:783214`). Case-insensitive `id:` prefix.",
+            "name": "handle",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "If truthy, include `about_account` on author when available",
+              "example": "1"
+            },
+            "required": false,
+            "description": "If truthy, include `about_account` on author when available",
+            "name": "about_account",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Alias for about_account"
+            },
+            "required": false,
+            "description": "Alias for about_account",
+            "name": "aboutAccount",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile (check `code`)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAPIResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAPIResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/search": {
+      "get": {
+        "summary": "Search posts",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Search query (non-empty)",
+              "example": "puppies"
+            },
+            "required": true,
+            "description": "Search query (non-empty)",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "latest",
+                "top",
+                "media"
+              ],
+              "default": "latest",
+              "description": "Search tab (default latest)"
+            },
+            "required": false,
+            "description": "Search tab (default latest)",
+            "name": "feed",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 30,
+              "description": "Page size (default 30)"
+            },
+            "required": false,
+            "description": "Page size (default 30)",
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target language (ISO 639-1 or 639-5, e.g. `en`, `es`, `zh-cn`) for inline X translations when available; falls back to translation API if missing",
+              "example": "es"
+            },
+            "required": false,
+            "description": "Target language (ISO 639-1 or 639-5, e.g. `en`, `es`, `zh-cn`) for inline X translations when available; falls back to translation API if missing",
+            "name": "lang",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResults"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid `q` parameter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No results or timeline unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResults"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResults"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/typeahead": {
+      "get": {
+        "summary": "Search typeahead suggestions",
+        "description": "Autocomplete-style suggestions from X REST `1.1/search/typeahead.json`: users (as `APIUser` with counts and bio omitted when unknown), topics (including hashtag-style trends), and events.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Prefix or query string",
+              "example": "example"
+            },
+            "required": true,
+            "description": "Prefix or query string",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Comma-separated suggestion kinds to request from X: `events`, `users`, `topics` (default: all three). Other values are ignored. Hashtag-style hits appear under `topics`.",
+              "example": "events,users,topics"
+            },
+            "required": false,
+            "description": "Comma-separated suggestion kinds to request from X: `events`, `users`, `topics` (default: all three). Other values are ignored. Hashtag-style hits appear under `topics`.",
+            "name": "result_type",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Upstream `src` hint (default: search_box)",
+              "example": "search_box"
+            },
+            "required": false,
+            "description": "Upstream `src` hint (default: search_box)",
+            "name": "src",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Typeahead payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APITypeaheadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Upstream returned an error payload for this query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APITypeaheadResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APITypeaheadResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/trends": {
+      "get": {
+        "summary": "Trending topics",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "trending"
+              ],
+              "default": "trending",
+              "description": "Explore timeline kind. Supported: trending",
+              "example": "trending"
+            },
+            "required": false,
+            "description": "Explore timeline kind. Supported: trending",
+            "name": "type",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "description": "Number of trends (default 20, max 50)"
+            },
+            "required": false,
+            "description": "Number of trends (default 20, max 50)",
+            "name": "count",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trends payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APITrendsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters (e.g. `type` or `count` out of allowed range)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Trends unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APITrendsResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APITrendsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

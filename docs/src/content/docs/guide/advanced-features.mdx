@@ -1,0 +1,72 @@
+---
+title: Advanced Features
+description: Translation, Telegram Instant View, Nitter redirect, and other advanced FxEmbed features.
+---
+
+## Post Translation
+
+FxEmbed can translate X/Twitter posts into any supported language. Append a two-letter ISO 639-1 language code to the post URL:
+
+```
+https://fxtwitter.com/user/status/123456789/en
+https://fixupx.com/user/status/123456789/es
+```
+
+The embed displays both the original text and the translated version, space permitting.
+
+:::note
+Translation currently relies on X/Twitter's Google Translate endpoint and is only available for X/Twitter posts. Bluesky translation support is planned for the future.
+:::
+
+## Telegram Instant View
+
+When sharing FxEmbed links in Telegram, threads are rendered using Telegram's Instant View, allowing users to read entire conversation threads without leaving the app or opening a browser.
+
+Instant View will:
+
+- Unroll the full thread from any linked post
+- Track replied-to posts back to the start of the conversation
+- Display media, quotes, and other rich content inline
+
+Use the `i.` subdomain to explicitly request Instant View rendering:
+
+```
+https://i.fxtwitter.com/user/status/123456789
+```
+
+## Custom Redirect (Nitter)
+
+You can configure FxEmbed to redirect you to Nitter or another alternative frontend instead of the default X/Twitter site:
+
+```
+https://fxtwitter.com/set_base_redirect?url=https://nitter.net
+```
+
+This sets a cookie on the domain you configure it on. If you set it on `fxtwitter.com`, it will not automatically apply to `fixupx.com` — you would need to set it separately on each domain.
+
+## Link Shortener Replacement
+
+FxEmbed automatically replaces `t.co` shortened links in X/Twitter posts with their original destination URLs. This makes it clear where links point before clicking them.
+
+## Tracking Parameter Removal
+
+When FxEmbed redirects to the original post, it strips tracking parameters (like `?s` and `&t` on X/Twitter URLs) that are only used for telemetry and advertising.
+
+## Comparison with Alternatives
+
+| Feature | FxTwitter / FixupX | Default X/Twitter | vxTwitter (fixvx) |
+|---|:---:|:---:|:---:|
+| Embed posts / images | ✅ | ✅ | ✅ |
+| Embed profile pictures | ✅ | ❌ | Partial |
+| Embed videos | ✅ | ❌ | ✅ |
+| Embed external videos (YouTube, etc.) | ✅ | ❌ | ❌ |
+| Embed poll results | ✅ | ❌ | ✅ |
+| Embed quotes | ✅ | ❌ | Partial |
+| Embed multiple images | ✅ | ❌ | ✅ |
+| Translate posts | ✅ | ❌ | ❌ |
+| Replace t.co links | ✅ | ❌ | ✅ |
+| Direct media links | ✅ | ❌ | Partial |
+| Gallery view | ✅ | ❌ | ❌ |
+| Strip tracking on redirect | ✅ | ❌ | ✅ |
+| Telegram Instant View | ✅ | ❌ | ❌ |
+| Developer API | ✅ | N/A | ✅ |

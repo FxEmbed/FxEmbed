@@ -1,0 +1,53 @@
+---
+title: FxEmbed
+description: Embed videos, polls, quotes, translations, and more from X/Twitter, Bluesky, and Mastodon on Discord, Telegram, and other platforms.
+template: splash
+hero:
+  tagline: Better social media embeds for Discord, Telegram, and more. Home of FxTwitter, FixupX, and FxBluesky.
+  image:
+    html: '<img src="/fxembed.svg" alt="FxEmbed Logo" width="200" />'
+  actions:
+    - text: Get Started
+      link: /guide/getting-started/
+      icon: right-arrow
+      variant: primary
+    - text: API Reference
+      link: /api/overview/
+      variant: minimal
+    - text: Self-Host
+      link: /deployment/self-hosting/
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## What is FxEmbed?
+
+FxEmbed powers **FxTwitter**, **FixupX**, and **FxBluesky** — services that turn social media links into rich embeds with videos, polls, quotes, translations, and more. Just change a URL prefix and share it in Discord, Telegram, or anywhere that supports link previews.
+
+<CardGrid>
+  <Card title="Embed Videos & GIFs" icon="seti:video">
+    Videos and GIFs embed directly — share memes, clips, and more without forcing people to open a browser.
+  </Card>
+  <Card title="Polls & Quotes" icon="comment">
+    See poll results and quoted posts inline, with full media support for quoted content.
+  </Card>
+  <Card title="Translate Posts" icon="translate">
+    Translate X/Twitter posts into any supported language by appending a language code to the URL.
+  </Card>
+  <Card title="Privacy First" icon="approve-check">
+    Built on Cloudflare Workers with no persistent logging. No ads, no tracking, no data sales.
+  </Card>
+</CardGrid>
+
+## Supported Platforms
+
+| Source Platform | Domain Prefix | Example |
+|---|---|---|
+| X/Twitter (`twitter.com`) | Add `fx` | `fxtwitter.com/user/status/123` |
+| X (`x.com`) | Add `fixup` | `fixupx.com/user/status/123` |
+| Bluesky (`bsky.app`) | Add `fx` | `fxbsky.app/profile/user/post/abc` |
+
+## Open Source
+
+FxEmbed is [MIT licensed](https://github.com/FxEmbed/FxEmbed/blob/main/LICENSE.md) and built with TypeScript on Cloudflare Workers. Contributions are welcome!

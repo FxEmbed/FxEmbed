@@ -1,0 +1,95 @@
+---
+title: API Overview
+description: Introduction to the FxEmbed JSON APIs for X/Twitter, Bluesky, and Mastodon.
+---
+
+FxEmbed exposes versioned JSON APIs that return structured post, profile, and timeline data. These are the same APIs that power the embed service itself.
+
+## Available APIs
+
+FxEmbed provides three separate API surfaces:
+
+### FxTwitter API
+
+The most feature-complete API, covering X/Twitter data.
+
+- **Base URL**: `https://api.fxtwitter.com`
+- **Spec**: [FxTwitter API Reference](/api/twitter/operations/)
+- Posts, threads, conversations, profiles, search, trends, typeahead
+
+### FxBluesky API
+
+Bluesky / AT Protocol data, with response shapes aligned to the FxTwitter API where applicable.
+
+- **Base URL**: `https://api.fxbsky.app`
+- **Spec**: [FxBluesky API Reference](/api/bluesky/operations/)
+- Posts, threads, conversations, profiles, search
+
+### Generic API (Mastodon / ActivityPub)
+
+Multi-provider API for Mastodon and other ActivityPub instances. Paths are prefixed with `/2/mastodon/{instance}/…`.
+
+- **Base URL**: `https://api.fxembed.com`
+- **Spec**: [Generic API Reference](/api/generic/operations/)
+- Posts, threads, conversations, profiles, search
+
+## Authentication
+
+All APIs require a `User-Agent` header. Requests without one receive a `401` response. Use a descriptive user agent that identifies your application:
+
+```
+User-Agent: MyApp/1.0 (+https://example.com/myapp)
+```
+
+There are no API keys or tokens required.
+
+## Versioning
+
+All current endpoints are under the `/2/` path prefix (API v2). The legacy v1 endpoints (e.g., `/:handle/status/:id`) still work for backward compatibility but return data through the older embed pipeline.
+
+## Response Format
+
+All API responses are JSON with `Content-Type: application/json`. Every response includes a `code` field that mirrors the HTTP status code, making it easy to check for errors even when the HTTP status is `200`.
+
+```json
+{
+  "code": 200,
+  "status": {
+    "id": "123456789",
+    "url": "https://twitter.com/user/status/12345",
+    "text": "Hello, world!",
+    "author": { ... },
+    "media": { ... },
+    ...
+  }
+}
+```
+
+## Pagination
+
+List endpoints (search results, timelines, followers, etc.) return a `cursor` object with `top` and `bottom` fields. Pass `cursor.bottom` as the `cursor` query parameter to fetch the next page.
+
+```json
+{
+  "code": 200,
+  "results": [ ... ],
+  "cursor": {
+    "top": "...",
+    "bottom": "..."
+  }
+}
+```
+
+## Rate Limiting
+
+There are no strict per-user rate limits, but you may be blocked if you send excessive requests from an unidentifiable user agent. Use a descriptive `User-Agent` header and be respectful of the service.
+
+## OpenAPI Specifications
+
+Machine-readable OpenAPI 3.0 specs are available at runtime:
+
+- FxTwitter: `https://api.fxtwitter.com/2/openapi.json`
+- FxBluesky: `https://api.fxbsky.app/2/openapi.json`
+- Generic: `https://api.fxembed.com/2/openapi.json`
+
+The interactive API reference pages in this documentation are generated from these specifications.

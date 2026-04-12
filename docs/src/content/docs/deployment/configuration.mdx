@@ -1,0 +1,133 @@
+---
+title: Configuration
+description: Environment variables, wrangler.toml settings, and branding configuration for FxEmbed.
+---
+
+FxEmbed is configured through environment variables (`.env`), Wrangler settings (`wrangler.toml`), and an optional branding file (`branding.json`).
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and configure:
+
+### Domain Lists
+
+These comma-separated lists define which domains route to which realm:
+
+| Variable | Description | Example |
+|---|---|---|
+| `STANDARD_DOMAIN_LIST` | X/Twitter embed domains | `fxtwitter.com,fixupx.com,twittpr.com` |
+| `STANDARD_BSKY_DOMAIN_LIST` | Bluesky embed domains | `fxbsky.app` |
+| `STANDARD_TIKTOK_DOMAIN_LIST` | TikTok embed domains | `fixtok.example.com` |
+
+### Subdomain Feature Domains
+
+| Variable | Description | Example |
+|---|---|---|
+| `DIRECT_MEDIA_DOMAINS` | `d.`/`dl.` direct media subdomains | `d.fxtwitter.com,dl.fxtwitter.com` |
+| `TEXT_ONLY_DOMAINS` | `t.` text-only subdomains | `t.fxtwitter.com` |
+| `INSTANT_VIEW_DOMAINS` | `i.` Telegram Instant View subdomains | `i.fxtwitter.com` |
+| `GALLERY_DOMAINS` | `g.` gallery subdomains | `g.fxtwitter.com` |
+| `FORCE_MOSAIC_DOMAINS` | `m.` mosaic subdomains | `m.fxtwitter.com` |
+| `OLD_EMBED_DOMAINS` | `o.` legacy embed subdomains | `o.fxtwitter.com` |
+
+### API Domains
+
+| Variable | Description | Example |
+|---|---|---|
+| `API_HOST_LIST` | FxTwitter API host(s) | `api.fxtwitter.com` |
+| `BLUESKY_API_HOST_LIST` | FxBluesky API host(s) | `api.fxbsky.app` |
+| `GENERIC_API_HOST_LIST` | Generic (Mastodon) API host(s) | `api.fxembed.com` |
+
+### Service Domains
+
+| Variable | Description |
+|---|---|
+| `MOSAIC_DOMAIN_LIST` | Mosaic image generation service endpoint(s) |
+| `GIF_TRANSCODE_DOMAIN_LIST` | GIF transcoding service endpoint(s) |
+| `VIDEO_TRANSCODE_DOMAIN_LIST` | Video transcoding service endpoint(s) |
+| `VIDEO_TRANSCODE_BSKY_DOMAIN_LIST` | Bluesky video transcoding endpoint(s) |
+| `POLYGLOT_DOMAIN_LIST` | Translation service endpoint(s) |
+| `POLYGLOT_ACCESS_TOKEN` | Translation service access token |
+| `TWITTER_ROOT` | Base Twitter/X URL for redirects |
+
+### Sentry (Error Monitoring)
+
+| Variable | Description |
+|---|---|
+| `SENTRY_DSN` | Sentry Data Source Name (leave empty to disable) |
+| `SENTRY_AUTH_TOKEN` | Sentry authentication token for source maps |
+| `SENTRY_ORG` | Sentry organization slug |
+| `SENTRY_PROJECT` | Sentry project slug |
+
+## Wrangler Configuration
+
+The `wrangler.toml` file configures the Cloudflare Worker:
+
+```toml
+name = "fxembed"
+account_id = "YOUR_ACCOUNT_ID"
+main = "./dist/worker.js"
+compatibility_date = "2026-04-11"
+send_metrics = false
+
+analytics_engine_datasets = [
+  { binding = "AnalyticsEngine" }
+]
+
+[build]
+command = "npm run build"
+```
+
+### Key Settings
+
+- **`name`**: Worker name (appears in `*.workers.dev` URL)
+- **`account_id`**: Your [Cloudflare Account ID](https://developers.cloudflare.com/fundamentals/get-started/basic-tasks/find-account-and-zone-ids/)
+- **`compatibility_date`**: Cloudflare Workers API compatibility date
+- **`analytics_engine_datasets`**: Remove this block if you don't use Cloudflare Analytics Engine
+
+### Secrets
+
+Some values should be set as Wrangler secrets rather than in `.env` or `wrangler.toml`:
+
+```bash
+wrangler secret put CREDENTIAL_KEY
+wrangler secret put EXCEPTION_DISCORD_WEBHOOK
+```
+
+- **`CREDENTIAL_KEY`**: Encryption key for credential storage
+- **`EXCEPTION_DISCORD_WEBHOOK`**: Discord webhook URL for exception notifications
+
+## Branding
+
+Copy `branding.example.json` to `branding.json` to customize the appearance and behavior of each domain zone.
+
+Each zone in the `zones` array defines:
+
+```json
+{
+  "name": "FxTwitter",
+  "default": true,
+  "domains": ["fxtwitter.com", "twittpr.com"],
+  "provider": "twitter",
+  "favicon": "https://example.com/favicon.ico",
+  "redirect": "https://github.com/FxEmbed/FxEmbed",
+  "color": "#6363ff",
+  "activityIcons": {
+    "default": "https://example.com/icon32.png",
+    "svg": "https://example.com/icon.svg",
+    "16": "https://example.com/icon16.png",
+    "32": "https://example.com/icon32.png"
+  }
+}
+```
+
+| Field | Description |
+|---|---|
+| `name` | Display name for this zone |
+| `default` | Whether this is the default zone (only one should be `true`) |
+| `domains` | Domains this zone applies to |
+| `provider` | Content provider (`twitter`, `bluesky`, `tiktok`) |
+| `favicon` | URL to the favicon served for this zone |
+| `redirect` | Where bare domain visits redirect to |
+| `color` | Theme color for embeds (hex) |
+| `activityIcons` | Icon URLs at various sizes; `activityIcons` can also be an array for random selection |

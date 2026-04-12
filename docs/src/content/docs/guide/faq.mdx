@@ -1,0 +1,62 @@
+---
+title: FAQ
+description: Frequently asked questions about FxEmbed, FxTwitter, FixupX, and FxBluesky.
+---
+
+## What's the difference between `fxtwitter.com`, `twittpr.com`, and `fixupx.com`?
+
+They all run the exact same worker and function identically.
+
+- **`fxtwitter.com`** is the primary domain for `twitter.com` links
+- **`fixupx.com`** makes it easy to fix `x.com` links (short `.com` domains are expensive)
+- **`twittpr.com`** was designed for Discord's sed-style replacement — send a `twitter.com` link, then type `s/e/p` to automatically edit it
+
+## How come embedding takes so long or doesn't work in Telegram?
+
+Telegram's embedding servers sometimes never send a request to embed a URL, possibly due to their servers being overloaded. Try using [Webpage Bot](https://t.me/WebpageBot) to clear the cached embed.
+
+## What if I don't want to display all images in a post?
+
+You can pick a specific photo from a post using Twitter/X's own URL syntax. Append `/photo/N` where N is the image number (starting from 1):
+
+```
+https://fxtwitter.com/user/status/123456789/photo/2
+```
+
+For Bluesky, there is no standard URL syntax for this yet, but similar functionality may be added in the future.
+
+## Is FxEmbed associated with [some other website that starts with fx]?
+
+No. FxEmbed only operates on these domains:
+
+- `fxtwitter.com` / `twittpr.com`
+- `fixupx.com` (also `xfixup.com`)
+- `fxbsky.app`
+
+## Is FxEmbed private?
+
+Yes. FxEmbed is built with privacy as a core principle:
+
+- **No persistent logging** of embedded posts
+- **No database or file system** — the Cloudflare Worker architecture means memory doesn't persist between requests
+- **No ads or tracking** — FxEmbed doesn't monetize user data
+- **Anonymous statistics only** — Cloudflare Analytics Engine aggregates basic, anonymous stats that cannot identify individual users or posts
+- **Tracking parameter removal** — Parameters like `?s` and `&t` are stripped on redirect
+
+Temporary real-time logging via `wrangler tail` may be used during development and debugging, but these logs are never saved. URLs that cause runtime exceptions may be logged to diagnose bugs.
+
+## Can I self-host FxEmbed?
+
+Yes! FxEmbed is open source (MIT licensed) and designed to run on Cloudflare Workers. See the [Self-Hosting guide](/deployment/self-hosting/) for setup instructions.
+
+## What platforms does FxEmbed support as embed sources?
+
+Currently:
+
+- **X/Twitter** — via `fxtwitter.com`, `fixupx.com`, `twittpr.com`
+- **Bluesky** — via `fxbsky.app`
+- **Mastodon / ActivityPub** — via the generic API
+
+## How do I contribute?
+
+FxEmbed is open source on [GitHub](https://github.com/FxEmbed/FxEmbed). Pull requests are welcome! You can also help with [localization via Crowdin](https://crowdin.com/project/fxtwitter).

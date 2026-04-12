@@ -1,0 +1,63 @@
+---
+title: Getting Started
+description: Learn how to use FxEmbed to create rich social media embeds in Discord, Telegram, and other platforms.
+---
+
+FxEmbed enhances links from X/Twitter and Bluesky so that platforms like Discord and Telegram display rich embeds — with videos, images, polls, quotes, and more — instead of the default minimal previews.
+
+## How It Works
+
+When you share a social media link in a chat app, the app's bot fetches the URL to generate a preview. FxEmbed intercepts that request and returns a richer embed with full media, engagement counts, and additional context.
+
+All you need to do is slightly modify the URL before sharing it.
+
+## Quick Start
+
+### X/Twitter Links
+
+For `twitter.com` links, add **`fx`** before the domain:
+
+```
+https://twitter.com/user/status/123456789
+→ https://fxtwitter.com/user/status/123456789
+```
+
+For `x.com` links, add **`fixup`** before the domain:
+
+```
+x.com/user/status/123456789
+→ fixupx.com/user/status/123456789
+```
+
+### Bluesky Links
+
+For `bsky.app` links, add **`fx`** before the domain:
+
+```
+https://bsky.app/profile/user.bsky.social/post/abc123
+→ https://fxbsky.app/profile/user.bsky.social/post/abc123
+```
+
+### Alternative Domain
+
+`twittpr.com` also works for Twitter links. It was designed for Discord's sed-style replacement — send a `twitter.com` link, then type `s/e/p` to correct it to `twittpr.com`.
+
+## What Gets Embedded
+
+FxEmbed provides richer embeds than the default behavior:
+
+- **Videos and GIFs** play inline instead of showing a static thumbnail
+- **Multiple images** display as a gallery
+- **Polls** show live results with vote counts and percentages
+- **Quotes** appear with their full text and media
+- **External videos** (e.g. YouTube links in posts) can embed directly on Discord
+- **Link shorteners** (`t.co`) are replaced with the original destination URL
+- **Tracking parameters** are stripped on redirect for privacy
+
+## Where It Works
+
+FxEmbed is optimized for:
+
+- **Discord** — Full support for videos, multi-image galleries, polls, quotes, and more
+- **Telegram** — Rich embeds plus [Instant View](/guide/advanced-features/#telegram-instant-view) for thread reading
+- **Other platforms** — Any app that fetches Open Graph / Twitter Card metadata will show improved embeds

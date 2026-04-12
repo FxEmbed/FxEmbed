@@ -1,0 +1,106 @@
+---
+title: URL Modifiers
+description: Subdomain flags and URL suffixes that change how FxEmbed renders your links.
+---
+
+FxEmbed supports a variety of subdomain prefixes and URL suffixes to customize embed behavior. These work across all supported domains (`fxtwitter.com`, `fixupx.com`, `fxbsky.app`).
+
+## Subdomain Flags
+
+Prepend these subdomains to change the embed style:
+
+### Direct Media (`d.` / `dl.`)
+
+Links directly to the post's media file without an embed wrapper.
+
+```
+https://d.fxtwitter.com/user/status/123456789
+https://dl.fixupx.com/user/status/123456789
+https://d.fxbsky.app/profile/user.bsky.social/post/abc123
+```
+
+You can also target a specific image from a multi-image post:
+
+```
+https://d.fixupx.com/user/status/123456789/photo/3
+```
+
+### Mosaic (`m.`)
+
+Combines multiple images from a single post into one composite image.
+
+```
+https://m.fxtwitter.com/user/status/123456789
+https://m.fixupx.com/user/status/123456789
+https://m.fxbsky.app/profile/user.bsky.social/post/abc123
+```
+
+By default, FxEmbed uses Discord's native multi-image display for individual full-quality images. The mosaic flag overrides this to merge them into a single image.
+
+### Gallery (`g.`)
+
+Minimal embed showing only the post's media and author information, without text or engagement counts. Useful for media-focused channels.
+
+```
+https://g.fxtwitter.com/user/status/123456789
+https://g.fixupx.com/user/status/123456789
+```
+
+### Text-Only (`t.`)
+
+The opposite of gallery — shows only the post text and excludes all photos and videos.
+
+```
+https://t.fxtwitter.com/user/status/123456789
+https://t.fixupx.com/user/status/123456789
+```
+
+### Instant View (`i.`)
+
+Forces Telegram Instant View rendering for the linked post or thread.
+
+```
+https://i.fxtwitter.com/user/status/123456789
+```
+
+## URL Suffixes
+
+### File Extension for Direct Media
+
+Append `.mp4` or `.jpg` after the post ID to get a direct link to the media file:
+
+```
+https://fxtwitter.com/user/status/123456789.mp4
+https://fixupx.com/user/status/123456789.jpg
+```
+
+### Translation
+
+Append a two-letter ISO 639-1 language code to translate the post (X/Twitter only):
+
+```
+https://fxtwitter.com/user/status/123456789/en
+https://fixupx.com/user/status/123456789/es
+```
+
+The embed will display both the original text and the translation.
+
+### Specific Photo
+
+Use Twitter/X's native `/photo/N` syntax to select a specific image from a multi-image post:
+
+```
+https://fxtwitter.com/user/status/123456789/photo/2
+```
+
+## Summary
+
+| Modifier | Syntax | Effect |
+|---|---|---|
+| Direct media | `d.` or `dl.` prefix, or `.mp4`/`.jpg` suffix | Link directly to media file |
+| Mosaic | `m.` prefix | Combine images into one |
+| Gallery | `g.` prefix | Media + author only |
+| Text-only | `t.` prefix | Text only, no media |
+| Instant View | `i.` prefix | Telegram Instant View |
+| Translate | `/{lang}` suffix | Translate post text |
+| Select photo | `/photo/{n}` suffix | Pick specific image |

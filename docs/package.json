@@ -1,0 +1,19 @@
+{
+  "name": "fxembed-docs",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "extract-openapi": "node scripts/extract-openapi.mjs",
+    "extract-openapi:placeholder": "node scripts/extract-openapi.mjs --placeholder"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.38.3",
+    "astro": "^6.1.5",
+    "starlight-openapi": "^0.24.0"
+  }
+}

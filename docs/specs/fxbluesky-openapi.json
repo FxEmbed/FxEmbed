@@ -1,0 +1,2477 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "FxBluesky API",
+    "version": "2.0.0",
+    "description": "FxBluesky API v2 (Bluesky / ATProto; response shape aligned with FxTwitter API v2 where applicable)"
+  },
+  "servers": [
+    {
+      "url": "https://api.fxbsky.app",
+      "description": "FxBluesky API host"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "SocialThreadBluesky": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number",
+            "description": "HTTP-style status; mirrors response status code"
+          },
+          "status": {
+            "$ref": "#/components/schemas/APIBlueskyStatus"
+          },
+          "thread": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/APIBlueskyStatus"
+            }
+          },
+          "author": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/APIUser"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "status",
+          "thread",
+          "author"
+        ]
+      },
+      "APIBlueskyStatus": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "cid": {
+            "type": "string"
+          },
+          "at_uri": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "created_timestamp": {
+            "type": "number"
+          },
+          "likes": {
+            "type": "number"
+          },
+          "reposts": {
+            "type": "number"
+          },
+          "quotes": {
+            "type": "number"
+          },
+          "replies": {
+            "type": "number"
+          },
+          "quote": {
+            "$ref": "#/components/schemas/APIBlueskyStatus"
+          },
+          "poll": {
+            "type": "object",
+            "properties": {
+              "choices": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "number"
+                    },
+                    "percentage": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "count",
+                    "percentage"
+                  ]
+                }
+              },
+              "total_votes": {
+                "type": "number"
+              },
+              "ends_at": {
+                "type": "string"
+              },
+              "time_left_en": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "choices",
+              "total_votes",
+              "ends_at",
+              "time_left_en"
+            ]
+          },
+          "author": {
+            "$ref": "#/components/schemas/APIUser"
+          },
+          "media": {
+            "type": "object",
+            "properties": {
+              "external": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "video"
+                    ]
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "thumbnail_url": {
+                    "type": "string"
+                  },
+                  "height": {
+                    "type": "number"
+                  },
+                  "width": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "type",
+                  "url"
+                ]
+              },
+              "photos": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "format": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "photo",
+                        "gif"
+                      ]
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "number"
+                    },
+                    "height": {
+                      "type": "number"
+                    },
+                    "transcode_url": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "altText": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "url",
+                    "width",
+                    "height"
+                  ]
+                }
+              },
+              "videos": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "format": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "video",
+                        "gif"
+                      ]
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "number"
+                    },
+                    "height": {
+                      "type": "number"
+                    },
+                    "thumbnail_url": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "transcode_url": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "duration": {
+                      "type": "number"
+                    },
+                    "filesize": {
+                      "type": "number"
+                    },
+                    "formats": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "container": {
+                            "type": "string",
+                            "enum": [
+                              "mp4",
+                              "webm",
+                              "m3u8"
+                            ]
+                          },
+                          "codec": {
+                            "type": "string",
+                            "enum": [
+                              "h264",
+                              "hevc",
+                              "vp9",
+                              "av1"
+                            ]
+                          },
+                          "bitrate": {
+                            "type": "number"
+                          },
+                          "url": {
+                            "type": "string"
+                          },
+                          "size": {
+                            "type": "number"
+                          },
+                          "height": {
+                            "type": "number"
+                          },
+                          "width": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      }
+                    },
+                    "publisher": {
+                      "allOf": [
+                        {
+                          "$ref": "#/components/schemas/APIUser"
+                        },
+                        {
+                          "nullable": true
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "url",
+                    "width",
+                    "height",
+                    "duration",
+                    "formats"
+                  ]
+                }
+              },
+              "all": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "format": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "photo",
+                            "gif"
+                          ]
+                        },
+                        "url": {
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "number"
+                        },
+                        "height": {
+                          "type": "number"
+                        },
+                        "transcode_url": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "altText": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "url",
+                        "width",
+                        "height"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "format": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "video",
+                            "gif"
+                          ]
+                        },
+                        "url": {
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "number"
+                        },
+                        "height": {
+                          "type": "number"
+                        },
+                        "thumbnail_url": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "transcode_url": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "duration": {
+                          "type": "number"
+                        },
+                        "filesize": {
+                          "type": "number"
+                        },
+                        "formats": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "container": {
+                                "type": "string",
+                                "enum": [
+                                  "mp4",
+                                  "webm",
+                                  "m3u8"
+                                ]
+                              },
+                              "codec": {
+                                "type": "string",
+                                "enum": [
+                                  "h264",
+                                  "hevc",
+                                  "vp9",
+                                  "av1"
+                                ]
+                              },
+                              "bitrate": {
+                                "type": "number"
+                              },
+                              "url": {
+                                "type": "string"
+                              },
+                              "size": {
+                                "type": "number"
+                              },
+                              "height": {
+                                "type": "number"
+                              },
+                              "width": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "url"
+                            ]
+                          }
+                        },
+                        "publisher": {
+                          "allOf": [
+                            {
+                              "$ref": "#/components/schemas/APIUser"
+                            },
+                            {
+                              "nullable": true
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "url",
+                        "width",
+                        "height",
+                        "duration",
+                        "formats"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "format": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "mosaic_photo"
+                          ]
+                        },
+                        "url": {
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "number"
+                        },
+                        "height": {
+                          "type": "number"
+                        },
+                        "formats": {
+                          "type": "object",
+                          "properties": {
+                            "webp": {
+                              "type": "string"
+                            },
+                            "jpeg": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "webp",
+                            "jpeg"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "url",
+                        "width",
+                        "height",
+                        "formats"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "format": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "url": {
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "number"
+                        },
+                        "height": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "url",
+                        "width",
+                        "height"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "mosaic": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "format": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "mosaic_photo"
+                    ]
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "width": {
+                    "type": "number"
+                  },
+                  "height": {
+                    "type": "number"
+                  },
+                  "formats": {
+                    "type": "object",
+                    "properties": {
+                      "webp": {
+                        "type": "string"
+                      },
+                      "jpeg": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "webp",
+                      "jpeg"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "url",
+                  "width",
+                  "height",
+                  "formats"
+                ]
+              },
+              "broadcast": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "width": {
+                    "type": "number"
+                  },
+                  "height": {
+                    "type": "number"
+                  },
+                  "state": {
+                    "type": "string",
+                    "enum": [
+                      "LIVE",
+                      "ENDED"
+                    ]
+                  },
+                  "broadcaster": {
+                    "type": "object",
+                    "properties": {
+                      "username": {
+                        "type": "string"
+                      },
+                      "display_name": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "username",
+                      "display_name",
+                      "id"
+                    ]
+                  },
+                  "stream": {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "url"
+                    ]
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string"
+                  },
+                  "orientation": {
+                    "type": "string",
+                    "enum": [
+                      "landscape",
+                      "portrait"
+                    ]
+                  },
+                  "broadcast_id": {
+                    "type": "string"
+                  },
+                  "media_id": {
+                    "type": "string"
+                  },
+                  "media_key": {
+                    "type": "string"
+                  },
+                  "is_high_latency": {
+                    "type": "boolean"
+                  },
+                  "thumbnail": {
+                    "type": "object",
+                    "properties": {
+                      "original": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      },
+                      "small": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      },
+                      "medium": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      },
+                      "large": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      },
+                      "x_large": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "original"
+                    ]
+                  }
+                },
+                "required": [
+                  "url",
+                  "width",
+                  "height",
+                  "state",
+                  "broadcaster",
+                  "title",
+                  "source",
+                  "orientation",
+                  "broadcast_id",
+                  "media_id",
+                  "media_key",
+                  "is_high_latency",
+                  "thumbnail"
+                ]
+              }
+            }
+          },
+          "raw_text": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "facets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "Facet kind: e.g. url, mention, hashtag, bold, media, custom_emoji (Mastodon custom emoji image)"
+                    },
+                    "indices": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "description": "Start and end UTF-16 indices"
+                    },
+                    "original": {
+                      "type": "string"
+                    },
+                    "replacement": {
+                      "type": "string"
+                    },
+                    "display": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "indices"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "text",
+              "facets"
+            ]
+          },
+          "lang": {
+            "type": "string",
+            "nullable": true
+          },
+          "translation": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "source_lang": {
+                "type": "string"
+              },
+              "source_lang_en": {
+                "type": "string"
+              },
+              "target_lang": {
+                "type": "string"
+              },
+              "provider": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "source_lang",
+              "source_lang_en",
+              "target_lang",
+              "provider"
+            ]
+          },
+          "possibly_sensitive": {
+            "type": "boolean"
+          },
+          "replying_to": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "screen_name": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "screen_name",
+              "status"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "nullable": true
+          },
+          "embed_card": {
+            "type": "string",
+            "enum": [
+              "tweet",
+              "summary",
+              "summary_large_image",
+              "player"
+            ]
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "bluesky"
+            ]
+          },
+          "reposted_by": {
+            "$ref": "#/components/schemas/APIRepostedBy"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "text",
+          "created_at",
+          "created_timestamp",
+          "likes",
+          "reposts",
+          "replies",
+          "author",
+          "media",
+          "raw_text",
+          "lang",
+          "possibly_sensitive",
+          "replying_to",
+          "source",
+          "embed_card",
+          "provider"
+        ],
+        "nullable": true
+      },
+      "APIUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "screen_name": {
+            "type": "string"
+          },
+          "avatar_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "banner_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string"
+          },
+          "raw_description": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "facets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "Facet kind: e.g. url, mention, hashtag, bold, media, custom_emoji (Mastodon custom emoji image)"
+                    },
+                    "indices": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "description": "Start and end UTF-16 indices"
+                    },
+                    "original": {
+                      "type": "string"
+                    },
+                    "replacement": {
+                      "type": "string"
+                    },
+                    "display": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "indices"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "text",
+              "facets"
+            ]
+          },
+          "location": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "protected": {
+            "type": "boolean"
+          },
+          "followers": {
+            "type": "number"
+          },
+          "following": {
+            "type": "number"
+          },
+          "statuses": {
+            "type": "number"
+          },
+          "media_count": {
+            "type": "number"
+          },
+          "likes": {
+            "type": "number"
+          },
+          "joined": {
+            "type": "string"
+          },
+          "website": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "display_url": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "url",
+              "display_url"
+            ]
+          },
+          "birthday": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "day": {
+                "type": "number"
+              },
+              "month": {
+                "type": "number"
+              },
+              "year": {
+                "type": "number"
+              }
+            }
+          },
+          "verification": {
+            "type": "object",
+            "properties": {
+              "verified": {
+                "type": "boolean"
+              },
+              "type": {
+                "type": "string",
+                "nullable": true,
+                "enum": [
+                  "organization",
+                  "government",
+                  "individual",
+                  null
+                ]
+              },
+              "verified_at": {
+                "type": "string",
+                "nullable": true
+              },
+              "identity_verified": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "verified",
+              "type"
+            ]
+          },
+          "about_account": {
+            "$ref": "#/components/schemas/APIAboutAccount"
+          },
+          "profile_embed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "screen_name",
+          "avatar_url",
+          "banner_url",
+          "description",
+          "raw_description",
+          "location",
+          "url",
+          "protected",
+          "followers",
+          "following",
+          "statuses",
+          "media_count",
+          "likes",
+          "joined",
+          "website"
+        ]
+      },
+      "APIAboutAccount": {
+        "type": "object",
+        "properties": {
+          "based_in": {
+            "type": "string",
+            "nullable": true
+          },
+          "location_accurate": {
+            "type": "boolean"
+          },
+          "created_country_accurate": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "source": {
+            "type": "string",
+            "nullable": true
+          },
+          "username_changes": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "number"
+              },
+              "last_changed_at": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "required": [
+              "count",
+              "last_changed_at"
+            ]
+          }
+        }
+      },
+      "APIRepostedBy": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "screen_name": {
+            "type": "string"
+          },
+          "avatar_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "screen_name"
+        ]
+      },
+      "ApiQueryError": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number",
+            "enum": [
+              400
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "APIUserListResults": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/APIUser"
+            }
+          },
+          "cursor": {
+            "type": "object",
+            "properties": {
+              "top": {
+                "type": "string",
+                "nullable": true
+              },
+              "bottom": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "required": [
+              "top",
+              "bottom"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "results",
+          "cursor"
+        ]
+      },
+      "SocialConversationBluesky": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number",
+            "description": "HTTP-style status; mirrors response status code"
+          },
+          "status": {
+            "$ref": "#/components/schemas/APIBlueskyStatus"
+          },
+          "thread": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/APIBlueskyStatus"
+            }
+          },
+          "replies": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/APIBlueskyStatus"
+            }
+          },
+          "author": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/APIUser"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "cursor": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "bottom": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "required": [
+              "bottom"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "status",
+          "thread",
+          "replies",
+          "author",
+          "cursor"
+        ]
+      },
+      "APISearchResultsBluesky": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/APIBlueskyStatus"
+            }
+          },
+          "cursor": {
+            "type": "object",
+            "properties": {
+              "top": {
+                "type": "string",
+                "nullable": true
+              },
+              "bottom": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "required": [
+              "top",
+              "bottom"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "results",
+          "cursor"
+        ]
+      },
+      "UserAPIResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number"
+          },
+          "message": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/APIUser"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "APIProfileRelationshipList": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/APIUser"
+            }
+          },
+          "cursor": {
+            "type": "object",
+            "properties": {
+              "top": {
+                "type": "string",
+                "nullable": true
+              },
+              "bottom": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "required": [
+              "top",
+              "bottom"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "results",
+          "cursor"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/2/status/{handle}/{rkey}": {
+      "get": {
+        "summary": "Get a single Bluesky post",
+        "description": "Returns one Bluesky post by handle and record key (rkey), in the same envelope as FxTwitter API v2 (`code`, `status`, `thread`, `author`).",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bluesky handle (e.g. `user.bsky.social`)",
+              "example": "bsky.app"
+            },
+            "required": true,
+            "description": "Bluesky handle (e.g. `user.bsky.social`)",
+            "name": "handle",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Post record key from the `at://` URI",
+              "example": "3l6xyz"
+            },
+            "required": true,
+            "description": "Post record key from the `at://` URI",
+            "name": "rkey",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target language (ISO 639-1 or BCP 47) for inline translation when available",
+              "example": "es"
+            },
+            "required": false,
+            "description": "Target language (ISO 639-1 or BCP 47) for inline translation when available",
+            "name": "lang",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thread payload (check `code` for upstream errors mirrored as HTTP status)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialThreadBluesky"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialThreadBluesky"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server or upstream failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialThreadBluesky"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/status/{handle}/{rkey}/reposts": {
+      "get": {
+        "summary": "List accounts that reposted a post",
+        "description": "Returns users who reposted the given post, in the same envelope as FxTwitter `GET /2/status/{id}/reposts` (`code`, `results`, `cursor`). Pagination uses Bluesky `app.bsky.feed.getRepostedBy`: pass the prior `cursor.bottom` as the `cursor` query param. `handle` may be a handle or DID (`did:plc:…`). `cursor.top` is always null.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bluesky handle (e.g. `user.bsky.social`) or DID (`did:plc:…`)",
+              "example": "bsky.app"
+            },
+            "required": true,
+            "description": "Bluesky handle (e.g. `user.bsky.social`) or DID (`did:plc:…`)",
+            "name": "handle",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Post record key from the `at://` URI",
+              "example": "3l6xyz"
+            },
+            "required": true,
+            "description": "Post record key from the `at://` URI",
+            "name": "rkey",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Page size (default 20)"
+            },
+            "required": false,
+            "description": "Page size (default 20)",
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Pagination cursor from prior response (`cursor.bottom`)"
+            },
+            "required": false,
+            "description": "Pagination cursor from prior response (`cursor.bottom`)",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User list page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIUserListResults"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Post not found or list unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIUserListResults"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIUserListResults"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/status/{handle}/{rkey}/likes": {
+      "get": {
+        "summary": "List accounts that liked a post",
+        "description": "Returns users who liked the given post, in the same envelope as FxTwitter-style user list results (`code`, `results`, `cursor`). Pagination uses Bluesky `app.bsky.feed.getLikes`: pass the prior `cursor.bottom` as the `cursor` query param. `handle` may be a handle or DID (`did:plc:…`). `cursor.top` is always null.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bluesky handle (e.g. `user.bsky.social`) or DID (`did:plc:…`)",
+              "example": "bsky.app"
+            },
+            "required": true,
+            "description": "Bluesky handle (e.g. `user.bsky.social`) or DID (`did:plc:…`)",
+            "name": "handle",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Post record key from the `at://` URI",
+              "example": "3l6xyz"
+            },
+            "required": true,
+            "description": "Post record key from the `at://` URI",
+            "name": "rkey",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Page size (default 20)"
+            },
+            "required": false,
+            "description": "Page size (default 20)",
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Pagination cursor from prior response (`cursor.bottom`)"
+            },
+            "required": false,
+            "description": "Pagination cursor from prior response (`cursor.bottom`)",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User list page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIUserListResults"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Post not found or list unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIUserListResults"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIUserListResults"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/thread/{handle}/{rkey}": {
+      "get": {
+        "summary": "Get a Bluesky thread (main post + parents + self-thread replies)",
+        "description": "Returns the post chain for a Bluesky thread, matching the shape of FxTwitter `GET /2/thread/{id}`.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bluesky handle",
+              "example": "bsky.app"
+            },
+            "required": true,
+            "description": "Bluesky handle",
+            "name": "handle",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Post record key",
+              "example": "3l6xyz"
+            },
+            "required": true,
+            "description": "Post record key",
+            "name": "rkey",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target language (ISO 639-1 or BCP 47) for inline translation when available",
+              "example": "es"
+            },
+            "required": false,
+            "description": "Target language (ISO 639-1 or BCP 47) for inline translation when available",
+            "name": "lang",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thread payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialThreadBluesky"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialThreadBluesky"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server or upstream failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialThreadBluesky"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/conversation/{handle}/{rkey}": {
+      "get": {
+        "summary": "Get a Bluesky post with full thread and paginated replies",
+        "description": "Returns the focal post, ancestor chain and author self-thread (same as `/2/thread/{handle}/{rkey}` on the first page), plus **direct** replies from other participants. Replies are sorted by `ranking_mode` (default likes). Pagination uses an opaque `cursor` query param (`cursor.bottom` from the prior response); Bluesky `getPostThread` has no native reply cursor, so each page refetches the thread slice. Optional `count` (1–100, default 20) sets the reply page size. Very large reply lists still require a large upstream payload when loading direct replies.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bluesky handle (e.g. `user.bsky.social`) or DID (`did:plc:…`)",
+              "example": "bsky.app"
+            },
+            "required": true,
+            "description": "Bluesky handle (e.g. `user.bsky.social`) or DID (`did:plc:…`)",
+            "name": "handle",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Post record key",
+              "example": "3l6xyz"
+            },
+            "required": true,
+            "description": "Post record key",
+            "name": "rkey",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "likes",
+                "recency"
+              ],
+              "default": "likes",
+              "description": "How direct replies are ranked (default: likes). Ignored when `cursor` is set; the cursor carries the mode used for the session."
+            },
+            "required": false,
+            "description": "How direct replies are ranked (default: likes). Ignored when `cursor` is set; the cursor carries the mode used for the session.",
+            "name": "ranking_mode",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Opaque pagination cursor from prior response (`cursor.bottom`)"
+            },
+            "required": false,
+            "description": "Opaque pagination cursor from prior response (`cursor.bottom`)",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Reply page size for the first request (default 20). Subsequent pages use the size embedded in `cursor`."
+            },
+            "required": false,
+            "description": "Reply page size for the first request (default 20). Subsequent pages use the size embedded in `cursor`.",
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target language (ISO 639-1 or BCP 47) for inline translation when available",
+              "example": "es"
+            },
+            "required": false,
+            "description": "Target language (ISO 639-1 or BCP 47) for inline translation when available",
+            "name": "lang",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation payload with thread, replies, and pagination cursor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialConversationBluesky"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path, query parameters, or cursor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialConversationBluesky"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server or upstream failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialConversationBluesky"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/search": {
+      "get": {
+        "summary": "Search posts",
+        "description": "Search posts via Bluesky `app.bsky.feed.searchPosts`. Response shape matches FxTwitter `GET /2/search` (`code`, `results`, `cursor`). `cursor.top` is always null; pass `cursor.bottom` as the `cursor` query param. `feed=latest` and `feed=top` map to Bluesky `sort`. `feed=media` uses `sort=latest` then keeps posts with image, video, or external link embeds (may return fewer hits than `count`). `lang` is used for inline translation only, not the upstream post-language filter.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Search query (non-empty)",
+              "example": "puppies"
+            },
+            "required": true,
+            "description": "Search query (non-empty)",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "latest",
+                "top",
+                "media"
+              ],
+              "default": "latest",
+              "description": "Search tab (default latest). `media` is a client-side filter on the current result page (no native Bluesky media tab)."
+            },
+            "required": false,
+            "description": "Search tab (default latest). `media` is a client-side filter on the current result page (no native Bluesky media tab).",
+            "name": "feed",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 30,
+              "description": "Page size (default 30)"
+            },
+            "required": false,
+            "description": "Page size (default 30)",
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Pagination cursor from prior response (`cursor.bottom`)"
+            },
+            "required": false,
+            "description": "Pagination cursor from prior response (`cursor.bottom`)",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target language (ISO 639-1 or BCP 47) for inline translation when available",
+              "example": "es"
+            },
+            "required": false,
+            "description": "Target language (ISO 639-1 or BCP 47) for inline translation when available",
+            "name": "lang",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResultsBluesky"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid `q` parameter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No results or search unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResultsBluesky"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResultsBluesky"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/profile/{handle}": {
+      "get": {
+        "summary": "Get Bluesky actor profile",
+        "description": "Returns profile fields in the same envelope as FxTwitter `GET /2/profile/{handle}` (`code`, `message`, `user`). `handle` may be a handle (e.g. `user.bsky.social`) or a DID (`did:plc:…`).",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bluesky handle or DID (`did:plc:…`)",
+              "example": "bsky.app"
+            },
+            "required": true,
+            "description": "Bluesky handle or DID (`did:plc:…`)",
+            "name": "handle",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile (check `code`)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAPIResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAPIResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server or upstream failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAPIResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/profile/{handle}/followers": {
+      "get": {
+        "summary": "List followers of an actor",
+        "description": "Returns a page in the same shape as FxTwitter `GET /2/profile/{handle}/followers` (`code`, `results`, `cursor`). `handle` may be a handle or DID. Pagination uses Bluesky `app.bsky.graph.getFollowers`: pass the prior `cursor.bottom` as the `cursor` query param. `cursor.top` is always null.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bluesky handle (e.g. `user.bsky.social`) or DID (`did:plc:…`)",
+              "example": "bsky.app"
+            },
+            "required": true,
+            "description": "Bluesky handle (e.g. `user.bsky.social`) or DID (`did:plc:…`)",
+            "name": "handle",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Page size (default 20)"
+            },
+            "required": false,
+            "description": "Page size (default 20)",
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Pagination cursor from prior response (`cursor.bottom`)"
+            },
+            "required": false,
+            "description": "Pagination cursor from prior response (`cursor.bottom`)",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Followers page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIProfileRelationshipList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or query parameters (e.g. `count` out of range)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Actor not found or list unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIProfileRelationshipList"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIProfileRelationshipList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/profile/{handle}/following": {
+      "get": {
+        "summary": "List accounts an actor follows",
+        "description": "Returns a page in the same shape as FxTwitter `GET /2/profile/{handle}/following` (`code`, `results`, `cursor`). `handle` may be a handle or DID. Pagination uses Bluesky `app.bsky.graph.getFollows`: pass the prior `cursor.bottom` as the `cursor` query param. `cursor.top` is always null.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bluesky handle (e.g. `user.bsky.social`) or DID (`did:plc:…`)",
+              "example": "bsky.app"
+            },
+            "required": true,
+            "description": "Bluesky handle (e.g. `user.bsky.social`) or DID (`did:plc:…`)",
+            "name": "handle",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Page size (default 20)"
+            },
+            "required": false,
+            "description": "Page size (default 20)",
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Pagination cursor from prior response (`cursor.bottom`)"
+            },
+            "required": false,
+            "description": "Pagination cursor from prior response (`cursor.bottom`)",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Following page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIProfileRelationshipList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or query parameters (e.g. `count` out of range)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Actor not found or list unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIProfileRelationshipList"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIProfileRelationshipList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/profile/{handle}/media": {
+      "get": {
+        "summary": "List posts with media for an actor",
+        "description": "Returns a timeline page in the same shape as FxTwitter `GET /2/profile/{handle}/media` (`code`, `results`, `cursor`). `handle` may be a handle or DID. Pagination uses Bluesky `app.bsky.feed.getAuthorFeed` with `filter=posts_with_media`: `cursor.bottom` is the opaque next-page token (pass as `cursor` query param). `cursor.top` is always null.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bluesky handle (e.g. `user.bsky.social`) or DID (`did:plc:…`)",
+              "example": "bsky.app"
+            },
+            "required": true,
+            "description": "Bluesky handle (e.g. `user.bsky.social`) or DID (`did:plc:…`)",
+            "name": "handle",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Page size (default 20)"
+            },
+            "required": false,
+            "description": "Page size (default 20)",
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Pagination cursor from prior response (`cursor.bottom`)"
+            },
+            "required": false,
+            "description": "Pagination cursor from prior response (`cursor.bottom`)",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target language (ISO 639-1 or BCP 47) for inline translation when available",
+              "example": "es"
+            },
+            "required": false,
+            "description": "Target language (ISO 639-1 or BCP 47) for inline translation when available",
+            "name": "lang",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Media timeline page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResultsBluesky"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or query parameters (e.g. `count` out of range)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Actor not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResultsBluesky"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResultsBluesky"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/profile/{handle}/likes": {
+      "get": {
+        "summary": "List posts liked by an actor",
+        "description": "Returns a timeline page in the same shape as other FxBluesky profile timelines (`code`, `results`, `cursor`). `handle` may be a handle or DID. Pagination uses Bluesky `app.bsky.feed.getActorLikes`: pass the prior `cursor.bottom` as the `cursor` query param. `cursor.top` is always null. **Note:** Bluesky’s lexicon states this method requires authentication and that `actor` must be the requesting account; the public AppView may return **401** or errors for unauthenticated or cross-actor access—callers should handle `code` 401 accordingly.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bluesky handle (e.g. `user.bsky.social`) or DID (`did:plc:…`)",
+              "example": "bsky.app"
+            },
+            "required": true,
+            "description": "Bluesky handle (e.g. `user.bsky.social`) or DID (`did:plc:…`)",
+            "name": "handle",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Page size (default 20)"
+            },
+            "required": false,
+            "description": "Page size (default 20)",
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Pagination cursor from prior response (`cursor.bottom`)"
+            },
+            "required": false,
+            "description": "Pagination cursor from prior response (`cursor.bottom`)",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target language (ISO 639-1 or BCP 47) for inline translation when available",
+              "example": "es"
+            },
+            "required": false,
+            "description": "Target language (ISO 639-1 or BCP 47) for inline translation when available",
+            "name": "lang",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Likes timeline page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResultsBluesky"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or query parameters (e.g. `count` out of range)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Upstream rejected the request (e.g. unauthenticated access to likes)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResultsBluesky"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Actor not found or list unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResultsBluesky"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResultsBluesky"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/2/profile/{handle}/statuses": {
+      "get": {
+        "summary": "List posts for an actor",
+        "description": "Returns a timeline page in the same shape as FxTwitter `GET /2/profile/{handle}/statuses` (`code`, `results`, `cursor`). `handle` may be a handle or DID. Pagination uses Bluesky `app.bsky.feed.getAuthorFeed`: `cursor.bottom` is the opaque next-page token (pass as `cursor` query param). `cursor.top` is always null—there is no reverse cursor on this upstream endpoint. Optional `since` (Unix time): when used without `cursor`, returns **204 No Content** if no posts are strictly newer than that instant. Values ≥ 1e12 are treated as milliseconds.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bluesky handle (e.g. `user.bsky.social`) or DID (`did:plc:…`)",
+              "example": "bsky.app"
+            },
+            "required": true,
+            "description": "Bluesky handle (e.g. `user.bsky.social`) or DID (`did:plc:…`)",
+            "name": "handle",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Page size (default 20)"
+            },
+            "required": false,
+            "description": "Page size (default 20)",
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Pagination cursor from prior response (`cursor.bottom`)"
+            },
+            "required": false,
+            "description": "Pagination cursor from prior response (`cursor.bottom`)",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "nullable": true,
+              "minimum": 0,
+              "description": "Unix timestamp (seconds, or ms if ≥ 1e12). Without `cursor`, 204 if no post is strictly newer than this time."
+            },
+            "required": false,
+            "description": "Unix timestamp (seconds, or ms if ≥ 1e12). Without `cursor`, 204 if no post is strictly newer than this time.",
+            "name": "since",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "If truthy (`1`, `true`, `yes`, `on`, or empty), include replies (`posts_with_replies` upstream); otherwise `posts_no_replies`."
+            },
+            "required": false,
+            "description": "If truthy (`1`, `true`, `yes`, `on`, or empty), include replies (`posts_with_replies` upstream); otherwise `posts_no_replies`.",
+            "name": "with_replies",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target language (ISO 639-1 or BCP 47) for inline translation when available",
+              "example": "es"
+            },
+            "required": false,
+            "description": "Target language (ISO 639-1 or BCP 47) for inline translation when available",
+            "name": "lang",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Timeline page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResultsBluesky"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No posts newer than `since` (only when `since` is set and `cursor` is omitted; same conditions as 200 otherwise)"
+          },
+          "400": {
+            "description": "Invalid path or query parameters (e.g. `count` out of range)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiQueryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Actor not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResultsBluesky"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Upstream or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APISearchResultsBluesky"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

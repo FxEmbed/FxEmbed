@@ -1,0 +1,82 @@
+---
+title: Embedding Media
+description: How FxEmbed handles videos, images, GIFs, polls, and other media types.
+---
+
+FxEmbed is designed to make media-rich posts look great wherever you share them.
+
+## Videos and GIFs
+
+Videos and GIFs embed and play inline in Discord, Telegram, and other clients. No need for the recipient to open a browser.
+
+FxEmbed can also embed external videos linked within posts (such as YouTube videos) directly on Discord, so they play without leaving the app.
+
+:::note
+External media that requires web containers (like YouTube) won't embed in Telegram due to Telegram's platform limitations. Plain video media works in both Discord and Telegram.
+:::
+
+## Images
+
+### Single Images
+
+Single images display at full quality with proper aspect ratios.
+
+### Multiple Images
+
+By default, FxEmbed sends multiple images using Discord's native multi-image embed, allowing viewers to see each image individually at full quality.
+
+To combine all images into a single composite mosaic image instead, use the `m.` subdomain prefix:
+
+```
+https://m.fxtwitter.com/user/status/123456789
+```
+
+To link directly to a specific image in a multi-image post, use the `/photo/N` suffix:
+
+```
+https://fxtwitter.com/user/status/123456789/photo/2
+```
+
+Or use the `d.` prefix with the photo selector:
+
+```
+https://d.fixupx.com/user/status/123456789/photo/3
+```
+
+If no specific photo is selected, direct media defaults to the first image.
+
+## Polls
+
+Poll embeds display full results including:
+
+- Each option's label and vote count
+- Percentage bars for each option
+- Total vote count
+- Time remaining (or final status)
+
+This works even for polls that are still active.
+
+## Quotes and Quote Posts
+
+When a post quotes another post, FxEmbed displays the quoted content inline, including:
+
+- The quoted post's text
+- The quoted post's media (surfaced even when the quoting post has no media of its own)
+- Author information for the quoted post
+
+## Link Cards
+
+Link preview cards attached to posts (summary, summary with large image, etc.) are included in the API response, with URL, title, description, domain, and preview image when available.
+
+## Direct Media Links
+
+For sharing just the media file without any embed wrapper, use direct media mode:
+
+- **Subdomain**: `d.` or `dl.` before the domain
+- **File extension**: `.mp4` for video/GIF, `.jpg` for images
+
+```
+https://d.fxbsky.app/profile/user.bsky.social/post/abc123
+https://fxtwitter.com/user/status/123456789.mp4
+https://fixupx.com/user/status/123456789.jpg
+```
