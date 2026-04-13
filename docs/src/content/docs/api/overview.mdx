@@ -33,16 +33,6 @@ Multi-provider API for Mastodon and other ActivityPub instances. Paths are prefi
 - **Spec**: [Generic API Reference](/api/generic/operations/)
 - Posts, threads, conversations, profiles, search
 
-## Authentication
-
-All APIs require a `User-Agent` header. Requests without one receive a `401` response. Use a descriptive user agent that identifies your application:
-
-```
-User-Agent: MyApp/1.0 (+https://example.com/myapp)
-```
-
-There are no API keys or tokens required.
-
 ## Versioning
 
 All current endpoints are under the `/2/` path prefix (API v2). The legacy v1 endpoints (e.g., `/:handle/status/:id`) still work for backward compatibility but return data through the older embed pipeline.
@@ -90,6 +80,5 @@ Machine-readable OpenAPI 3.0 specs are available at runtime:
 
 - FxTwitter: `https://api.fxtwitter.com/2/openapi.json`
 - FxBluesky: `https://api.fxbsky.app/2/openapi.json`
-- Generic: `https://api.fxembed.com/2/openapi.json`
 
 The interactive API reference pages in this documentation are generated from these specifications.

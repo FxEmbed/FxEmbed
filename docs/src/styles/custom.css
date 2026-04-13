@@ -1,19 +1,14 @@
-:root {
-  --sl-color-accent-low: #1a1a4e;
-  --sl-color-accent: #6363ff;
-  --sl-color-accent-high: #b8b8ff;
-  --sl-color-white: #ffffff;
-  --sl-color-gray-1: #eeeeee;
-  --sl-color-gray-2: #c2c2c2;
-  --sl-color-gray-3: #8b8b8b;
-  --sl-color-gray-4: #585858;
-  --sl-color-gray-5: #383838;
-  --sl-color-gray-6: #272727;
-  --sl-color-black: #181818;
-}
+/* Keep overrides inside Starlight’s cascade layers. Unlayered rules here would win over @layer starlight.base and break light theme (see Page.astro import order). */
+@layer starlight.utils {
+  :root {
+    --sl-color-accent-low: #1a1a4e;
+    --sl-color-accent: #6363ff;
+    --sl-color-accent-high: #b8b8ff;
+  }
 
-:root[data-theme='light'] {
-  --sl-color-accent-low: #d8d8ff;
-  --sl-color-accent: #4b4bdb;
-  --sl-color-accent-high: #1e1e6e;
+  :root[data-theme='light'] {
+    --sl-color-accent-low: #d8d8ff;
+    --sl-color-accent: #4b4bdb;
+    --sl-color-accent-high: #1e1e6e;
+  }
 }

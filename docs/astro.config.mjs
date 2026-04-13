@@ -5,7 +5,7 @@ import starlightOpenAPI, { openAPISidebarGroups } from 'starlight-openapi';
 export default defineConfig({
   integrations: [
     starlight({
-      title: 'FxEmbed Docs',
+      title: 'FxEmbed',
       logo: {
         src: './src/assets/fxembed.svg'
       },
@@ -24,11 +24,6 @@ export default defineConfig({
             base: 'api/bluesky',
             label: 'FxBluesky API',
             schema: './specs/fxbluesky-openapi.json'
-          },
-          {
-            base: 'api/generic',
-            label: 'Generic API (Mastodon)',
-            schema: './specs/generic-openapi.json'
           }
         ])
       ],

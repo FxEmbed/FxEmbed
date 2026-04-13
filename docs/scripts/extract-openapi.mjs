@@ -22,10 +22,6 @@ const PRODUCTION_ENDPOINTS = [
   {
     name: 'fxbluesky-openapi.json',
     url: 'https://api.fxbsky.app/2/openapi.json'
-  },
-  {
-    name: 'generic-openapi.json',
-    url: 'https://api.fxembed.com/2/openapi.json'
   }
 ];
 
@@ -60,12 +56,7 @@ async function main() {
     console.log('Writing placeholder specs...');
     const placeholders = [
       { name: 'fxtwitter-openapi.json', title: 'FxTwitter API', desc: 'FxTwitter API v2' },
-      { name: 'fxbluesky-openapi.json', title: 'FxBluesky API', desc: 'FxBluesky API v2' },
-      {
-        name: 'generic-openapi.json',
-        title: 'FxEmbed generic API',
-        desc: 'Multi-provider JSON API (Mastodon / ActivityPub instances)'
-      }
+      { name: 'fxbluesky-openapi.json', title: 'FxBluesky API', desc: 'FxBluesky API v2' }
     ];
     for (const p of placeholders) {
       const path = join(specsDir, p.name);
