@@ -25,8 +25,8 @@
   "author": "dangered wolf",
   "license": "MIT",
   "devDependencies": {
-    "@aws-sdk/client-s3": "^3.1031.0",
-    "@aws-sdk/s3-request-presigner": "^3.1031.0",
+    "@aws-sdk/client-s3": "^3.1032.0",
+    "@aws-sdk/s3-request-presigner": "^3.1032.0",
     "@cloudflare/vitest-pool-workers": "^0.14.7",
     "@cloudflare/workers-types": "^4.20260417.1",
     "@eslint/js": "^10.0.1",
