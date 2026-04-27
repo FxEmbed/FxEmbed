@@ -98,7 +98,7 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^22.19.0",
+    "@types/node": "^22.19.17",
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"
   },
