@@ -1,5 +1,5 @@
 {
-  "extends": ["config:base"],
+  "extends": ["config:recommended"],
   "rangeStrategy": "bump",
   "platformAutomerge": true,
   "packageRules": [
