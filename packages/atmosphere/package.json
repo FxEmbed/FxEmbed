@@ -111,7 +111,7 @@
     "vitest": "^4.1.5"
   },
   "dependencies": {
-    "@hono/zod-openapi": "^1.3.0",
+    "@hono/zod-openapi": "^1.4.0",
     "zod": "^4.4.3"
   }
 }
