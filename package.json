@@ -55,7 +55,7 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.3",
     "vitest": "^4.1.6",
-    "wrangler": "^4.90.0"
+    "wrangler": "^4.90.1"
   },
   "dependencies": {
     "@fxembed/atmosphere": "*",
