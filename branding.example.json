@@ -52,7 +52,7 @@
       }
     },
     {
-      "name": "FixTok (beta)",
+      "name": "FixTok",
       "domains": ["fixtok.wuff.gay", "dxtiktok.com", "wuff.gay", "cocktiktok.com"],
       "provider": "tiktok",
       "redirect": "https://tiktok.com",
@@ -65,6 +65,22 @@
         "32": "https://fxembed-assets.pages.dev/logos/fixtok32.png",
         "48": "https://fxembed-assets.pages.dev/logos/fixtok48.png",
         "64": "https://fxembed-assets.pages.dev/logos/fixtok64.png"
+      }
+    },
+    {
+      "name": "FxInstagram",
+      "domains": ["67instagram.com"],
+      "provider": "instagram",
+      "redirect": "https://www.instagram.com",
+      "color": "#6363ff",
+      "activityIcons": {
+        "default": "https://fxembed-assets.pages.dev/logos/fxinstagram32.png",
+        "svg": "https://fxembed-assets.pages.dev/logos/fxinstagram.svg",
+        "16": "https://fxembed-assets.pages.dev/logos/fxinstagram16.png",
+        "24": "https://fxembed-assets.pages.dev/logos/fxinstagram24.png",
+        "32": "https://fxembed-assets.pages.dev/logos/fxinstagram32.png",
+        "48": "https://fxembed-assets.pages.dev/logos/fxinstagram48.png",
+        "64": "https://fxembed-assets.pages.dev/logos/fxinstagram64.png"
       }
     }
   ]
