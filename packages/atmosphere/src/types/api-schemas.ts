@@ -80,6 +80,14 @@ export const APIVideoFormatSchema = z.object({
   width: z.number().optional()
 });
 
+/** Twitter photo size variant (`?name=` on pbs.twimg.com). */
+export const APIPhotoFormatSchema = z.object({
+  name: z.string(),
+  url: z.string(),
+  width: z.number().optional(),
+  height: z.number().optional()
+});
+
 export const APIMediaBaseSchema = z.object({
   id: z.string().optional(),
   format: z.string().optional(),
@@ -98,7 +106,8 @@ export const APIPhotoSchema = z.object({
   width: z.number(),
   height: z.number(),
   transcode_url: z.string().optional().nullable(),
-  altText: z.string().optional()
+  altText: z.string().optional(),
+  formats: z.array(APIPhotoFormatSchema).optional()
 });
 
 /** Same shape as `APIUser.about_account` (X “About this account” metadata). */
@@ -1297,6 +1306,7 @@ export type APITranslate = z.infer<typeof APITranslateSchema>;
 export type APIPollChoice = z.infer<typeof APIPollChoiceSchema>;
 export type APIPoll = z.infer<typeof APIPollSchema>;
 export type APIVideoFormat = z.infer<typeof APIVideoFormatSchema>;
+export type APIPhotoFormat = z.infer<typeof APIPhotoFormatSchema>;
 export type APIMedia = z.infer<typeof APIMediaBaseSchema>;
 export type APIPhoto = z.infer<typeof APIPhotoSchema>;
 export type APIVideo = z.infer<typeof APIVideoSchema>;

@@ -90,6 +90,7 @@ type TweetMedia = {
     large: TweetMediaSize;
     medium: TweetMediaSize;
     small: TweetMediaSize;
+    x_large?: TweetMediaSize;
   };
   type: 'photo' | 'video' | 'animated_gif';
   url: string;

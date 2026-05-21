@@ -3,7 +3,37 @@ import { getGIFTranscodeDomain } from './gif-transcode.js';
 import { getTwitterProviderEnv } from '../providers/twitter-runtime.js';
 import { formatImageUrl, isParamTruthy } from './format-image-url.js';
 import { convertToApiUser } from '../providers/twitter/profile.js';
-import type { APIPhoto, APIVideo, APIVideoFormat } from '../types/api-schemas.js';
+import type { APIPhoto, APIPhotoFormat, APIVideo, APIVideoFormat } from '../types/api-schemas.js';
+
+const TWITTER_PHOTO_SIZE_NAMES = ['thumb', 'small', 'medium', 'large', 'x_large'] as const;
+
+/** Build size variants from Twitter `TweetMedia.sizes` for API v2 photo `formats`. */
+export const buildTwitterPhotoFormats = (media: TweetMedia): APIPhotoFormat[] => {
+  const base = media.media_url_https;
+  const formats: APIPhotoFormat[] = [];
+  const sizes = media.sizes as Record<string, TweetMediaSize | undefined>;
+
+  for (const name of TWITTER_PHOTO_SIZE_NAMES) {
+    const size = sizes[name];
+    if (size) {
+      formats.push({
+        name,
+        url: formatImageUrl(base, name),
+        width: size.w,
+        height: size.h
+      });
+    }
+  }
+
+  formats.push({
+    name: 'orig',
+    url: formatImageUrl(base, 'orig'),
+    width: media.original_info?.width,
+    height: media.original_info?.height
+  });
+
+  return formats;
+};
 
 /**
  * Convert Twitter's TweetMediaVariant to our APIVideoFormat
@@ -76,7 +106,8 @@ export const processMedia = (
       url: formatImageUrl(media.media_url_https, 'orig'),
       width: media.original_info?.width,
       height: media.original_info?.height,
-      altText: media.ext_alt_text
+      altText: media.ext_alt_text,
+      formats: buildTwitterPhotoFormats(media)
     };
   } else if (media.type === 'video' || media.type === 'animated_gif') {
     const formats: APIVideoFormat[] = media.video_info?.variants?.map(convertVariantToFormat) ?? [];

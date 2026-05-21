@@ -5,6 +5,7 @@ import icu from 'i18next-icu';
 import { Constants } from '../constants';
 import { handleQuote } from '../helpers/quote';
 import { isTombstone, withLocalizedTombstoneMessage } from '../helpers/tombstone';
+import { pickPhotoEmbedUrl } from '@fxembed/atmosphere';
 import { formatImageUrl, sanitizeText, truncateWithEllipsis } from '../helpers/utils';
 import { Strings } from '../strings';
 import { getSocialProof } from '../helpers/socialproof';
@@ -298,9 +299,16 @@ export const handleStatus = async (
 
     const selectedMedia = all[(mediaNumber || 1) - 1];
     if (selectedMedia) {
-      redirectUrl = selectedMedia.url;
+      redirectUrl =
+        selectedMedia.type === 'photo'
+          ? pickPhotoEmbedUrl(selectedMedia as APIPhoto, userAgent)
+          : selectedMedia.url;
     } else if (all.length > 0) {
-      redirectUrl = all[0].url;
+      const fallback = all[0];
+      redirectUrl =
+        fallback.type === 'photo'
+          ? pickPhotoEmbedUrl(fallback as APIPhoto, userAgent)
+          : fallback.url;
     }
 
     if (redirectUrl) {
@@ -414,7 +422,8 @@ export const handleStatus = async (
         thread: thread,
         text: newText,
         flags: flags,
-        targetLanguage: language ?? status.lang ?? 'en'
+        targetLanguage: language ?? status.lang ?? 'en',
+        userAgent
       });
       headers.push(...instructions.addHeaders);
       if (instructions.authorText) {

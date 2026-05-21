@@ -1129,6 +1129,28 @@ export const buildAPITwitterStatus = async (
         }
       });
     }
+
+    const stripPhotoFormats = (photo: APIPhoto) => {
+      delete photo.formats;
+    };
+    if (apiStatus.media?.photos) {
+      apiStatus.media.photos.forEach(stripPhotoFormats);
+    }
+    if (apiStatus.media?.all) {
+      apiStatus.media.all.forEach(media => {
+        if (media.type === 'photo' || media.type === 'gif') {
+          stripPhotoFormats(media as APIPhoto);
+        }
+      });
+    }
+    if (apiStatus.quote && !isTombstone(apiStatus.quote)) {
+      apiStatus.quote.media?.photos?.forEach(stripPhotoFormats);
+      apiStatus.quote.media?.all?.forEach(media => {
+        if (media.type === 'photo' || media.type === 'gif') {
+          stripPhotoFormats(media as APIPhoto);
+        }
+      });
+    }
   }
 
   if (apiStatus.raw_text.facets) {

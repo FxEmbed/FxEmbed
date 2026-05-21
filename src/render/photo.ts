@@ -1,3 +1,4 @@
+import { pickPhotoEmbedUrl } from '@fxembed/atmosphere';
 import i18next from 'i18next';
 import { Strings } from '../strings';
 import { getBranding } from '../helpers/branding';
@@ -45,9 +46,10 @@ export const renderPhoto = (
     ];
   } else {
     photo = photo as APIPhoto;
+    const imageUrl = pickPhotoEmbedUrl(photo, userAgent);
     instructions.addHeaders = [
-      `<meta property="twitter:image" content="${photo.url}"/>`,
-      `<meta property="og:image" content="${photo.url}"/>`,
+      `<meta property="twitter:image" content="${imageUrl}"/>`,
+      `<meta property="og:image" content="${imageUrl}"/>`,
       `<meta property="twitter:image:width" content="${photo.width}"/>`,
       `<meta property="twitter:image:height" content="${photo.height}"/>`,
       `<meta property="og:image:width" content="${photo.width}"/>`,

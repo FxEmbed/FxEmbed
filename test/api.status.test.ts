@@ -140,6 +140,44 @@ test('API v2 /2/thread includes quote count on focal status', async () => {
   expect(body.status?.quotes).toEqual(2886);
 });
 
+test('API v2 /2/status photo includes formats with orig url', async () => {
+  const result = await app.request(
+    new Request('https://api.fxtwitter.com/2/status/1848831595014459513', {
+      method: 'GET',
+      headers: botHeaders
+    }),
+    undefined,
+    harness
+  );
+  expect(result.status).toEqual(200);
+  const body = (await result.json()) as SocialThread;
+  expect(body.code).toEqual(200);
+  const photo = body.status?.media?.photos?.[0];
+  expect(photo).toBeTruthy();
+  expect(photo?.url).toContain('name=orig');
+  expect(photo?.formats?.map(f => f.name)).toEqual(
+    expect.arrayContaining(['thumb', 'small', 'medium', 'large', 'orig'])
+  );
+  expect(photo?.formats?.find(f => f.name === 'large')?.url).toContain('name=large');
+});
+
+test('Legacy /status JSON omits photo formats', async () => {
+  const result = await app.request(
+    new Request('https://api.fxtwitter.com/status/1848831595014459513', {
+      method: 'GET',
+      headers: botHeaders
+    }),
+    undefined,
+    harness
+  );
+  expect(result.status).toEqual(200);
+  const response = (await result.json()) as TweetAPIEnvelope;
+  const photo = response.tweet?.media?.photos?.[0];
+  expect(photo).toBeTruthy();
+  expect(photo?.url).toContain('name=orig');
+  expect(photo).not.toHaveProperty('formats');
+});
+
 test('API v2 /2/conversation includes quote count on focal status', async () => {
   const result = await app.request(
     new Request('https://api.fxtwitter.com/2/conversation/20', {

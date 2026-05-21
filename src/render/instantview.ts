@@ -9,6 +9,7 @@ import { renderArticleToHtml } from '../helpers/article';
 import type { APIStatusTombstone, APITwitterStatus } from '../realms/api/schemas';
 import { isTombstone } from '../helpers/tombstone';
 import { getVideoTranscodeDomain, getVideoTranscodeDomainBluesky } from '../helpers/transcode';
+import { pickPhotoEmbedUrl } from '@fxembed/atmosphere';
 import { experimentCheck, Experiment } from '../experiments';
 
 /**
@@ -68,13 +69,17 @@ const populateUserLinks = (text: string, status: APIStatus): string => {
   return text;
 };
 
-const generateStatusMedia = (status: APIStatus): string => {
+const generateStatusMedia = (status: APIStatus, userAgent?: string): string => {
   let media = '';
   if (status.media?.all?.length) {
     status.media.all.forEach(mediaItem => {
       let url = mediaItem.url;
 
-      if (experimentCheck(Experiment.KITCHENSINK_VIDEO, !!Constants.VIDEO_TRANSCODE_DOMAIN_LIST)) {
+      if (mediaItem.type === 'photo') {
+        url = pickPhotoEmbedUrl(mediaItem as APIPhoto, userAgent);
+      } else if (
+        experimentCheck(Experiment.KITCHENSINK_VIDEO, !!Constants.VIDEO_TRANSCODE_DOMAIN_LIST)
+      ) {
         const domain =
           status.provider === DataProvider.Twitter
             ? getVideoTranscodeDomain(status.id)
@@ -327,7 +332,8 @@ const generateStatus = (
   author: APIUser,
   language: string,
   isQuote = false,
-  authorActionType: AuthorActionType | null
+  authorActionType: AuthorActionType | null,
+  userAgent?: string
 ): string => {
   if (isTombstone(status)) {
     const inner = `<i>${sanitizeText(status.message)}</i>`;
@@ -376,7 +382,7 @@ const generateStatus = (
   <!-- Embed article (if applicable) -->
   ${articleHtml || notApplicableComment}
   <!-- Embed media -->
-  ${generateStatusMedia(status)} 
+  ${generateStatusMedia(status, userAgent)} 
   <!-- Translated text (if applicable) -->
   ${translatedText ? translatedText : notApplicableComment}
   <!-- Inline author (if applicable) -->
@@ -392,7 +398,7 @@ const generateStatus = (
     !isQuote && status.quote
       ? isTombstone(status.quote)
         ? `<blockquote><i>${sanitizeText(status.quote.message)}</i></blockquote>`
-        : generateStatus(status.quote, author, language, true, null)
+        : generateStatus(status.quote, author, language, true, null, userAgent)
       : notApplicableComment
   }`.format({
     quoteHeader: isQuote
@@ -514,7 +520,8 @@ export const renderInstantView = (properties: RenderProperties): ResponseInstruc
           status.author ?? thread?.author,
           properties?.targetLanguage ?? 'en',
           false,
-          authorAction
+          authorAction,
+          properties.userAgent
         );
       })
       .join('')}
