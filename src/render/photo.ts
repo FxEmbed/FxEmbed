@@ -9,7 +9,7 @@ export const renderPhoto = (
 ): ResponseInstructions => {
   const { status, engagementText, authorText, isOverrideMedia, userAgent } = properties;
   const instructions: ResponseInstructions = { addHeaders: [] };
-  const isTelegram = (userAgent?.indexOf('TelegramBot') ?? 0) > -1;
+  const isTelegram = (userAgent ?? '').includes('TelegramBot');
 
   if ((status.media?.photos?.length || 0) > 1 && (!status.media?.mosaic || isOverrideMedia)) {
     const all = status.media?.all as APIMedia[];
