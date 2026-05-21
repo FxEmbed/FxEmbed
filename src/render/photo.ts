@@ -45,7 +45,8 @@ export const renderPhoto = (
     ];
   } else {
     photo = photo as APIPhoto;
-    const photoUrl = proxyTwitterPostPhotoUrl(photo.url, shouldProxyTelegramPbsPhotos(isTelegram));
+    const proxyPbs = shouldProxyTelegramPbsPhotos(isTelegram);
+    const photoUrl = proxyTwitterPostPhotoUrl(photo.url, proxyPbs);
     instructions.addHeaders = [
       `<meta property="twitter:image" content="${photoUrl}"/>`,
       `<meta property="og:image" content="${photoUrl}"/>`,
