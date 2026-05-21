@@ -417,7 +417,7 @@ export const renderInstantView = (properties: RenderProperties): ResponseInstruc
   console.log('Generating Instant View...');
   const { status, thread, flags, userAgent } = properties;
   const instructions: ResponseInstructions = { addHeaders: [] };
-  const isTelegram = (userAgent?.indexOf('TelegramBot') ?? 0) > -1;
+  const isTelegram = (userAgent ?? '').includes('TelegramBot');
   const proxyPbs = shouldProxyTelegramPbsPhotos(isTelegram);
 
   let previousThreadPieceAuthor: string | null = null;
