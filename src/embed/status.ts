@@ -6,6 +6,7 @@ import { Constants } from '../constants';
 import { handleQuote } from '../helpers/quote';
 import { isTombstone, withLocalizedTombstoneMessage } from '../helpers/tombstone';
 import { formatImageUrl, sanitizeText, truncateWithEllipsis } from '../helpers/utils';
+import { proxyTwitterPostPhotoUrl, shouldProxyTelegramPbsPhotos } from '../helpers/pbsProxy';
 import { Strings } from '../strings';
 import { getSocialProof } from '../helpers/socialproof';
 import { renderPhoto } from '../render/photo';
@@ -414,7 +415,8 @@ export const handleStatus = async (
         thread: thread,
         text: newText,
         flags: flags,
-        targetLanguage: language ?? status.lang ?? 'en'
+        targetLanguage: language ?? status.lang ?? 'en',
+        userAgent: userAgent
       });
       headers.push(...instructions.addHeaders);
       if (instructions.authorText) {
@@ -652,8 +654,12 @@ export const handleStatus = async (
     // Check if we have an article with cover media to use instead
     if (articleOnly && twitterStatus.article?.cover_media?.media_info?.__typename === 'ApiImage') {
       const coverImage = twitterStatus.article.cover_media.media_info as TwitterApiImage;
+      const coverUrl = proxyTwitterPostPhotoUrl(
+        coverImage.original_img_url,
+        shouldProxyTelegramPbsPhotos(isTelegram)
+      );
       headers.push(
-        `<meta property="og:image" content="${coverImage.original_img_url}"/>`,
+        `<meta property="og:image" content="${coverUrl}"/>`,
         `<meta property="og:image:width" content="${coverImage.original_img_width}"/>`,
         `<meta property="og:image:height" content="${coverImage.original_img_height}"/>`
       );

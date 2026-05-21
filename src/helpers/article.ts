@@ -8,6 +8,7 @@ interface ArticleRenderOptions {
   fullRenderer?: boolean; // true for Telegram, false for Discord
   mediaEntities: TwitterApiMedia[];
   apiHost?: string; // Required for Telegram to wrap foreign links
+  photoUrlTransform?: (url: string) => string;
 }
 
 interface ArticleRenderResult {
@@ -301,7 +302,10 @@ const renderBlock = (
             let mediaHtml: string;
             if (media.media_info.__typename === 'ApiImage') {
               const image = media.media_info as TwitterApiImage;
-              mediaHtml = `<img src="${image.original_img_url}" alt="" />`;
+              const imgUrl = options.photoUrlTransform
+                ? options.photoUrlTransform(image.original_img_url)
+                : image.original_img_url;
+              mediaHtml = `<img src="${imgUrl}" alt="" />`;
             } else {
               const video = media.media_info as TwitterApiVideo;
               // Article videos have variants directly on media_info, regular videos have them under video_info

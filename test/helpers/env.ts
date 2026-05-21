@@ -23,6 +23,7 @@ export const WORKER_TEST_PROCESS_ENV = {
   GIF_TRANSCODE_DOMAIN_LIST: 'gif.fxtwitter.com',
   VIDEO_TRANSCODE_DOMAIN_LIST: 'video.fxtwitter.com',
   VIDEO_TRANSCODE_BSKY_DOMAIN_LIST: 'video.fxbsky.app',
+  PBS_PROXY_DOMAIN_LIST: 'pbs.fxtwitter.com',
   SENTRY_DSN: '',
   TWITTER_ROOT: 'https://x.com',
   ENCRYPTED_CREDENTIALS: '',

@@ -10,6 +10,7 @@ import type { APIStatusTombstone, APITwitterStatus } from '../realms/api/schemas
 import { isTombstone } from '../helpers/tombstone';
 import { getVideoTranscodeDomain, getVideoTranscodeDomainBluesky } from '../helpers/transcode';
 import { experimentCheck, Experiment } from '../experiments';
+import { proxyTwitterPostPhotoUrl, shouldProxyTelegramPbsPhotos } from '../helpers/pbsProxy';
 
 /**
  * Check if the tweet text is essentially just an article URL with no meaningful additional content.
@@ -68,7 +69,7 @@ const populateUserLinks = (text: string, status: APIStatus): string => {
   return text;
 };
 
-const generateStatusMedia = (status: APIStatus): string => {
+const generateStatusMedia = (status: APIStatus, proxyPbs: boolean): string => {
   let media = '';
   if (status.media?.all?.length) {
     status.media.all.forEach(mediaItem => {
@@ -85,6 +86,7 @@ const generateStatusMedia = (status: APIStatus): string => {
         case 'photo':
           // eslint-disable-next-line no-case-declarations
           const { altText } = mediaItem as APIPhoto;
+          url = proxyTwitterPostPhotoUrl(url, proxyPbs);
           media += `<img src="{url}" {altText}/>`.format({
             altText: altText ? `alt="${altText}"` : '',
             url: url
@@ -327,7 +329,8 @@ const generateStatus = (
   author: APIUser,
   language: string,
   isQuote = false,
-  authorActionType: AuthorActionType | null
+  authorActionType: AuthorActionType | null,
+  proxyPbs: boolean
 ): string => {
   if (isTombstone(status)) {
     const inner = `<i>${sanitizeText(status.message)}</i>`;
@@ -344,7 +347,8 @@ const generateStatus = (
       maxLength: undefined, // No limit for Telegram
       fullRenderer: true, // Render inline media for Telegram
       mediaEntities: twitterStatus.article.media_entities,
-      apiHost: Constants.API_HOST_LIST[0] // For wrapping foreign links
+      apiHost: Constants.API_HOST_LIST[0], // For wrapping foreign links
+      photoUrlTransform: url => proxyTwitterPostPhotoUrl(url, proxyPbs)
     });
 
     // Render cover media if available
@@ -352,7 +356,8 @@ const generateStatus = (
       const coverMedia = twitterStatus.article.cover_media;
       if (coverMedia.media_info.__typename === 'ApiImage') {
         const image = coverMedia.media_info;
-        articleCoverMedia = `<img src="${image.original_img_url}" alt="${twitterStatus.article.title}" />`;
+        const coverUrl = proxyTwitterPostPhotoUrl(image.original_img_url, proxyPbs);
+        articleCoverMedia = `<img src="${coverUrl}" alt="${twitterStatus.article.title}" />`;
       }
     }
 
@@ -376,7 +381,7 @@ const generateStatus = (
   <!-- Embed article (if applicable) -->
   ${articleHtml || notApplicableComment}
   <!-- Embed media -->
-  ${generateStatusMedia(status)} 
+  ${generateStatusMedia(status, proxyPbs)} 
   <!-- Translated text (if applicable) -->
   ${translatedText ? translatedText : notApplicableComment}
   <!-- Inline author (if applicable) -->
@@ -392,7 +397,7 @@ const generateStatus = (
     !isQuote && status.quote
       ? isTombstone(status.quote)
         ? `<blockquote><i>${sanitizeText(status.quote.message)}</i></blockquote>`
-        : generateStatus(status.quote, author, language, true, null)
+        : generateStatus(status.quote, author, language, true, null, proxyPbs)
       : notApplicableComment
   }`.format({
     quoteHeader: isQuote
@@ -410,8 +415,10 @@ const generateStatus = (
 
 export const renderInstantView = (properties: RenderProperties): ResponseInstructions => {
   console.log('Generating Instant View...');
-  const { status, thread, flags } = properties;
+  const { status, thread, flags, userAgent } = properties;
   const instructions: ResponseInstructions = { addHeaders: [] };
+  const isTelegram = (userAgent ?? '').includes('TelegramBot');
+  const proxyPbs = shouldProxyTelegramPbsPhotos(isTelegram);
 
   let previousThreadPieceAuthor: string | null = null;
   let originalAuthor: string | null = null;
@@ -514,7 +521,8 @@ export const renderInstantView = (properties: RenderProperties): ResponseInstruc
           status.author ?? thread?.author,
           properties?.targetLanguage ?? 'en',
           false,
-          authorAction
+          authorAction,
+          proxyPbs
         );
       })
       .join('')}

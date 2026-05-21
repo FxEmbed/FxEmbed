@@ -1,6 +1,7 @@
 import i18next from 'i18next';
 import { Strings } from '../strings';
 import { getBranding } from '../helpers/branding';
+import { proxyTwitterPostPhotoUrl, shouldProxyTelegramPbsPhotos } from '../helpers/pbsProxy';
 
 export const renderPhoto = (
   properties: RenderProperties,
@@ -8,6 +9,7 @@ export const renderPhoto = (
 ): ResponseInstructions => {
   const { status, engagementText, authorText, isOverrideMedia, userAgent } = properties;
   const instructions: ResponseInstructions = { addHeaders: [] };
+  const isTelegram = (userAgent ?? '').includes('TelegramBot');
 
   if ((status.media?.photos?.length || 0) > 1 && (!status.media?.mosaic || isOverrideMedia)) {
     const all = status.media?.all as APIMedia[];
@@ -20,8 +22,6 @@ export const renderPhoto = (
       number: String(all.indexOf(photo) + 1),
       total: String(all.length)
     });
-
-    const isTelegram = (userAgent?.indexOf('TelegramBot') ?? 0) > -1;
 
     if (authorText === Strings.DEFAULT_AUTHOR_TEXT || isTelegram) {
       instructions.authorText = photoCounter;
@@ -45,9 +45,11 @@ export const renderPhoto = (
     ];
   } else {
     photo = photo as APIPhoto;
+    const proxyPbs = shouldProxyTelegramPbsPhotos(isTelegram);
+    const photoUrl = proxyTwitterPostPhotoUrl(photo.url, proxyPbs);
     instructions.addHeaders = [
-      `<meta property="twitter:image" content="${photo.url}"/>`,
-      `<meta property="og:image" content="${photo.url}"/>`,
+      `<meta property="twitter:image" content="${photoUrl}"/>`,
+      `<meta property="og:image" content="${photoUrl}"/>`,
       `<meta property="twitter:image:width" content="${photo.width}"/>`,
       `<meta property="twitter:image:height" content="${photo.height}"/>`,
       `<meta property="og:image:width" content="${photo.width}"/>`,

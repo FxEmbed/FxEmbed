@@ -41,6 +41,7 @@ export const Constants = {
   GIF_TRANSCODE_DOMAIN_LIST: (process.env.GIF_TRANSCODE_DOMAIN_LIST ?? '').split(','),
   VIDEO_TRANSCODE_DOMAIN_LIST: (process.env.VIDEO_TRANSCODE_DOMAIN_LIST ?? '').split(','),
   VIDEO_TRANSCODE_BSKY_DOMAIN_LIST: (process.env.VIDEO_TRANSCODE_BSKY_DOMAIN_LIST ?? '').split(','),
+  PBS_PROXY_DOMAIN_LIST: (process.env.PBS_PROXY_DOMAIN_LIST ?? '').split(','),
   API_DOCS_URL: `https://github.com/FxEmbed/FxEmbed/wiki/API-Home`,
   TWITTER_ROOT: process.env.TWITTER_ROOT || 'https://x.com',
   HORIZON_WEB_ROOT: 'https://app.fxtwitter.com',

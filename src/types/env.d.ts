@@ -20,6 +20,7 @@ declare namespace NodeJS {
     GIF_TRANSCODE_DOMAIN_LIST?: string;
     VIDEO_TRANSCODE_DOMAIN_LIST?: string;
     VIDEO_TRANSCODE_BSKY_DOMAIN_LIST?: string;
+    PBS_PROXY_DOMAIN_LIST?: string;
     TWITTER_ROOT?: string;
     SENTRY_DSN?: string;
     RELEASE_NAME?: string;
