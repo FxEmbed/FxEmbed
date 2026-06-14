@@ -1,0 +1,21 @@
+{
+  "errors": [
+    {
+      "message": "BadRequest: SearchQueryParsingException(ERROR_EMPTY_QUERY)",
+      "locations": [{ "line": 3, "column": 5 }],
+      "path": ["search_by_raw_query", "search_timeline", "timeline"],
+      "extensions": {
+        "name": "BadRequestError",
+        "source": "Client",
+        "code": 214,
+        "kind": "Validation",
+        "tracing": { "trace_id": "00000000000000000000000000000000" }
+      },
+      "code": 214,
+      "kind": "Validation",
+      "name": "BadRequestError",
+      "source": "Client"
+    }
+  ],
+  "data": {}
+}

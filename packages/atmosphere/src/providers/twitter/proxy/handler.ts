@@ -5,6 +5,7 @@ import { mergeCookies } from './cookies.js';
 import { needsTransactionId } from './allowlist.js';
 import {
   classifyAPIErrors,
+  isSearchTimelineClientErrorResponse,
   jsonError,
   jsonHasTruthyErrorsProperty,
   twitterResponseLooksEmpty
@@ -168,7 +169,7 @@ export async function proxyTwitterRequest(request: Request, env: ProxyEnv): Prom
           }
         }
 
-        if (twitterResponseLooksEmpty(json)) {
+        if (twitterResponseLooksEmpty(json) && !isSearchTimelineClientErrorResponse(json)) {
           console.log(
             `No data was sent. Response code ${response.status}. Data sent`,
             rawBody ?? '[empty]'
