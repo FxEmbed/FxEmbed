@@ -77,9 +77,23 @@ declare type BlueskyEmbedViewRecord = {
   indexedAt?: string;
 };
 
+/** Hydrated `app.bsky.embed.gallery#viewImage` from AppView. */
+declare type BlueskyGalleryViewImage = {
+  $type?: string;
+  thumbnail?: string;
+  fullsize?: string;
+  alt?: string;
+  aspectRatio?: {
+    height: number;
+    width: number;
+  };
+};
+
 declare type BlueskyEmbed = {
   $type?: string;
   images?: BlueskyImage[];
+  /** `app.bsky.embed.gallery#view` items (carousel / multi-image posts with 5+ images). */
+  items?: BlueskyGalleryViewImage[];
   video?: BlueskyVideo;
   media?: BlueskyMedia;
   external?: BlueskyExternalEmbed;

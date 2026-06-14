@@ -1,0 +1,91 @@
+{
+  "thread": {
+    "post": {
+      "uri": "at://did:plc:test222/app.bsky.feed.post/rkeygallery",
+      "cid": "bafycidgallery",
+      "author": {
+        "did": "did:plc:test222",
+        "handle": "gallery.test",
+        "displayName": "Gallery",
+        "avatar": "https://cdn.bsky.app/img/avatar.png",
+        "createdAt": "2023-01-01T00:00:00.000Z",
+        "associated": { "chat": { "allowIncoming": "all" } },
+        "labels": []
+      },
+      "record": {
+        "text": "Six image carousel",
+        "createdAt": "2026-06-13T12:00:00.000Z",
+        "langs": ["en"],
+        "facets": [],
+        "embed": {
+          "$type": "app.bsky.embed.gallery",
+          "items": [
+            {
+              "$type": "app.bsky.embed.gallery#image",
+              "alt": "one",
+              "aspectRatio": { "width": 1200, "height": 800 },
+              "image": {
+                "$type": "blob",
+                "ref": { "$link": "bafyimg1" },
+                "mimeType": "image/jpeg",
+                "size": 1000
+              }
+            }
+          ]
+        }
+      },
+      "embed": {
+        "$type": "app.bsky.embed.gallery#view",
+        "items": [
+          {
+            "$type": "app.bsky.embed.gallery#viewImage",
+            "thumbnail": "https://cdn.bsky.app/gallery-thumb1",
+            "fullsize": "https://cdn.bsky.app/gallery-full1",
+            "alt": "one",
+            "aspectRatio": { "width": 1200, "height": 800 }
+          },
+          {
+            "$type": "app.bsky.embed.gallery#viewImage",
+            "thumbnail": "https://cdn.bsky.app/gallery-thumb2",
+            "fullsize": "https://cdn.bsky.app/gallery-full2",
+            "alt": "two",
+            "aspectRatio": { "width": 800, "height": 600 }
+          },
+          {
+            "$type": "app.bsky.embed.gallery#viewImage",
+            "thumbnail": "https://cdn.bsky.app/gallery-thumb3",
+            "fullsize": "https://cdn.bsky.app/gallery-full3",
+            "alt": "three",
+            "aspectRatio": { "width": 900, "height": 900 }
+          },
+          {
+            "$type": "app.bsky.embed.gallery#viewImage",
+            "thumbnail": "https://cdn.bsky.app/gallery-thumb4",
+            "fullsize": "https://cdn.bsky.app/gallery-full4",
+            "alt": "four",
+            "aspectRatio": { "width": 1000, "height": 700 }
+          },
+          {
+            "$type": "app.bsky.embed.gallery#viewImage",
+            "thumbnail": "https://cdn.bsky.app/gallery-thumb5",
+            "fullsize": "https://cdn.bsky.app/gallery-full5",
+            "alt": "five",
+            "aspectRatio": { "width": 1100, "height": 750 }
+          },
+          {
+            "$type": "app.bsky.embed.gallery#viewImage",
+            "thumbnail": "https://cdn.bsky.app/gallery-thumb6",
+            "fullsize": "https://cdn.bsky.app/gallery-full6",
+            "alt": "six",
+            "aspectRatio": { "width": 1300, "height": 850 }
+          }
+        ]
+      },
+      "indexedAt": "2026-06-13T12:01:00.000Z",
+      "labels": [],
+      "likeCount": 0,
+      "repostCount": 0,
+      "replyCount": 0
+    }
+  }
+}

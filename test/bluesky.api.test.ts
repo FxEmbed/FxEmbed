@@ -2,6 +2,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { app } from '../src/worker';
 import threadSingle from './fixtures/bluesky/thread-single.json';
 import threadMultiImage from './fixtures/bluesky/thread-multi-image.json';
+import threadGallery from './fixtures/bluesky/thread-gallery.json';
 import profileDetail from './fixtures/bluesky/profile-detail.json';
 import authorFeed from './fixtures/bluesky/author-feed.json';
 import getFollowers from './fixtures/bluesky/get-followers.json';
@@ -82,6 +83,41 @@ test('GET /2/status multi-image embed exposes photos', async () => {
   expect(res.status).toBe(200);
   const body = (await res.json()) as { status: { media: { photos?: { url: string }[] } } };
   expect(body.status.media.photos?.length).toBeGreaterThanOrEqual(2);
+});
+
+test('GET /2/status gallery embed exposes all carousel photos', async () => {
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: RequestInfo) => {
+    const u = typeof input === 'string' ? input : input.url;
+    if (u.includes('app.bsky.feed.getPostThread')) {
+      return new Response(JSON.stringify(threadGallery), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    if (u.includes('app.bsky.actor.getProfiles')) {
+      return new Response(JSON.stringify({ profiles: [] }), { status: 200 });
+    }
+    if (u.includes('[REDACTED]')) {
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }
+    throw new Error(`Unexpected fetch: ${u}`);
+  });
+
+  const res = await app.request('https://api.fxbsky.app/2/status/gallery.test/rkeygallery', {
+    headers: { 'User-Agent': 'FxEmbedTest/1.0' }
+  });
+  expect(res.status).toBe(200);
+  const body = (await res.json()) as {
+    status: {
+      embed_card: string;
+      media: { photos?: { url: string; altText?: string }[]; all?: unknown[] };
+    };
+  };
+  expect(body.status.embed_card).toBe('summary_large_image');
+  expect(body.status.media.photos?.length).toBe(6);
+  expect(body.status.media.photos?.[0]?.url).toBe('https://cdn.bsky.app/gallery-full1');
+  expect(body.status.media.photos?.[5]?.altText).toBe('six');
+  expect(body.status.media.all?.length).toBe(6);
 });
 
 test('GET /2/search returns results and cursor.bottom', async () => {

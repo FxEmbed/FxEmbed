@@ -1,6 +1,7 @@
 import type { APIBlueskyStatus, APISearchResultsBluesky } from '../../types/api-schemas.js';
 import { buildAPIBlueskyPost } from './processor.js';
 import { fetchSearchPosts } from './client.js';
+import { isBlueskyGalleryEmbed } from './gallery.js';
 import type { BlueskyBuildHost } from './build-host.js';
 
 export type BlueskySearchFeed = 'latest' | 'top' | 'media';
@@ -17,6 +18,7 @@ function normalizePostView(post: BlueskyPost): BlueskyPost {
 
 function embedHasVisualMedia(embed: BlueskyEmbed | undefined): boolean {
   if (!embed || typeof embed !== 'object') return false;
+  if (isBlueskyGalleryEmbed(embed)) return true;
   if (Array.isArray(embed.images) && embed.images.length > 0) return true;
   if (embed.video || embed.$type?.includes('video')) return true;
   if (embed.external) return true;
