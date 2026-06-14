@@ -19,7 +19,7 @@ import type {
 import type { FetchResults } from '../../types/fetch-results.js';
 import { isTombstone, tombstoneMessageForReason } from '../../helpers/tombstone.js';
 import { translateStatusGrok } from '../../helpers/translate-grok.js';
-import { normalizeLanguage } from '../../helpers/language.js';
+import { normalizeLanguage, isTranslatableLanguageCode } from '../../helpers/language.js';
 import { tcoResolver } from './tcoResolver.js';
 import type { TwitterBuildHost } from './build-host.js';
 
@@ -640,11 +640,7 @@ export const buildAPITwitterStatus = async (
     apiStatus.community_note = null;
   }
 
-  if (
-    status.legacy.lang !== 'unk' &&
-    status.legacy.lang !== 'und' &&
-    status.legacy.lang !== 'zxx'
-  ) {
+  if (isTranslatableLanguageCode(status.legacy.lang)) {
     apiStatus.lang = status.legacy.lang;
   } else {
     apiStatus.lang = null;
@@ -988,6 +984,7 @@ export const buildAPITwitterStatus = async (
   if (
     typeof language === 'string' &&
     (language.length === 2 || language.length === 5) && // Only translate if the language is a valid ISO 639-1 or ISO 639-5 code
+    isTranslatableLanguageCode(status.legacy?.lang) &&
     normalizeLanguage(language) !== normalizeLanguage(status.legacy?.lang || '') &&
     apiStatus.text.length > 1 // Don't translate if the status text is too short
   ) {
