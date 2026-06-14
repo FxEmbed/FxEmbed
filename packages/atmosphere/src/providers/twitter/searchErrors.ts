@@ -19,9 +19,7 @@ function firstGraphqlErrorEntry(json: unknown): Record<string, unknown> | undefi
 
 function isSearchTimelineErrorPath(path: unknown): boolean {
   if (!Array.isArray(path) || path.length === 0) return true;
-  return path.some(
-    segment => segment === 'search_timeline' || segment === 'search_by_raw_query'
-  );
+  return path.some(segment => segment === 'search_timeline' || segment === 'search_by_raw_query');
 }
 
 /**
