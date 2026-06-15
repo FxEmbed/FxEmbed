@@ -1,1 +1,5 @@
-export { buildLanguageHeaders, normalizeLanguage } from '@fxembed/atmosphere/helpers';
+export {
+  buildLanguageHeaders,
+  isTranslatableLanguageCode,
+  normalizeLanguage
+} from '@fxembed/atmosphere/helpers';
