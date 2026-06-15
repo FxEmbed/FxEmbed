@@ -28,10 +28,14 @@ export const NON_TRANSLATABLE_LANGUAGE_CODES = new Set([
 ]);
 
 export const isTranslatableLanguageCode = (language: string | null | undefined): boolean => {
-  if (typeof language !== 'string' || language.length === 0) {
+  if (typeof language !== 'string') {
     return false;
   }
-  return !NON_TRANSLATABLE_LANGUAGE_CODES.has(language.toLowerCase());
+  const trimmed = language.trim();
+  if (trimmed.length === 0) {
+    return false;
+  }
+  return !NON_TRANSLATABLE_LANGUAGE_CODES.has(trimmed.toLowerCase());
 };
 
 export const normalizeLanguage = (language: string) => {
