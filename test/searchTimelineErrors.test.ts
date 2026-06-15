@@ -45,6 +45,19 @@ test('parseSearchTimelineClientError ignores unrelated GraphQL errors', () => {
   expect(parseSearchTimelineClientError({ data: {} })).toBeNull();
 });
 
+test('parseSearchTimelineClientError accepts known messages without path', () => {
+  expect(
+    parseSearchTimelineClientError({
+      errors: [{ message: 'BadRequest: SearchQueryParsingException(ERROR_EMPTY_QUERY)' }]
+    })
+  ).toBe('empty_query');
+  expect(
+    parseSearchTimelineClientError({
+      errors: [{ message: 'BadRequest: Query is denylisted in Search Content Control tool.' }]
+    })
+  ).toBe('blocklisted');
+});
+
 test('searchTimelineClientErrorToApiQueryError maps to API 400 messages', () => {
   expect(searchTimelineClientErrorToApiQueryError('empty_query')).toEqual({
     code: 400,
