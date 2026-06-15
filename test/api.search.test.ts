@@ -102,3 +102,33 @@ test('API search accepts count parameter', async () => {
   const response = (await result.json()) as APISearchResults;
   expect(response.code).toEqual(200);
 });
+
+test('API search returns 400 for upstream empty query error', async () => {
+  const result = await app.request(
+    new Request('https://api.fxtwitter.com/2/search?q=empty_query_error', {
+      method: 'GET',
+      headers: botHeaders
+    }),
+    undefined,
+    harness
+  );
+  expect(result.status).toEqual(400);
+  const body = (await result.json()) as { code?: number; message?: string };
+  expect(body.code).toEqual(400);
+  expect(body.message).toContain('empty or could not be parsed');
+});
+
+test('API search returns 400 for upstream blocklisted query error', async () => {
+  const result = await app.request(
+    new Request('https://api.fxtwitter.com/2/search?q=blocklisted_query', {
+      method: 'GET',
+      headers: botHeaders
+    }),
+    undefined,
+    harness
+  );
+  expect(result.status).toEqual(400);
+  const body = (await result.json()) as { code?: number; message?: string };
+  expect(body.code).toEqual(400);
+  expect(body.message).toContain('blocked by X content controls');
+});

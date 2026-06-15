@@ -1,4 +1,8 @@
 /* Twitter API error payloads are loosely typed */
+import {
+  isSearchTimelineClientErrorResponse,
+  parseSearchTimelineClientError
+} from '../searchErrors.js';
 import type { ErrorResponse } from '../../../types/proxy-credentials.js';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' } as const;
@@ -188,8 +192,20 @@ const ERROR_RULES: ErrorRule[] = [
     ),
     disposition: 'ignore',
     log: 'Downstream fetch problem (Internal server error); retrying with another account.'
+  },
+  {
+    match: ({ json }) => parseSearchTimelineClientError(json) === 'empty_query',
+    disposition: 'ignore',
+    log: 'SearchTimeline empty or unparseable query (expected client error)'
+  },
+  {
+    match: ({ json }) => parseSearchTimelineClientError(json) === 'blocklisted',
+    disposition: 'ignore',
+    log: 'SearchTimeline blocklisted query (expected client error)'
   }
 ];
+
+export { isSearchTimelineClientErrorResponse };
 
 export function applyNsfwViewerErrorPatch(json: unknown): void {
   const rec = asRecord(json);
