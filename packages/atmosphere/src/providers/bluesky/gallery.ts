@@ -1,17 +1,5 @@
 import type { APIPhoto } from '../../types/api-schemas.js';
 
-/** Hydrated `app.bsky.embed.gallery#viewImage` from AppView. */
-export type BlueskyGalleryViewImage = {
-  $type?: string;
-  thumbnail?: string;
-  fullsize?: string;
-  alt?: string;
-  aspectRatio?: {
-    width: number;
-    height: number;
-  };
-};
-
 export const isBlueskyGalleryEmbed = (embed: BlueskyEmbed | undefined): boolean => {
   if (!embed || typeof embed !== 'object') return false;
   if (embed.$type?.includes('gallery')) return true;
@@ -43,7 +31,7 @@ export const blueskyPhotosFromEmbed = (embed: BlueskyEmbed | undefined): APIPhot
   if (!embed) return [];
 
   if (isBlueskyGalleryEmbed(embed)) {
-    return blueskyGalleryItemsToPhotos(embed.items as BlueskyGalleryViewImage[]);
+    return blueskyGalleryItemsToPhotos(embed.items);
   }
 
   const images =
