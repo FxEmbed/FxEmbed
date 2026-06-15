@@ -1,5 +1,5 @@
 import { searchAPI } from './search.js';
-import type { APISearchResults } from '../../types/api-schemas.js';
+import type { APISearchResults, ApiQueryError } from '../../types/api-schemas.js';
 import type { TwitterBuildHost } from './build-host.js';
 
 export const statusQuotesAPI = async (
@@ -8,6 +8,6 @@ export const statusQuotesAPI = async (
   cursor: string | null,
   host: TwitterBuildHost,
   language?: string
-): Promise<APISearchResults> => {
+): Promise<APISearchResults | ApiQueryError> => {
   return searchAPI(`quoted_tweet_id:${statusId}`, 'latest', count, cursor, host, language);
 };
