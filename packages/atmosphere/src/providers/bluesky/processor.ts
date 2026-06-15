@@ -10,6 +10,7 @@ import type { APIStatusTombstone, APITombstoneReason, APIUser } from '../../type
 import type { APIStatus } from '../../types/api-status.js';
 import { isTombstone, tombstoneMessageForReason } from '../../helpers/tombstone.js';
 import { blueskyVerificationToApiUserVerification } from './verification.js';
+import { blueskyPhotosFromEmbed } from './gallery.js';
 import type { BlueskyBuildHost } from './build-host.js';
 
 export const buildBlueskyTombstone = (
@@ -210,16 +211,13 @@ const applyEmbedsToStatus = async (apiStatus: APIStatus, status: BlueskyPost): P
   const media = primary?.media ?? status.embeds?.[0]?.media;
   const authorDid = status.author?.did;
 
-  if (primary?.media?.images?.length || status.embeds?.[0]?.images?.length) {
+  let embedPhotos = blueskyPhotosFromEmbed(primary);
+  if (!embedPhotos.length && status.embeds?.[0] && status.embeds[0] !== primary) {
+    embedPhotos = blueskyPhotosFromEmbed(status.embeds[0]);
+  }
+  if (embedPhotos.length) {
     apiStatus.embed_card = 'summary_large_image';
-    const images = primary?.media?.images ?? (status.embeds?.[0]?.images as BlueskyImage[]);
-    apiStatus.media.photos = images.map(image => ({
-      type: 'photo' as const,
-      width: image.aspectRatio?.width,
-      height: image.aspectRatio?.height,
-      url: image.fullsize,
-      altText: image.alt
-    }));
+    apiStatus.media.photos = embedPhotos;
   }
 
   if (status.embeds?.[0]?.video || primary?.video) {
@@ -269,19 +267,7 @@ const applyEmbedsToStatus = async (apiStatus: APIStatus, status: BlueskyPost): P
     }
   }
 
-  if (primary?.images?.length) {
-    apiStatus.embed_card = 'summary_large_image';
-    apiStatus.media.photos = primary.images.map(image => ({
-      type: 'photo' as const,
-      width: image.aspectRatio?.width,
-      height: image.aspectRatio?.height,
-      url: image.fullsize,
-      altText: image.alt
-    }));
-  }
-
-  if (
-    status.record?.embed?.video ||
+  if (status.record?.embed?.video ||
     status.value?.embed?.video ||
     primary?.media?.$type === 'app.bsky.embed.video#view'
   ) {
