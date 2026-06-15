@@ -17,6 +17,14 @@ function firstGraphqlErrorEntry(json: unknown): Record<string, unknown> | undefi
   return asRecord(errors[0]);
 }
 
+/**
+ * Validate if an error path relates to search timeline operations.
+ *
+ * Note: Returns `true` when path is missing, null, or empty. This permissive behavior
+ * is intentional and allows errors without path information to proceed to message-based
+ * classification. This defensive design handles API response variations where the path
+ * field may be omitted while still containing valid search timeline error messages.
+ */
 function isSearchTimelineErrorPath(path: unknown): boolean {
   if (!Array.isArray(path) || path.length === 0) return true;
   return path.some(segment => segment === 'search_timeline' || segment === 'search_by_raw_query');
