@@ -3,7 +3,12 @@ import { buildAPITwitterStatus } from './processor.js';
 import { SearchTimelineQuery } from './graphql/queries.js';
 import { graphqlRequest } from './graphql/request.js';
 import { isTombstone } from '../../helpers/tombstone.js';
-import type { APISearchResults, APITwitterStatus } from '../../types/api-schemas.js';
+import {
+  isSearchTimelineClientErrorResponse,
+  parseSearchTimelineClientError,
+  searchTimelineClientErrorToApiQueryError
+} from './searchErrors.js';
+import type { APISearchResults, APITwitterStatus, ApiQueryError } from '../../types/api-schemas.js';
 import type { FetchResults } from '../../types/fetch-results.js';
 import type { TwitterBuildHost } from './build-host.js';
 
@@ -433,7 +438,7 @@ export const searchAPI = async (
   cursor: string | null,
   host: TwitterBuildHost,
   language?: string
-): Promise<APISearchResults> => {
+): Promise<APISearchResults | ApiQueryError> => {
   const product = feedToProduct(feed);
 
   let response: TwitterSearchTimelineResponse | null;
@@ -449,6 +454,9 @@ export const searchAPI = async (
       },
       headers: buildLanguageHeaders(language),
       validator: (_response: unknown) => {
+        if (isSearchTimelineClientErrorResponse(_response)) {
+          return true;
+        }
         const r = _response as TwitterSearchTimelineResponse;
         return Array.isArray(r?.data?.search_by_raw_query?.search_timeline?.timeline?.instructions);
       }
@@ -456,6 +464,11 @@ export const searchAPI = async (
   } catch (e) {
     console.error('Search request failed', e);
     return { code: 500, results: [], cursor: { top: null, bottom: null } };
+  }
+
+  const clientError = parseSearchTimelineClientError(response);
+  if (clientError) {
+    return searchTimelineClientErrorToApiQueryError(clientError);
   }
 
   if (!response?.data?.search_by_raw_query?.search_timeline?.timeline?.instructions) {
