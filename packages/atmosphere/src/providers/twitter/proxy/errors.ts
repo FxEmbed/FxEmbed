@@ -140,6 +140,11 @@ const ERROR_RULES: ErrorRule[] = [
     log: 'Downstream fetch problem (DependencyError). Ignore this as this is usually not an issue.'
   },
   {
+    match: ignoreOnlyWithPayload(({ json }) => firstErrorEntry(json)?.name === 'DeadlineExceeded'),
+    disposition: 'ignore',
+    log: 'Downstream fetch problem (DeadlineExceeded). Ignore this as this is usually not an issue.'
+  },
+  {
     match: ignoreOnlyWithPayload(({ json }) => firstErrorEntry(json)?.kind === 'NonFatal'),
     disposition: 'ignore',
     log: 'Non-Fatal Error reported by server, continuing...'
