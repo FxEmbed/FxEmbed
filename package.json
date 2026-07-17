@@ -62,7 +62,7 @@
     "@hono/sentry": "^1.2.2",
     "@hono/zod-openapi": "^1.4.0",
     "cheerio": "^1.2.0",
-    "hono": "^4.12.28",
+    "hono": "^4.12.29",
     "i18next": "^26.3.6",
     "i18next-icu": "^2.4.4",
     "zod": "^4.4.3"
