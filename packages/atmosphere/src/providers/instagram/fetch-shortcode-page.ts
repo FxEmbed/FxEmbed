@@ -59,7 +59,7 @@ export async function fetchInstagramPageWithWebInfo(
   const cookies = session?.cookieHeader ?? '';
   const htmlOpts = cookies ? { cookies } : undefined;
 
-  let mediaId: string | null = null;
+  let mediaId: string | null;
   try {
     mediaId = String(instagramShortcodeToPk(shortcode));
   } catch {
