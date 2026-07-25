@@ -5,6 +5,7 @@ import type {
   APIVideo,
   APIPhoto
 } from '../../types/api-schemas.js';
+import { parseDashPresentationDurationSec } from './extractors.js';
 
 function pickInt(...vals: unknown[]): number {
   for (const v of vals) {
@@ -22,6 +23,63 @@ function pickFloat(...vals: unknown[]): number {
     }
   }
   return Number.NaN;
+}
+
+function pickString(...vals: unknown[]): string {
+  for (const v of vals) {
+    if (typeof v === 'string' && v.length > 0) return v;
+  }
+  return '';
+}
+
+/** Instagram media_type: 1 photo, 2 video, 8 carousel. */
+function isVideoNode(node: Record<string, unknown>): boolean {
+  if (node.media_type === 2) return true;
+  if (Boolean(node.is_video) || node.__typename === 'GraphVideo') return true;
+  if (typeof node.__typename === 'string' && node.__typename.includes('Video')) return true;
+  if (Array.isArray(node.video_versions) && node.video_versions.length > 0) return true;
+  if (typeof node.video_url === 'string' && node.video_url.length > 0) return true;
+  return false;
+}
+
+function displayImageUrl(node: Record<string, unknown>): string {
+  return pickString(
+    node.display_url,
+    node.display_uri,
+    node.display_src,
+    (node.image_versions2 as { candidates?: { url?: string }[] } | undefined)?.candidates?.[0]?.url
+  );
+}
+
+function pickBestVideoVersion(
+  versions: { url?: string; width?: number; height?: number; type?: number }[] | undefined
+): { url: string; width: number; height: number } | null {
+  if (!versions?.length) return null;
+  // Prefer entries with dimensions; otherwise first URL (polaris often omits width/height).
+  let best: { url: string; width: number; height: number } | null = null;
+  for (const v of versions) {
+    if (typeof v?.url !== 'string' || !v.url) continue;
+    const w = pickInt(v.width);
+    const h = pickInt(v.height);
+    const candidate = { url: v.url, width: w, height: h };
+    if (!best) {
+      best = candidate;
+      continue;
+    }
+    const bestArea = best.width * best.height;
+    const area = w * h;
+    if (area > bestArea) best = candidate;
+  }
+  return best;
+}
+
+function videoDurationSec(node: Record<string, unknown>): number {
+  const durRaw = pickFloat(node.video_duration);
+  if (Number.isFinite(durRaw) && durRaw > 0) return durRaw;
+  const fromDash = parseDashPresentationDurationSec(
+    typeof node.video_dash_manifest === 'string' ? node.video_dash_manifest : undefined
+  );
+  return Number.isFinite(fromDash) ? fromDash : 0;
 }
 
 function isoFromUnix(sec: number): string {
@@ -129,7 +187,8 @@ export function fullUserFromWebProfile(d: Record<string, unknown>): APIUser | nu
 
 function permalinkForNode(node: Record<string, unknown>, shortcode: string): string {
   const pt = node.product_type;
-  if (pt === 'clips' || node.media_type === 2) {
+  // Clips/reels use /reel/; feed videos and carousels use /p/.
+  if (pt === 'clips') {
     return `https://www.instagram.com/reel/${encodeURIComponent(shortcode)}/`;
   }
   return `https://www.instagram.com/p/${encodeURIComponent(shortcode)}/`;
@@ -176,7 +235,9 @@ function mediaPkFromNode(node: Record<string, unknown>): string | undefined {
 }
 
 /**
- * Normalize an Instagram timeline/web_info media node into API v2 status.
+ * Normalize an Instagram timeline / polaris / web_info media node into API v2 status.
+ * Polaris product media (yt-dlp `_extract_product`) uses `code`, `user`, `media_type`,
+ * `video_versions`, and `display_uri` rather than GraphQL `shortcode` / `owner` / `is_video`.
  */
 export function instagramNodeToStatus(
   node: Record<string, unknown>,
@@ -187,13 +248,16 @@ export function instagramNodeToStatus(
     (typeof node.code === 'string' && node.code) ||
     '';
   if (!shortcode) return null;
-  const owner = (node.owner as Record<string, unknown> | undefined) ?? {};
-  const oid = String(owner.id ?? owner.pk ?? ownerFallback.id);
+  const owner =
+    (node.user as Record<string, unknown> | undefined) ??
+    (node.owner as Record<string, unknown> | undefined) ??
+    {};
+  const oid = String(owner.pk ?? owner.id ?? ownerFallback.id);
   const ouser = String(owner.username ?? ownerFallback.username);
   const oname = typeof owner.full_name === 'string' ? owner.full_name : ownerFallback.fullName;
   const opic =
-    typeof owner.profile_pic_url === 'string' ? owner.profile_pic_url : (ownerFallback.pic ?? null);
-  const author = stubAuthorFromIg(oid, ouser, oname, opic, Boolean(owner.is_verified));
+    pickString(owner.profile_pic_url, owner.profile_image_uri) || (ownerFallback.pic ?? null);
+  const author = stubAuthorFromIg(oid, ouser, oname, opic || null, Boolean(owner.is_verified));
   const takenRaw = pickInt(
     node.taken_at_timestamp,
     node.taken_at,
@@ -210,7 +274,6 @@ export function instagramNodeToStatus(
     node.comment_count
   );
   const text = captionFromMedia(node);
-  const isVideo = Boolean(node.is_video) || node.__typename === 'GraphVideo';
   const dims = (node.dimensions as { width?: number; height?: number } | undefined) ?? {};
   const w = pickInt(dims.width, node.original_width);
   const h = pickInt(dims.height, node.original_height);
@@ -222,30 +285,24 @@ export function instagramNodeToStatus(
     for (const slide of carousel) {
       if (!slide || typeof slide !== 'object') continue;
       const s = slide as Record<string, unknown>;
-      if (s.is_video || s.video_url) {
-        const vu = s.video_versions as
-          | { url?: string; width?: number; height?: number }[]
-          | undefined;
-        const url = (typeof s.video_url === 'string' && s.video_url) || vu?.[0]?.url || '';
+      if (isVideoNode(s)) {
+        const best = pickBestVideoVersion(
+          s.video_versions as { url?: string; width?: number; height?: number; type?: number }[]
+        );
+        const url = pickString(s.video_url, best?.url);
         if (url) {
-          const durRaw = pickFloat(s.video_duration);
-          const durationSec = Number.isFinite(durRaw) ? durRaw : 0;
           const v = buildVideo(
             url,
-            pickInt(s.original_width, vu?.[0]?.width, w),
-            pickInt(s.original_height, vu?.[0]?.height, h),
-            durationSec,
-            typeof s.display_url === 'string' ? s.display_url : undefined
+            pickInt(s.original_width, best?.width, w),
+            pickInt(s.original_height, best?.height, h),
+            videoDurationSec(s),
+            displayImageUrl(s) || undefined
           );
           videos.push(v);
           all.push(v);
         }
       } else {
-        const img =
-          (s.display_url as string | undefined) ||
-          ((s.image_versions2 as { candidates?: { url?: string }[] } | undefined)?.candidates?.[0]
-            ?.url ??
-            undefined);
+        const img = displayImageUrl(s);
         if (img) {
           const p = buildPhoto(img, pickInt(s.original_width, w), pickInt(s.original_height, h));
           photos.push(p);
@@ -253,38 +310,37 @@ export function instagramNodeToStatus(
         }
       }
     }
-  } else if (isVideo) {
-    const vv = node.video_versions as
-      | { url?: string; width?: number; height?: number }[]
-      | undefined;
-    const url = (typeof node.video_url === 'string' && node.video_url) || vv?.[0]?.url || '';
+  } else if (isVideoNode(node)) {
+    const best = pickBestVideoVersion(
+      node.video_versions as { url?: string; width?: number; height?: number; type?: number }[]
+    );
+    const url = pickString(node.video_url, best?.url);
     if (url) {
-      const durRaw = pickFloat(node.video_duration);
-      const durationSec = Number.isFinite(durRaw) ? durRaw : 0;
+      const thumb = displayImageUrl(node) || undefined;
       const v = buildVideo(
         url,
-        pickInt(vv?.[0]?.width, w),
-        pickInt(vv?.[0]?.height, h),
-        durationSec,
-        typeof node.display_url === 'string' ? node.display_url : undefined
+        pickInt(best?.width, w),
+        pickInt(best?.height, h),
+        videoDurationSec(node),
+        thumb
       );
+      // When polaris omits version dimensions, fall back to original_* / image candidate size.
+      if ((v.width <= 1 || v.height <= 1) && (w > 0 || h > 0)) {
+        v.width = w || v.width;
+        v.height = h || v.height;
+        if (v.formats[0]) {
+          v.formats[0].width = v.width || undefined;
+          v.formats[0].height = v.height || undefined;
+        }
+      }
       videos.push(v);
       all.push(v);
     }
   } else {
-    const img =
-      (typeof node.display_url === 'string' && node.display_url) ||
-      (typeof node.display_src === 'string' && node.display_src) ||
-      ((
-        node.image_versions2 as
-          | { candidates?: { url?: string; width?: number; height?: number }[] }
-          | undefined
-      )?.candidates?.[0]?.url ??
-        '');
+    const img = displayImageUrl(node);
     const cand = (
       node.image_versions2 as
-        | { candidates?: { url?: string; width?: number; height?: number }[] }
-        | undefined
+        { candidates?: { url?: string; width?: number; height?: number }[] } | undefined
     )?.candidates?.[0];
     if (img) {
       const p = buildPhoto(img, pickInt(cand?.width, w), pickInt(cand?.height, h));

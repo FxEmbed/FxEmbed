@@ -39,6 +39,80 @@ describe('instagram processor', () => {
     expect(s!.media_pk).toBe('3881689364048676894');
   });
 
+  it('maps polaris video product media to status with video URL', () => {
+    const node: Record<string, unknown> = {
+      __typename: 'XIGPolarisVideoMedia',
+      pk: '2913440072144448240',
+      code: 'Chunk8-jurw',
+      media_type: 2,
+      product_type: 'clips',
+      taken_at: 1661529231,
+      like_count: 980043,
+      comment_count: 15928,
+      original_width: 720,
+      original_height: 1280,
+      caption: { text: 'Gingerton' },
+      user: {
+        pk: '25025320',
+        username: 'instagram',
+        full_name: 'Instagram',
+        profile_pic_url: 'https://cdn.example/u.jpg',
+        is_verified: true
+      },
+      display_uri: 'https://cdn.example/thumb.jpg',
+      video_versions: [{ url: 'https://cdn.example/v.mp4', type: 101 }],
+      video_dash_manifest: '<MPD mediaPresentationDuration="PT0H0M4.967S"></MPD>'
+    };
+    const s = instagramNodeToStatus(node, ownerFb);
+    expect(s).toBeTruthy();
+    expect(s!.id).toBe('Chunk8-jurw');
+    expect(s!.url).toContain('/reel/Chunk8-jurw');
+    expect(s!.author.screen_name).toBe('instagram');
+    expect(s!.likes).toBe(980043);
+    expect(s!.media?.videos?.length).toBe(1);
+    expect(s!.media?.videos?.[0]?.url).toBe('https://cdn.example/v.mp4');
+    expect(s!.media?.videos?.[0]?.thumbnail_url).toBe('https://cdn.example/thumb.jpg');
+    expect(s!.media?.videos?.[0]?.duration).toBeCloseTo(4.967, 3);
+    expect(s!.media?.videos?.[0]?.width).toBe(720);
+    expect(s!.media_pk).toBe('2913440072144448240');
+  });
+
+  it('maps polaris carousel with video slides', () => {
+    const node: Record<string, unknown> = {
+      pk: '1455917559229915856',
+      code: 'BQ0eAlwhDrw',
+      media_type: 8,
+      product_type: 'carousel_container',
+      taken_at: 1486140000,
+      caption: { text: 'Surprise' },
+      user: { pk: '25025320', username: 'instagram', full_name: 'Instagram' },
+      carousel_media: [
+        {
+          pk: '1455917388444111830',
+          code: 'BQ0dSaohpPW',
+          media_type: 2,
+          original_width: 640,
+          original_height: 640,
+          video_versions: [{ url: 'https://cdn.example/c1.mp4' }],
+          image_versions2: {
+            candidates: [{ url: 'https://cdn.example/c1.jpg', width: 640, height: 640 }]
+          }
+        },
+        {
+          pk: '1455917472833528275',
+          code: 'BQ0dTpOhuHT',
+          media_type: 2,
+          video_versions: [{ url: 'https://cdn.example/c2.mp4' }]
+        }
+      ]
+    };
+    const s = instagramNodeToStatus(node, ownerFb);
+    expect(s).toBeTruthy();
+    expect(s!.media?.videos?.length).toBe(2);
+    expect(s!.media?.videos?.[0]?.url).toBe('https://cdn.example/c1.mp4');
+    expect(s!.url).toContain('/p/BQ0eAlwhDrw');
+  });
+
   it('maps comment node to substatus', () => {
     const sub = commentRecordToSubstatus(
       {
