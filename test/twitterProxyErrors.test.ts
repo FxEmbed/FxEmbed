@@ -35,12 +35,20 @@ const deadlineExceededWithoutPayload = {
 
 test('classifyAPIErrors ignores DeadlineExceeded when user payload is present', () => {
   expect(
-    classifyAPIErrors(deadlineExceededWithUserPayload, JSON.stringify(deadlineExceededWithUserPayload), 200)
+    classifyAPIErrors(
+      deadlineExceededWithUserPayload,
+      JSON.stringify(deadlineExceededWithUserPayload),
+      200
+    )
   ).toEqual({ action: 'ignore' });
 });
 
 test('classifyAPIErrors retries DeadlineExceeded when response has no payload', () => {
   expect(
-    classifyAPIErrors(deadlineExceededWithoutPayload, JSON.stringify(deadlineExceededWithoutPayload), 200)
+    classifyAPIErrors(
+      deadlineExceededWithoutPayload,
+      JSON.stringify(deadlineExceededWithoutPayload),
+      200
+    )
   ).toEqual({ action: 'retry' });
 });

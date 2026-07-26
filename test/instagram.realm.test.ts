@@ -31,13 +31,10 @@ test('Instagram realm redirects humans from /reel/ to Instagram', async () => {
 
 test('Instagram realm serves oembed', async () => {
   const res = await app.request(
-    new Request(
-      'https://67instagram.com/owoembed?text=hello&status=CexampleShort&author=demo',
-      {
-        method: 'GET',
-        headers: botHeaders
-      }
-    ),
+    new Request('https://67instagram.com/owoembed?text=hello&status=CexampleShort&author=demo', {
+      method: 'GET',
+      headers: botHeaders
+    }),
     undefined,
     harness
   );

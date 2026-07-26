@@ -18,9 +18,7 @@ export const oembed = async (c: Context) => {
 
   const data: OEmbed = {
     author_name: text,
-    author_url: author
-      ? `${Constants.INSTAGRAM_ROOT}/${encodeURIComponent(author)}/`
-      : statusUrl,
+    author_url: author ? `${Constants.INSTAGRAM_ROOT}/${encodeURIComponent(author)}/` : statusUrl,
     provider_name: branding.name,
     provider_url: searchParams.get('provider') ? statusUrl : branding.redirect,
     title: Strings.DEFAULT_AUTHOR_TEXT,

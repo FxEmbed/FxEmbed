@@ -39,7 +39,9 @@ test('parseSearchTimelineClientError detects blocklisted query', () => {
 test('parseSearchTimelineClientError ignores unrelated GraphQL errors', () => {
   expect(
     parseSearchTimelineClientError({
-      errors: [{ message: 'BadRequest: SearchQueryParsingException(ERROR_EMPTY_QUERY)', path: ['user'] }]
+      errors: [
+        { message: 'BadRequest: SearchQueryParsingException(ERROR_EMPTY_QUERY)', path: ['user'] }
+      ]
     })
   ).toBeNull();
   expect(parseSearchTimelineClientError({ data: {} })).toBeNull();
