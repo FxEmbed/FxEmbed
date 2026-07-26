@@ -5,6 +5,7 @@ import {
   fetchRulingForContent
 } from './client.js';
 import {
+  extractLsdFromHtml,
   extractPolarisProductFromGraphqlJson,
   extractPostMediaItem,
   type PolarisMediaBundle
@@ -20,6 +21,8 @@ export type InstagramWebInfoPage =
       pathUsed: string;
       comments: PolarisMediaBundle['comments'];
       source: 'polaris-graphql' | 'polaris-html' | 'web-info-html';
+      /** Session/doc LSD for GraphQL comment pagination (Polaris GraphQL has no HTML to parse). */
+      lsd: string | null;
     }
   | {
       ok: false;
@@ -29,6 +32,7 @@ export type InstagramWebInfoPage =
       pathUsed: null;
       comments: null;
       source: null;
+      lsd: null;
     };
 
 function isLoginRedirect(finalUrl: string | undefined): boolean {
@@ -92,7 +96,8 @@ export async function fetchInstagramPageWithWebInfo(
           item: bundle.product,
           pathUsed: refererPath,
           comments: bundle.comments,
-          source: 'polaris-graphql'
+          source: 'polaris-graphql',
+          lsd: session.lsd
         };
       }
     }
@@ -145,7 +150,8 @@ export async function fetchInstagramPageWithWebInfo(
         item,
         pathUsed: path,
         comments: null,
-        source: looksPolaris ? 'polaris-html' : 'web-info-html'
+        source: looksPolaris ? 'polaris-html' : 'web-info-html',
+        lsd: extractLsdFromHtml(r.html) ?? session?.lsd ?? null
       };
     }
 
@@ -180,6 +186,7 @@ export async function fetchInstagramPageWithWebInfo(
     item: null,
     pathUsed: null,
     comments: null,
-    source: null
+    source: null,
+    lsd: null
   };
 }

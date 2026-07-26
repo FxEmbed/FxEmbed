@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Context, Hono } from 'hono';
 import { trimTrailingSlash } from 'hono/trailing-slash';
 import { getBranding } from '../../helpers/branding';
 import { activityRequest } from './routes/activity';
@@ -6,7 +6,10 @@ import { instagramPostRequest } from './routes/post';
 import { oembed } from './routes/oembed';
 import { versionRoute } from '../common/version';
 import { constructInstagramPost } from '@fxembed/atmosphere/providers/instagram/post';
-import { normalizeInstagramPostId } from '@fxembed/atmosphere/providers/instagram/shortcode';
+import {
+  instagramShortcodeToPk,
+  normalizeInstagramPostId
+} from '@fxembed/atmosphere/providers/instagram/shortcode';
 
 export const instagram = new Hono();
 instagram.use(trimTrailingSlash());
@@ -14,24 +17,29 @@ instagram.use(trimTrailingSlash());
 instagram.get('/owoembed', oembed);
 instagram.get('/api/v1/statuses/:snowcode', activityRequest);
 
-instagram.get('/raw/:id', async c => {
+const instagramJsonPostRequest = async (c: Context) => {
   const { id } = c.req.param();
   if (!id) {
     return c.json({ error: 'Invalid request' }, 400);
   }
-  const shortcode = normalizeInstagramPostId(id);
-  const thread = await constructInstagramPost(shortcode, c.req.header('User-Agent'));
-  return c.json(thread);
-});
-instagram.get('/api/:id', async c => {
-  const { id } = c.req.param();
-  if (!id) {
+
+  let shortcode: string;
+  try {
+    shortcode = normalizeInstagramPostId(id);
+    if (!shortcode) {
+      throw new Error('empty shortcode');
+    }
+    instagramShortcodeToPk(shortcode);
+  } catch {
     return c.json({ error: 'Invalid request' }, 400);
   }
-  const shortcode = normalizeInstagramPostId(id);
+
   const thread = await constructInstagramPost(shortcode, c.req.header('User-Agent'));
   return c.json(thread);
-});
+};
+
+instagram.get('/raw/:id', instagramJsonPostRequest);
+instagram.get('/api/:id', instagramJsonPostRequest);
 
 // Instagram permalinks: /p/SHORTCODE and /reel/SHORTCODE (same media object)
 instagram.get('/p/:id', instagramPostRequest);

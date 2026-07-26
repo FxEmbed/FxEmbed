@@ -1,7 +1,7 @@
 import type { SocialConversationInstagram } from '../../types/api-schemas.js';
 import { fetchCommentPageGraphql, fetchInstagramCsrfToken } from './client.js';
 import { decodeCommentCursor, encodeCommentCursor } from './cursors.js';
-import { extractCommentsConnection, extractLsdFromHtml } from './extractors.js';
+import { extractCommentsConnection } from './extractors.js';
 import { fetchInstagramPageWithWebInfo } from './fetch-shortcode-page.js';
 import {
   extractCommentsFromGraphqlJson,
@@ -111,8 +111,23 @@ export async function constructInstagramConversation(
     return { ok: false, message: 'Invalid cursor' };
   }
 
+  // Prefer LSD preserved on the page result (required for polaris-graphql, which has empty HTML).
+  const lsd = page.lsd;
+  if (!lsd) {
+    return {
+      ok: false,
+      message: 'Instagram comment fetch failed',
+      data: {
+        code: 500,
+        status,
+        thread: [status],
+        replies: [],
+        author: status.author,
+        cursor: { bottom: options.cursor }
+      }
+    };
+  }
   const csrf = await fetchInstagramCsrfToken(options.userAgent);
-  const lsd = extractLsdFromHtml(htmlBody) ?? 'a';
   const gql = await fetchCommentPageGraphql({
     mediaId: decoded.mediaId,
     after: decoded.after,
