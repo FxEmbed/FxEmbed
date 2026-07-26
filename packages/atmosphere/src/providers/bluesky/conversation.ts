@@ -25,8 +25,7 @@ type ConversationCursorPayload = {
 };
 
 export type BlueskyConversationResult =
-  | { ok: true; data: SocialConversation }
-  | { ok: false; message: string };
+  { ok: true; data: SocialConversation } | { ok: false; message: string };
 
 export const fetchBlueskyThread = async (
   post: string,
