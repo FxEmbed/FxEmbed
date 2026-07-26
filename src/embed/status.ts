@@ -27,6 +27,7 @@ import { shouldTranscodeGif } from '../helpers/giftranscode';
 import { normalizeLanguage } from '../helpers/language';
 import { getVideoTranscodeDomain, getVideoTranscodeDomainBluesky } from '../helpers/transcode';
 import { constructTikTokVideo } from '@fxembed/atmosphere/providers/tiktok/conversation';
+import { constructInstagramPost } from '@fxembed/atmosphere/providers/instagram/post';
 import { InputFlags } from '../types/types';
 import { formatRuntime } from '../helpers/runtime';
 
@@ -157,6 +158,8 @@ export const handleStatus = async (
     const requestUrl = new URL(c.req.url);
     const proxyBase = `${requestUrl.protocol}//${requestUrl.host}`;
     thread = await constructTikTokVideo(statusId, proxyBase, userAgent);
+  } else if (provider === DataProvider.Instagram) {
+    thread = (await constructInstagramPost(statusId, userAgent)) as SocialThread;
   } else {
     return returnError(c, Strings.ERROR_API_FAIL);
   }
@@ -311,7 +314,8 @@ export const handleStatus = async (
       if (selectedMedia?.type === 'video') {
         if (
           experimentCheck(Experiment.KITCHENSINK_VIDEO, isTelegram) &&
-          status.provider !== DataProvider.TikTok
+          status.provider !== DataProvider.TikTok &&
+          status.provider !== DataProvider.Instagram
         ) {
           const domain =
             status.provider === DataProvider.Twitter
@@ -320,7 +324,8 @@ export const handleStatus = async (
           redirectUrl = `https://${domain}${new URL(redirectUrl).pathname}`;
         } else if (
           experimentCheck(Experiment.VIDEO_REDIRECT_WORKAROUND, !!Constants.API_HOST_LIST) &&
-          status.provider !== DataProvider.TikTok
+          status.provider !== DataProvider.TikTok &&
+          status.provider !== DataProvider.Instagram
         ) {
           redirectUrl = `https://${Constants.API_HOST_LIST[0]}/2/go?url=${encodeURIComponent(redirectUrl)}`;
         }
@@ -373,6 +378,8 @@ export const handleStatus = async (
   const bskyPublicStatusUrl = flags?.horizon
     ? `${Constants.HORIZON_WEB_ROOT}/profile/${status.author.screen_name}/post/${status.id}`
     : `${Constants.BLUESKY_ROOT}/profile/${status.author.screen_name}/post/${status.id}`;
+  const instagramPublicStatusUrl =
+    status.url || `${Constants.INSTAGRAM_ROOT}/p/${encodeURIComponent(status.id)}/`;
 
   if (status.provider === DataProvider.Twitter) {
     headers.push(
@@ -385,6 +392,11 @@ export const handleStatus = async (
     headers.push(
       `<link rel="canonical" href="${bskyPublicStatusUrl}"/>`,
       `<meta property="og:url" content="${bskyPublicStatusUrl}"/>`
+    );
+  } else if (status.provider === DataProvider.Instagram) {
+    headers.push(
+      `<link rel="canonical" href="${instagramPublicStatusUrl}"/>`,
+      `<meta property="og:url" content="${instagramPublicStatusUrl}"/>`
     );
   }
 
@@ -404,6 +416,8 @@ export const handleStatus = async (
       headers.push(`<meta http-equiv="refresh" content="0;url=${twitterPublicStatusUrl}"/>`);
     } else if (provider === DataProvider.Bluesky) {
       headers.push(`<meta http-equiv="refresh" content="0;url=${bskyPublicStatusUrl}"/>`);
+    } else if (provider === DataProvider.Instagram) {
+      headers.push(`<meta http-equiv="refresh" content="0;url=${instagramPublicStatusUrl}"/>`);
     }
   }
 
@@ -851,6 +865,9 @@ export const handleStatus = async (
         break;
       case DataProvider.TikTok:
         base = Constants.STANDARD_TIKTOK_DOMAIN_LIST[0];
+        break;
+      case DataProvider.Instagram:
+        base = Constants.STANDARD_INSTAGRAM_DOMAIN_LIST[0];
         break;
       default:
         base = Constants.STANDARD_DOMAIN_LIST[0];

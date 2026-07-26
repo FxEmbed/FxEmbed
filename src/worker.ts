@@ -71,6 +71,7 @@ import { blueskyApi } from './realms/bluesky-api/router';
 import { atmosphere } from './realms/atmosphere/router';
 import { getBranding } from './helpers/branding';
 import { tiktok } from './realms/tiktok/router';
+import { instagram } from './realms/instagram/router';
 
 const noCache = 'max-age=0, no-cache, no-store, must-revalidate';
 const embeddingClientRegex =
@@ -124,6 +125,9 @@ export const app = new Hono<{
     } else if (Constants.STANDARD_TIKTOK_DOMAIN_LIST.includes(baseHostName)) {
       realm = 'tiktok';
       console.log('TikTok realm');
+    } else if (Constants.STANDARD_INSTAGRAM_DOMAIN_LIST.includes(baseHostName)) {
+      realm = 'instagram';
+      console.log('Instagram realm');
     } else if (
       baseHostName.includes('workers.dev') ||
       baseHostName.includes('localhost') ||
@@ -240,7 +244,8 @@ app.get('/', c => {
     Or you can access all realms by their path prefix:
       /twitter/...     FxTwitter / FixupX
       /bluesky/...     FxBluesky
-      /tiktok/...      TikTok realm
+      /tiktok/...      FixTok
+      /instagram/...   FxInstagram
       /api/...         FxTwitter API
       /blueskyapi/...  FxBluesky API
       /atmosphere/...  Atmosphere API (multi-provider)
@@ -255,6 +260,7 @@ app.route(`/atmosphere`, atmosphere);
 app.route(`/twitter`, twitter);
 app.route(`/bluesky`, bluesky);
 app.route(`/tiktok`, tiktok);
+app.route(`/instagram`, instagram);
 
 app.all('/error', async c => {
   c.header('cache-control', noCache);
