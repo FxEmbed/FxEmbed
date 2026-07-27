@@ -6,10 +6,7 @@ import type {
   APIVideoFormat,
   APIPhoto
 } from '../../types/api-schemas.js';
-import {
-  parseDashBandwidthByHeight,
-  parseDashPresentationDurationSec
-} from './extractors.js';
+import { parseDashBandwidthByHeight, parseDashPresentationDurationSec } from './extractors.js';
 
 /** Telegram refuses bot videos over ~20 MiB; prefer under that when we can estimate. */
 const TELEGRAM_MAX_BYTES = 20 * 1024 * 1024;
@@ -159,16 +156,21 @@ function selectInstagramVideoVariant(
 
   let selected: Candidate;
   if (opts.preferTelegramSafe) {
-    const fitting = candidates
-      .filter(c => !c.estimatedBytes || c.estimatedBytes <= TELEGRAM_SOFT_MAX_BYTES)
+    // Prefer known estimates under the soft cap. Unknown sizes are not treated as
+    // Telegram-safe when any candidate has an estimate.
+    const knownFitting = candidates
+      .filter(c => c.estimatedBytes && c.estimatedBytes <= TELEGRAM_SOFT_MAX_BYTES)
       .sort((a, b) => {
         const q = byQuality(a, b);
         if (q !== 0) return q;
         // Prefer smaller estimate when quality ties.
         return (a.estimatedBytes ?? 0) - (b.estimatedBytes ?? 0);
       });
-    if (fitting.length > 0) {
-      selected = fitting[0];
+    if (knownFitting.length > 0) {
+      selected = knownFitting[0];
+    } else if (candidates.every(c => !c.estimatedBytes)) {
+      // No estimates available — keep quality ordering among unknown-size candidates.
+      selected = [...candidates].sort(byQuality)[0];
     } else {
       // Nothing estimated under the soft cap — pick the smallest estimate / lowest type.
       selected = [...candidates].sort((a, b) => {
@@ -445,7 +447,9 @@ export function instagramNodeToStatus(
             preferTelegramSafe
           }
         );
-        const url = pickString(s.video_url, selected?.url);
+        const url = preferTelegramSafe
+          ? pickString(selected?.url, s.video_url)
+          : pickString(s.video_url, selected?.url);
         if (url) {
           const v = buildVideo(
             url,
@@ -483,7 +487,9 @@ export function instagramNodeToStatus(
         preferTelegramSafe
       }
     );
-    const url = pickString(node.video_url, selected?.url);
+    const url = preferTelegramSafe
+      ? pickString(selected?.url, node.video_url)
+      : pickString(node.video_url, selected?.url);
     if (url) {
       const thumb = displayImageUrl(node) || undefined;
       const v = buildVideo(

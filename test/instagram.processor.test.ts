@@ -114,6 +114,31 @@ describe('instagram processor', () => {
     expect(forTelegram!.media?.videos?.[0]?.formats?.length).toBe(2);
   });
 
+  it('for Telegram with no size estimates keeps highest-quality variant', () => {
+    const node: Record<string, unknown> = {
+      pk: '3',
+      code: 'NoDurationReel',
+      media_type: 2,
+      product_type: 'clips',
+      taken_at: 1661529231,
+      // No video_duration / dash duration → estimates unavailable
+      original_width: 1080,
+      original_height: 1920,
+      caption: { text: 'nodur' },
+      user: { pk: '1', username: 'demo' },
+      display_uri: 'https://cdn.example/thumb.jpg',
+      video_versions: [
+        { url: 'https://cdn.example/1080.mp4', type: 103, width: 1080, height: 1920 },
+        { url: 'https://cdn.example/360.mp4', type: 101, width: 360, height: 640 }
+      ]
+    };
+    const forTelegram = instagramNodeToStatus(node, ownerFb, {
+      userAgent: 'TelegramBot'
+    });
+    expect(forTelegram!.media?.videos?.[0]?.url).toBe('https://cdn.example/1080.mp4');
+    expect(forTelegram!.media?.videos?.[0]?.filesize).toBeUndefined();
+  });
+
   it('uses DASH bandwidth when estimating Telegram-safe variants', () => {
     const node: Record<string, unknown> = {
       pk: '2',
