@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   commentRecordToSubstatus,
+  estimateInstagramVideoBytes,
   fullUserFromWebProfile,
   instagramNodeToStatus,
   mapCommentEdges
@@ -75,6 +76,73 @@ describe('instagram processor', () => {
     expect(s!.media?.videos?.[0]?.duration).toBeCloseTo(4.967, 3);
     expect(s!.media?.videos?.[0]?.width).toBe(720);
     expect(s!.media_pk).toBe('2913440072144448240');
+  });
+
+  it('for Telegram prefers a lower-res variant when high-res estimate exceeds ~20MB', () => {
+    const node: Record<string, unknown> = {
+      pk: '1',
+      code: 'LongReel123',
+      media_type: 2,
+      product_type: 'clips',
+      taken_at: 1661529231,
+      video_duration: 90,
+      original_width: 1080,
+      original_height: 1920,
+      caption: { text: 'long' },
+      user: { pk: '1', username: 'demo' },
+      display_uri: 'https://cdn.example/thumb.jpg',
+      video_versions: [
+        { url: 'https://cdn.example/1080.mp4', type: 103, width: 1080, height: 1920 },
+        { url: 'https://cdn.example/360.mp4', type: 101, width: 360, height: 640 }
+      ]
+    };
+    const high = estimateInstagramVideoBytes(1080, 1920, 90)!;
+    const low = estimateInstagramVideoBytes(360, 640, 90)!;
+    expect(high).toBeGreaterThan(20 * 1024 * 1024);
+    expect(low).toBeLessThan(18 * 1024 * 1024);
+
+    const forDiscord = instagramNodeToStatus(node, ownerFb, {
+      userAgent: 'Discordbot/2.0'
+    });
+    expect(forDiscord!.media?.videos?.[0]?.url).toBe('https://cdn.example/1080.mp4');
+
+    const forTelegram = instagramNodeToStatus(node, ownerFb, {
+      userAgent: 'TelegramBot (like TwitterBot)'
+    });
+    expect(forTelegram!.media?.videos?.[0]?.url).toBe('https://cdn.example/360.mp4');
+    expect(forTelegram!.media?.videos?.[0]?.filesize).toBe(low);
+    expect(forTelegram!.media?.videos?.[0]?.formats?.length).toBe(2);
+  });
+
+  it('uses DASH bandwidth when estimating Telegram-safe variants', () => {
+    const node: Record<string, unknown> = {
+      pk: '2',
+      code: 'DashReel',
+      media_type: 2,
+      product_type: 'clips',
+      taken_at: 1661529231,
+      video_duration: 60,
+      original_width: 720,
+      original_height: 1280,
+      caption: { text: 'dash' },
+      user: { pk: '1', username: 'demo' },
+      display_uri: 'https://cdn.example/thumb.jpg',
+      video_versions: [
+        { url: 'https://cdn.example/hi.mp4', type: 103, width: 720, height: 1280 },
+        { url: 'https://cdn.example/lo.mp4', type: 101, width: 360, height: 640 }
+      ],
+      video_dash_manifest:
+        '<MPD mediaPresentationDuration="PT0H1M0S">' +
+        '<Representation bandwidth="5000000" width="720" height="1280"/>' +
+        '<Representation bandwidth="400000" width="360" height="640"/>' +
+        '</MPD>'
+    };
+    const forTelegram = instagramNodeToStatus(node, ownerFb, {
+      userAgent: 'TelegramBot'
+    });
+    expect(forTelegram!.media?.videos?.[0]?.url).toBe('https://cdn.example/lo.mp4');
+    // 400000 bps * 60s / 8 = 3_000_000 bytes
+    expect(forTelegram!.media?.videos?.[0]?.filesize).toBe(3_000_000);
   });
 
   it('maps polaris carousel with video slides', () => {

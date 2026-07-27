@@ -7,6 +7,7 @@ import {
   extractPostMediaItem,
   extractShortcodeWebInfo,
   hasUsefulRelayData,
+  parseDashBandwidthByHeight,
   parseDashPresentationDurationSec
 } from '@fxembed/atmosphere/providers/instagram/extractors';
 
@@ -58,6 +59,15 @@ describe('instagram extractors', () => {
     expect(
       parseDashPresentationDurationSec('<MPD mediaPresentationDuration="PT5.016S"></MPD>')
     ).toBeCloseTo(5.016, 3);
+  });
+
+  it('parses DASH representation bandwidth by height', () => {
+    const map = parseDashBandwidthByHeight(
+      '<MPD><Representation id="1" bandwidth="5000000" width="720" height="1280"/>' +
+        '<Representation height="640" width="360" bandwidth="400000"/></MPD>'
+    );
+    expect(map.get(1280)).toBe(5_000_000);
+    expect(map.get(640)).toBe(400_000);
   });
 
   it('extracts polaris product from GraphQL JSON', () => {

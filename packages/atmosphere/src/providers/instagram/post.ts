@@ -23,7 +23,7 @@ export async function constructInstagramPost(
       (typeof owner?.profile_image_uri === 'string' && owner.profile_image_uri) ||
       null
   };
-  const status = instagramNodeToStatus(item, fb);
+  const status = instagramNodeToStatus(item, fb, { userAgent });
   if (!status) {
     return { code: 404, status: null, thread: null, author: null };
   }

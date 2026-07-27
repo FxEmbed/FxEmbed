@@ -249,6 +249,33 @@ export function parseDashPresentationDurationSec(manifest: string | null | undef
 }
 
 /**
+ * Best-effort map of height → bandwidth (bits/sec) from Instagram DASH Representations.
+ * Attribute order varies; we only keep the highest bandwidth seen for each height.
+ */
+export function parseDashBandwidthByHeight(
+  manifest: string | null | undefined
+): Map<number, number> {
+  const out = new Map<number, number>();
+  if (!manifest || typeof manifest !== 'string') return out;
+  const re = /<Representation\b([^>]*)>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(manifest))) {
+    const attrs = match[1] ?? '';
+    const bw = attrs.match(/\bbandwidth=["'](\d+)["']/i);
+    const h = attrs.match(/\bheight=["'](\d+)["']/i);
+    if (!bw?.[1] || !h?.[1]) continue;
+    const bandwidth = Number(bw[1]);
+    const height = Number(h[1]);
+    if (!Number.isFinite(bandwidth) || bandwidth <= 0 || !Number.isFinite(height) || height <= 0) {
+      continue;
+    }
+    const prev = out.get(height) ?? 0;
+    if (bandwidth > prev) out.set(height, bandwidth);
+  }
+  return out;
+}
+
+/**
  * Pull product media from a Polaris GraphQL JSON response
  * (`data.xig_polaris_media.if_not_gated_logged_out`).
  */
