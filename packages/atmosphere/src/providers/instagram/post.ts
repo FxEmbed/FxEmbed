@@ -11,14 +11,19 @@ export async function constructInstagramPost(
     return { code: page.status === 404 ? 404 : 500, status: null, thread: null, author: null };
   }
   const item = page.item;
-  const owner = item.user as Record<string, unknown> | undefined;
+  const owner =
+    (item.user as Record<string, unknown> | undefined) ??
+    (item.owner as Record<string, unknown> | undefined);
   const fb = {
     id: String(owner?.pk ?? owner?.id ?? ''),
     username: String(owner?.username ?? ''),
     fullName: typeof owner?.full_name === 'string' ? owner.full_name : undefined,
-    pic: typeof owner?.profile_pic_url === 'string' ? owner.profile_pic_url : null
+    pic:
+      (typeof owner?.profile_pic_url === 'string' && owner.profile_pic_url) ||
+      (typeof owner?.profile_image_uri === 'string' && owner.profile_image_uri) ||
+      null
   };
-  const status = instagramNodeToStatus(item, fb);
+  const status = instagramNodeToStatus(item, fb, { userAgent });
   if (!status) {
     return { code: 404, status: null, thread: null, author: null };
   }

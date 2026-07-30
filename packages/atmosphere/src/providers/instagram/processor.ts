@@ -3,8 +3,30 @@ import type {
   APISubstatus,
   APIUser,
   APIVideo,
+  APIVideoFormat,
   APIPhoto
 } from '../../types/api-schemas.js';
+import { parseDashBandwidthByHeight, parseDashPresentationDurationSec } from './extractors.js';
+
+/** Telegram refuses bot videos over ~20 MiB; prefer under that when we can estimate. */
+const TELEGRAM_MAX_BYTES = 20 * 1024 * 1024;
+/** Soft cap used with estimates so overshoots still tend to fit Telegram. */
+const TELEGRAM_SOFT_MAX_BYTES = 18 * 1024 * 1024;
+const ESTIMATE_FPS = 30;
+/** Bits/pixel/frame — slightly high on purpose so we overestimate size for Telegram. */
+const ESTIMATE_BPP = 0.14;
+
+export type InstagramStatusOptions = {
+  userAgent?: string;
+};
+
+type IgVideoVersion = {
+  url?: string;
+  width?: number;
+  height?: number;
+  type?: number;
+  bandwidth?: number | null;
+};
 
 function pickInt(...vals: unknown[]): number {
   for (const v of vals) {
@@ -22,6 +44,182 @@ function pickFloat(...vals: unknown[]): number {
     }
   }
   return Number.NaN;
+}
+
+function pickString(...vals: unknown[]): string {
+  for (const v of vals) {
+    if (typeof v === 'string' && v.length > 0) return v;
+  }
+  return '';
+}
+
+/** Instagram media_type: 1 photo, 2 video, 8 carousel. */
+function isVideoNode(node: Record<string, unknown>): boolean {
+  if (node.media_type === 2) return true;
+  if (Boolean(node.is_video) || node.__typename === 'GraphVideo') return true;
+  if (typeof node.__typename === 'string' && node.__typename.includes('Video')) return true;
+  if (Array.isArray(node.video_versions) && node.video_versions.length > 0) return true;
+  if (typeof node.video_url === 'string' && node.video_url.length > 0) return true;
+  return false;
+}
+
+function displayImageUrl(node: Record<string, unknown>): string {
+  return pickString(
+    node.display_url,
+    node.display_uri,
+    node.display_src,
+    (node.image_versions2 as { candidates?: { url?: string }[] } | undefined)?.candidates?.[0]?.url
+  );
+}
+
+/**
+ * Estimate progressive MP4 size when Instagram omits byte lengths.
+ * Prefer DASH/API bandwidth (bits/sec) when available; otherwise resolution × duration.
+ */
+export function estimateInstagramVideoBytes(
+  width: number,
+  height: number,
+  durationSec: number,
+  bitrateBps?: number
+): number | undefined {
+  if (durationSec > 0 && bitrateBps && bitrateBps > 0) {
+    return Math.round((bitrateBps * durationSec) / 8);
+  }
+  if (durationSec > 0 && width > 0 && height > 0) {
+    const bitrate = width * height * ESTIMATE_FPS * ESTIMATE_BPP;
+    return Math.round((bitrate * durationSec) / 8);
+  }
+  return undefined;
+}
+
+function selectInstagramVideoVariant(
+  versions: IgVideoVersion[] | undefined,
+  opts: {
+    durationSec: number;
+    fallbackWidth: number;
+    fallbackHeight: number;
+    dashBandwidthByHeight?: Map<number, number>;
+    preferTelegramSafe?: boolean;
+  }
+): {
+  url: string;
+  width: number;
+  height: number;
+  type?: number;
+  estimatedBytes?: number;
+  bitrate?: number;
+  formats: APIVideoFormat[];
+} | null {
+  if (!versions?.length) return null;
+
+  type Candidate = {
+    url: string;
+    width: number;
+    height: number;
+    type: number;
+    bitrate?: number;
+    estimatedBytes?: number;
+  };
+
+  const candidates: Candidate[] = [];
+  for (const v of versions) {
+    if (typeof v?.url !== 'string' || !v.url) continue;
+    const width = pickInt(v.width, opts.fallbackWidth);
+    const height = pickInt(v.height, opts.fallbackHeight);
+    const type = pickInt(v.type);
+    const fromDash = height > 0 ? opts.dashBandwidthByHeight?.get(height) : undefined;
+    const bitrate =
+      (typeof v.bandwidth === 'number' && v.bandwidth > 0 ? v.bandwidth : undefined) ?? fromDash;
+    const estimatedBytes = estimateInstagramVideoBytes(
+      width || opts.fallbackWidth,
+      height || opts.fallbackHeight,
+      opts.durationSec,
+      bitrate
+    );
+    candidates.push({
+      url: v.url,
+      width,
+      height,
+      type,
+      bitrate,
+      estimatedBytes
+    });
+  }
+  if (candidates.length === 0) return null;
+
+  const byQuality = (a: Candidate, b: Candidate) => {
+    const areaDiff = b.width * b.height - a.width * a.height;
+    if (areaDiff !== 0) return areaDiff;
+    // Same resolution: higher type is often the better encode (102/103 > 101).
+    return b.type - a.type;
+  };
+
+  let selected: Candidate;
+  if (opts.preferTelegramSafe) {
+    // Prefer known estimates under the soft cap. Unknown sizes are not treated as
+    // Telegram-safe when any candidate has an estimate.
+    const knownFitting = candidates
+      .filter(c => c.estimatedBytes && c.estimatedBytes <= TELEGRAM_SOFT_MAX_BYTES)
+      .sort((a, b) => {
+        const q = byQuality(a, b);
+        if (q !== 0) return q;
+        // Prefer smaller estimate when quality ties.
+        return (a.estimatedBytes ?? 0) - (b.estimatedBytes ?? 0);
+      });
+    if (knownFitting.length > 0) {
+      selected = knownFitting[0];
+    } else if (candidates.every(c => !c.estimatedBytes)) {
+      // No estimates available — keep quality ordering among unknown-size candidates.
+      selected = [...candidates].sort(byQuality)[0];
+    } else {
+      // Nothing estimated under the soft cap — pick the smallest estimate / lowest type.
+      selected = [...candidates].sort((a, b) => {
+        if (a.estimatedBytes && b.estimatedBytes) {
+          return a.estimatedBytes - b.estimatedBytes;
+        }
+        if (a.estimatedBytes) return -1;
+        if (b.estimatedBytes) return 1;
+        const areaDiff = a.width * a.height - b.width * b.height;
+        if (areaDiff !== 0) return areaDiff;
+        return a.type - b.type;
+      })[0];
+      if (selected.estimatedBytes && selected.estimatedBytes > TELEGRAM_MAX_BYTES) {
+        console.log(
+          `[instagram] Telegram video estimate ${Math.round(selected.estimatedBytes / (1024 * 1024))}MB exceeds 20MB; no smaller variant available`
+        );
+      }
+    }
+  } else {
+    selected = [...candidates].sort(byQuality)[0];
+  }
+
+  const formats: APIVideoFormat[] = candidates.map(c => ({
+    url: c.url,
+    width: c.width || undefined,
+    height: c.height || undefined,
+    bitrate: c.bitrate,
+    size: c.estimatedBytes,
+    container: 'mp4' as const
+  }));
+
+  return {
+    url: selected.url,
+    width: selected.width,
+    height: selected.height,
+    type: selected.type || undefined,
+    estimatedBytes: selected.estimatedBytes,
+    bitrate: selected.bitrate,
+    formats
+  };
+}
+
+function videoDurationSec(node: Record<string, unknown>): number {
+  const durRaw = pickFloat(node.video_duration);
+  if (Number.isFinite(durRaw) && durRaw > 0) return durRaw;
+  const fromDash = parseDashPresentationDurationSec(
+    typeof node.video_dash_manifest === 'string' ? node.video_dash_manifest : undefined
+  );
+  return Number.isFinite(fromDash) ? fromDash : 0;
 }
 
 function isoFromUnix(sec: number): string {
@@ -129,7 +327,8 @@ export function fullUserFromWebProfile(d: Record<string, unknown>): APIUser | nu
 
 function permalinkForNode(node: Record<string, unknown>, shortcode: string): string {
   const pt = node.product_type;
-  if (pt === 'clips' || node.media_type === 2) {
+  // Clips/reels use /reel/; feed videos and carousels use /p/.
+  if (pt === 'clips') {
     return `https://www.instagram.com/reel/${encodeURIComponent(shortcode)}/`;
   }
   return `https://www.instagram.com/p/${encodeURIComponent(shortcode)}/`;
@@ -149,7 +348,9 @@ function buildVideo(
   w: number,
   h: number,
   durationSec: number,
-  thumb: string | null | undefined
+  thumb: string | null | undefined,
+  formats?: APIVideoFormat[],
+  estimatedBytes?: number
 ): APIVideo {
   return {
     type: 'video',
@@ -157,7 +358,10 @@ function buildVideo(
     width: w || 1,
     height: h || 1,
     duration: durationSec > 0 ? durationSec : 0,
-    formats: [{ url, width: w || undefined, height: h || undefined }],
+    filesize: estimatedBytes,
+    formats: formats?.length
+      ? formats
+      : [{ url, width: w || undefined, height: h || undefined, size: estimatedBytes }],
     thumbnail_url: thumb ?? null
   };
 }
@@ -176,24 +380,31 @@ function mediaPkFromNode(node: Record<string, unknown>): string | undefined {
 }
 
 /**
- * Normalize an Instagram timeline/web_info media node into API v2 status.
+ * Normalize an Instagram timeline / polaris / web_info media node into API v2 status.
+ * Polaris product media (yt-dlp `_extract_product`) uses `code`, `user`, `media_type`,
+ * `video_versions`, and `display_uri` rather than GraphQL `shortcode` / `owner` / `is_video`.
  */
 export function instagramNodeToStatus(
   node: Record<string, unknown>,
-  ownerFallback: { id: string; username: string; fullName?: string; pic?: string | null }
+  ownerFallback: { id: string; username: string; fullName?: string; pic?: string | null },
+  options?: InstagramStatusOptions
 ): APIInstagramStatus | null {
   const shortcode =
     (typeof node.shortcode === 'string' && node.shortcode) ||
     (typeof node.code === 'string' && node.code) ||
     '';
   if (!shortcode) return null;
-  const owner = (node.owner as Record<string, unknown> | undefined) ?? {};
-  const oid = String(owner.id ?? owner.pk ?? ownerFallback.id);
+  const preferTelegramSafe = Boolean(options?.userAgent?.toLowerCase().includes('telegram'));
+  const owner =
+    (node.user as Record<string, unknown> | undefined) ??
+    (node.owner as Record<string, unknown> | undefined) ??
+    {};
+  const oid = String(owner.pk ?? owner.id ?? ownerFallback.id);
   const ouser = String(owner.username ?? ownerFallback.username);
   const oname = typeof owner.full_name === 'string' ? owner.full_name : ownerFallback.fullName;
   const opic =
-    typeof owner.profile_pic_url === 'string' ? owner.profile_pic_url : (ownerFallback.pic ?? null);
-  const author = stubAuthorFromIg(oid, ouser, oname, opic, Boolean(owner.is_verified));
+    pickString(owner.profile_pic_url, owner.profile_image_uri) || (ownerFallback.pic ?? null);
+  const author = stubAuthorFromIg(oid, ouser, oname, opic || null, Boolean(owner.is_verified));
   const takenRaw = pickInt(
     node.taken_at_timestamp,
     node.taken_at,
@@ -210,7 +421,6 @@ export function instagramNodeToStatus(
     node.comment_count
   );
   const text = captionFromMedia(node);
-  const isVideo = Boolean(node.is_video) || node.__typename === 'GraphVideo';
   const dims = (node.dimensions as { width?: number; height?: number } | undefined) ?? {};
   const w = pickInt(dims.width, node.original_width);
   const h = pickInt(dims.height, node.original_height);
@@ -222,30 +432,39 @@ export function instagramNodeToStatus(
     for (const slide of carousel) {
       if (!slide || typeof slide !== 'object') continue;
       const s = slide as Record<string, unknown>;
-      if (s.is_video || s.video_url) {
-        const vu = s.video_versions as
-          | { url?: string; width?: number; height?: number }[]
-          | undefined;
-        const url = (typeof s.video_url === 'string' && s.video_url) || vu?.[0]?.url || '';
+      if (isVideoNode(s)) {
+        const durationSec = videoDurationSec(s);
+        const dashBw = parseDashBandwidthByHeight(
+          typeof s.video_dash_manifest === 'string' ? s.video_dash_manifest : undefined
+        );
+        const selected = selectInstagramVideoVariant(
+          s.video_versions as IgVideoVersion[] | undefined,
+          {
+            durationSec,
+            fallbackWidth: pickInt(s.original_width, w),
+            fallbackHeight: pickInt(s.original_height, h),
+            dashBandwidthByHeight: dashBw,
+            preferTelegramSafe
+          }
+        );
+        const url = preferTelegramSafe
+          ? pickString(selected?.url, s.video_url)
+          : pickString(s.video_url, selected?.url);
         if (url) {
-          const durRaw = pickFloat(s.video_duration);
-          const durationSec = Number.isFinite(durRaw) ? durRaw : 0;
           const v = buildVideo(
             url,
-            pickInt(s.original_width, vu?.[0]?.width, w),
-            pickInt(s.original_height, vu?.[0]?.height, h),
+            pickInt(s.original_width, selected?.width, w),
+            pickInt(s.original_height, selected?.height, h),
             durationSec,
-            typeof s.display_url === 'string' ? s.display_url : undefined
+            displayImageUrl(s) || undefined,
+            selected?.formats,
+            selected?.estimatedBytes
           );
           videos.push(v);
           all.push(v);
         }
       } else {
-        const img =
-          (s.display_url as string | undefined) ||
-          ((s.image_versions2 as { candidates?: { url?: string }[] } | undefined)?.candidates?.[0]
-            ?.url ??
-            undefined);
+        const img = displayImageUrl(s);
         if (img) {
           const p = buildPhoto(img, pickInt(s.original_width, w), pickInt(s.original_height, h));
           photos.push(p);
@@ -253,38 +472,52 @@ export function instagramNodeToStatus(
         }
       }
     }
-  } else if (isVideo) {
-    const vv = node.video_versions as
-      | { url?: string; width?: number; height?: number }[]
-      | undefined;
-    const url = (typeof node.video_url === 'string' && node.video_url) || vv?.[0]?.url || '';
+  } else if (isVideoNode(node)) {
+    const durationSec = videoDurationSec(node);
+    const dashBw = parseDashBandwidthByHeight(
+      typeof node.video_dash_manifest === 'string' ? node.video_dash_manifest : undefined
+    );
+    const selected = selectInstagramVideoVariant(
+      node.video_versions as IgVideoVersion[] | undefined,
+      {
+        durationSec,
+        fallbackWidth: w,
+        fallbackHeight: h,
+        dashBandwidthByHeight: dashBw,
+        preferTelegramSafe
+      }
+    );
+    const url = preferTelegramSafe
+      ? pickString(selected?.url, node.video_url)
+      : pickString(node.video_url, selected?.url);
     if (url) {
-      const durRaw = pickFloat(node.video_duration);
-      const durationSec = Number.isFinite(durRaw) ? durRaw : 0;
+      const thumb = displayImageUrl(node) || undefined;
       const v = buildVideo(
         url,
-        pickInt(vv?.[0]?.width, w),
-        pickInt(vv?.[0]?.height, h),
+        pickInt(selected?.width, w),
+        pickInt(selected?.height, h),
         durationSec,
-        typeof node.display_url === 'string' ? node.display_url : undefined
+        thumb,
+        selected?.formats,
+        selected?.estimatedBytes
       );
+      // When polaris omits version dimensions, fall back to original_* / image candidate size.
+      if ((v.width <= 1 || v.height <= 1) && (w > 0 || h > 0)) {
+        v.width = w || v.width;
+        v.height = h || v.height;
+        if (v.formats[0]) {
+          v.formats[0].width = v.width || undefined;
+          v.formats[0].height = v.height || undefined;
+        }
+      }
       videos.push(v);
       all.push(v);
     }
   } else {
-    const img =
-      (typeof node.display_url === 'string' && node.display_url) ||
-      (typeof node.display_src === 'string' && node.display_src) ||
-      ((
-        node.image_versions2 as
-          | { candidates?: { url?: string; width?: number; height?: number }[] }
-          | undefined
-      )?.candidates?.[0]?.url ??
-        '');
+    const img = displayImageUrl(node);
     const cand = (
       node.image_versions2 as
-        | { candidates?: { url?: string; width?: number; height?: number }[] }
-        | undefined
+        { candidates?: { url?: string; width?: number; height?: number }[] } | undefined
     )?.candidates?.[0];
     if (img) {
       const p = buildPhoto(img, pickInt(cand?.width, w), pickInt(cand?.height, h));
@@ -322,12 +555,13 @@ export function instagramNodeToStatus(
 
 export function edgeNodeToStatus(
   edge: unknown,
-  ownerFallback: { id: string; username: string; fullName?: string; pic?: string | null }
+  ownerFallback: { id: string; username: string; fullName?: string; pic?: string | null },
+  options?: InstagramStatusOptions
 ): APIInstagramStatus | null {
   if (!edge || typeof edge !== 'object') return null;
   const n = (edge as { node?: unknown }).node;
   if (!n || typeof n !== 'object') return null;
-  return instagramNodeToStatus(n as Record<string, unknown>, ownerFallback);
+  return instagramNodeToStatus(n as Record<string, unknown>, ownerFallback, options);
 }
 
 export function commentRecordToSubstatus(

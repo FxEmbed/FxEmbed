@@ -572,9 +572,7 @@ const processResponse = (
         (instruction as TimelineAddModulesInstruction)?.moduleItems
       )?.forEach(_entry => {
         const entry = _entry as
-          | GraphQLTimelineTweetEntry
-          | GraphQLConversationThread
-          | GraphQLModuleTweetEntry;
+          GraphQLTimelineTweetEntry | GraphQLConversationThread | GraphQLModuleTweetEntry;
         const content =
           (entry as GraphQLModuleTweetEntry)?.item ?? (entry as GraphQLTimelineTweetEntry)?.content;
 
@@ -683,9 +681,7 @@ const processConversationResponse = (
         (instruction as TimelineAddModulesInstruction)?.moduleItems
       )?.forEach(_entry => {
         const entry = _entry as
-          | GraphQLTimelineTweetEntry
-          | GraphQLConversationThread
-          | GraphQLModuleTweetEntry;
+          GraphQLTimelineTweetEntry | GraphQLConversationThread | GraphQLModuleTweetEntry;
         const entryId = getEntryId(entry);
         const isReplyEntry = entryId?.startsWith('conversationthread-');
 
@@ -735,8 +731,7 @@ const findFocalInBucket = (
   bucket: GraphQLProcessBucket
 ): GraphQLTwitterStatus | APIStatusTombstone | null => {
   const fromStatuses = bucket.statuses.find(s => (s.rest_id ?? s.legacy?.id_str) === id) as
-    | GraphQLTwitterStatus
-    | undefined;
+    GraphQLTwitterStatus | undefined;
   if (fromStatuses) {
     return fromStatuses;
   }
@@ -909,9 +904,7 @@ const fetchSingleStatus = async (
           variables: { rest_ids: [id] },
           validator: (response: unknown) => {
             const r = (response as TweetResultsByIdsResponse)?.data?.tweet_results?.[0]?.result as
-              | GraphQLTwitterStatus
-              | TweetStub
-              | undefined;
+              GraphQLTwitterStatus | TweetStub | undefined;
             return Boolean((r as GraphQLTwitterStatus)?.__typename || (r as TweetStub)?.reason);
           }
         },

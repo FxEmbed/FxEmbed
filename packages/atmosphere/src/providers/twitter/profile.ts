@@ -270,8 +270,7 @@ export const mergeAboutAccountData = (
 };
 
 export type ProfileHandleOrId =
-  | { type: 'screenName'; value: string }
-  | { type: 'userId'; value: string };
+  { type: 'screenName'; value: string } | { type: 'userId'; value: string };
 
 /**
  * Parses API v2 profile `{handle}`: plain screen name or `id:<numeric rest id>`.

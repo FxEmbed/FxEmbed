@@ -34,9 +34,7 @@ export const blueskyPhotosFromEmbed = (embed: BlueskyEmbed | undefined): APIPhot
     return blueskyGalleryItemsToPhotos(embed.items);
   }
 
-  const images =
-    embed.images ??
-    embed.media?.images;
+  const images = embed.images ?? embed.media?.images;
 
   if (!Array.isArray(images) || images.length === 0) return [];
 

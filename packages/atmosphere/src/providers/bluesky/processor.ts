@@ -267,7 +267,8 @@ const applyEmbedsToStatus = async (apiStatus: APIStatus, status: BlueskyPost): P
     }
   }
 
-  if (status.record?.embed?.video ||
+  if (
+    status.record?.embed?.video ||
     status.value?.embed?.video ||
     primary?.media?.$type === 'app.bsky.embed.video#view'
   ) {

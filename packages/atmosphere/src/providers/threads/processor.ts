@@ -135,8 +135,7 @@ function textAndFacetsFromThreadsTextFragments(post: Record<string, unknown>): {
       const mentioned =
         mf && typeof mf === 'object'
           ? ((mf.mentioned_user as Record<string, unknown> | undefined)?.username as
-              | string
-              | undefined)
+              string | undefined)
           : undefined;
       const slice = plain.length > 0 ? plain : mentioned ? `@${mentioned}` : '';
       if (!slice) continue;
@@ -208,8 +207,7 @@ function mediaContainerFromThreadsPost(post: Record<string, unknown>): {
       const s = slide as Record<string, unknown>;
       if (s.is_video || s.video_url) {
         const vu = s.video_versions as
-          | { url?: string; width?: number; height?: number }[]
-          | undefined;
+          { url?: string; width?: number; height?: number }[] | undefined;
         const url = (typeof s.video_url === 'string' && s.video_url) || vu?.[0]?.url || '';
         if (url) {
           const durRaw = pickFloat(s.video_duration);
@@ -239,8 +237,7 @@ function mediaContainerFromThreadsPost(post: Record<string, unknown>): {
     }
   } else if (isVideo) {
     const vv = post.video_versions as
-      | { url?: string; width?: number; height?: number }[]
-      | undefined;
+      { url?: string; width?: number; height?: number }[] | undefined;
     const url = (typeof post.video_url === 'string' && post.video_url) || vv?.[0]?.url || '';
     if (url) {
       const durRaw = pickFloat(post.video_duration);
@@ -261,14 +258,12 @@ function mediaContainerFromThreadsPost(post: Record<string, unknown>): {
       (typeof post.display_src === 'string' && post.display_src) ||
       ((
         post.image_versions2 as
-          | { candidates?: { url?: string; width?: number; height?: number }[] }
-          | undefined
+          { candidates?: { url?: string; width?: number; height?: number }[] } | undefined
       )?.candidates?.[0]?.url ??
         '');
     const cand = (
       post.image_versions2 as
-        | { candidates?: { url?: string; width?: number; height?: number }[] }
-        | undefined
+        { candidates?: { url?: string; width?: number; height?: number }[] } | undefined
     )?.candidates?.[0];
     if (img) {
       const p = buildPhoto(img, pickInt(cand?.width, w), pickInt(cand?.height, h));

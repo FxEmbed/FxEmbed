@@ -69,9 +69,7 @@ export function jsonError(message: string, status: number): Response {
 }
 
 export type ClassifyOutcome =
-  | { action: 'respond'; response: Response }
-  | { action: 'ignore' }
-  | { action: 'retry' };
+  { action: 'respond'; response: Response } | { action: 'ignore' } | { action: 'retry' };
 
 type RuleContext = { json: unknown; body: string; httpStatus: number };
 

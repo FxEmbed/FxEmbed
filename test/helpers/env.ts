@@ -11,6 +11,7 @@ export const WORKER_TEST_PROCESS_ENV = {
   OLD_EMBED_DOMAINS: 'o.fxtwitter.com,o.twittpr.com,o.fixupx.com',
   STANDARD_DOMAIN_LIST: 'fxtwitter.com,fixupx.com,twittpr.com',
   STANDARD_TIKTOK_DOMAIN_LIST: 'dxtiktok.com,cocktiktok.com',
+  STANDARD_INSTAGRAM_DOMAIN_LIST: '67instagram.com',
   STANDARD_BSKY_DOMAIN_LIST: 'fxbsky.app',
   DIRECT_MEDIA_DOMAINS: 'd.fxtwitter.com,dl.fxtwitter.com,d.fixupx.com,dl.fixupx.com',
   MOSAIC_DOMAIN_LIST: 'mosaic.fxtwitter.com',
@@ -26,6 +27,7 @@ export const WORKER_TEST_PROCESS_ENV = {
   PBS_PROXY_DOMAIN_LIST: 'pbs.fxtwitter.com',
   SENTRY_DSN: '',
   TWITTER_ROOT: 'https://x.com',
+  INSTAGRAM_ROOT: 'https://www.instagram.com',
   ENCRYPTED_CREDENTIALS: '',
   CREDENTIALS_IV: ''
 } as const satisfies Record<string, string>;

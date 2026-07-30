@@ -121,7 +121,7 @@ export const buildCustomEmojiFacets = (
   };
 
   const out: APIFacet[] = [];
-  for (let i = 0; i < plain.length; ) {
+  for (let i = 0; i < plain.length;) {
     let advanced = false;
     for (const sc of shortcodes) {
       const token = `:${sc}:`;

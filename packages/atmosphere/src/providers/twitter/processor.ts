@@ -67,8 +67,7 @@ function mergeTweetShellIntoStatus(status: GraphQLTwitterStatus): void {
 
 function retweeterUserFromStatus(status: GraphQLTwitterStatus): GraphQLUser | undefined {
   return (status.core?.user_results?.result ?? status.core?.user_result?.result) as
-    | GraphQLUser
-    | undefined;
+    GraphQLUser | undefined;
 }
 
 /** Card `card_url` is usually a t.co short link; tweet URL entities carry the expanded destination. */
@@ -434,8 +433,7 @@ export const buildAPITwitterStatus = async (
   // console.log('status', JSON.stringify(status));
 
   let graphQLUser = (status.core.user_results?.result ?? status.core.user_result?.result) as
-    | GraphQLUser
-    | undefined;
+    GraphQLUser | undefined;
   if (!graphQLUser && typeof status.legacy?.user_id_str === 'string') {
     graphQLUser =
       (await fetchTwitterGraphQLUserByRestId(host, status.legacy.user_id_str)) ?? undefined;

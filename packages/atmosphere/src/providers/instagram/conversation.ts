@@ -1,7 +1,7 @@
 import type { SocialConversationInstagram } from '../../types/api-schemas.js';
 import { fetchCommentPageGraphql, fetchInstagramCsrfToken } from './client.js';
 import { decodeCommentCursor, encodeCommentCursor } from './cursors.js';
-import { extractCommentsConnection, extractLsdFromHtml } from './extractors.js';
+import { extractCommentsConnection } from './extractors.js';
 import { fetchInstagramPageWithWebInfo } from './fetch-shortcode-page.js';
 import {
   extractCommentsFromGraphqlJson,
@@ -40,14 +40,19 @@ export async function constructInstagramConversation(
   const item = page.item;
   const htmlBody = page.html;
   const refererForGraphql = page.pathUsed ?? `/p/${encodeURIComponent(shortcode)}/`;
-  const owner = item.user as Record<string, unknown> | undefined;
+  const owner =
+    (item.user as Record<string, unknown> | undefined) ??
+    (item.owner as Record<string, unknown> | undefined);
   const fb = {
     id: String(owner?.pk ?? owner?.id ?? ''),
     username: String(owner?.username ?? ''),
     fullName: typeof owner?.full_name === 'string' ? owner.full_name : undefined,
-    pic: typeof owner?.profile_pic_url === 'string' ? owner.profile_pic_url : null
+    pic:
+      (typeof owner?.profile_pic_url === 'string' && owner.profile_pic_url) ||
+      (typeof owner?.profile_image_uri === 'string' && owner.profile_image_uri) ||
+      null
   };
-  const status = instagramNodeToStatus(item, fb);
+  const status = instagramNodeToStatus(item, fb, { userAgent: options.userAgent });
   if (!status) {
     return {
       ok: true,
@@ -59,7 +64,7 @@ export async function constructInstagramConversation(
     (typeof item.pk === 'string' || typeof item.pk === 'number'
       ? String(item.pk).split('_')[0]
       : '');
-  const conn = extractCommentsConnection(htmlBody);
+  const conn = page.comments ?? extractCommentsConnection(htmlBody);
   const pageInfo = conn?.page_info ?? {};
   const hasNext =
     Boolean((pageInfo as { has_next_page?: boolean }).has_next_page) ||
@@ -106,8 +111,23 @@ export async function constructInstagramConversation(
     return { ok: false, message: 'Invalid cursor' };
   }
 
+  // Prefer LSD preserved on the page result (required for polaris-graphql, which has empty HTML).
+  const lsd = page.lsd;
+  if (!lsd) {
+    return {
+      ok: false,
+      message: 'Instagram comment fetch failed',
+      data: {
+        code: 500,
+        status,
+        thread: [status],
+        replies: [],
+        author: status.author,
+        cursor: { bottom: options.cursor }
+      }
+    };
+  }
   const csrf = await fetchInstagramCsrfToken(options.userAgent);
-  const lsd = extractLsdFromHtml(htmlBody) ?? 'a';
   const gql = await fetchCommentPageGraphql({
     mediaId: decoded.mediaId,
     after: decoded.after,

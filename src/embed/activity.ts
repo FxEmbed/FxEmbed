@@ -17,6 +17,7 @@ import { Context } from 'hono';
 import { shouldTranscodeGif } from '../helpers/giftranscode';
 import { normalizeLanguage } from '../helpers/language';
 import { constructTikTokVideo } from '@fxembed/atmosphere/providers/tiktok/conversation';
+import { constructInstagramPost } from '@fxembed/atmosphere/providers/instagram/post';
 import { renderArticleToHtml, DISCORD_ARTICLE_MAX_LENGTH } from '../helpers/article';
 import {
   facetUtf16RangeOnPlainText,
@@ -211,6 +212,9 @@ const linkifyMentions = (text: string, status: APIStatus) => {
     case DataProvider.TikTok:
       baseUrl = `${Constants.TIKTOK_ROOT}/@`;
       break;
+    case DataProvider.Instagram:
+      baseUrl = `${Constants.INSTAGRAM_ROOT}/`;
+      break;
   }
   const matches = text.match(/(?<!https?:\/\/[\w.\-_%$@&?!:;/'()*]+)@([\w.]+)(?=\W|$)/g);
 
@@ -237,6 +241,9 @@ const linkifyHashtags = (text: string, status: APIStatus) => {
       break;
     case DataProvider.TikTok:
       baseUrl = `${Constants.TIKTOK_ROOT}/tag`;
+      break;
+    case DataProvider.Instagram:
+      baseUrl = `${Constants.INSTAGRAM_ROOT}/explore/tags`;
       break;
   }
   const matches = text.match(/(?<!https?:\/\/[\w.\-_%$@&?!:;/'()*]+)#([\w.]+)(?=\W|$)/g);
@@ -298,6 +305,11 @@ const formatStatus = (text: string, status: APIStatus) => {
         baseHashtagUrl = `${Constants.TIKTOK_ROOT}/tag`;
         baseSymbolUrl = `${Constants.TIKTOK_ROOT}/search?q=%24`;
         baseMentionUrl = `${Constants.TIKTOK_ROOT}/@`;
+        break;
+      case DataProvider.Instagram:
+        baseHashtagUrl = `${Constants.INSTAGRAM_ROOT}/explore/tags`;
+        baseSymbolUrl = `${Constants.INSTAGRAM_ROOT}/explore/tags`;
+        baseMentionUrl = `${Constants.INSTAGRAM_ROOT}/`;
         break;
     }
     let offset = 0;
@@ -422,6 +434,8 @@ export const handleActivity = async (
     const requestUrl = new URL(c.req.url);
     const proxyBase = `${requestUrl.protocol}//${requestUrl.host}`;
     thread = await constructTikTokVideo(statusId, proxyBase);
+  } else if (provider === DataProvider.Instagram) {
+    thread = (await constructInstagramPost(statusId, c.req.header('User-Agent'))) as SocialThread;
   } else {
     return returnError(c, Strings.ERROR_API_FAIL);
   }
@@ -605,10 +619,11 @@ export const handleActivity = async (
               if (video.width < 400 || video.height < 400) {
                 sizeMultiplier = 2;
               }
-              // Apply video redirect workaround, but NOT for TikTok (needs its own proxy)
+              // Apply video redirect workaround, but NOT for TikTok/Instagram (CDN URLs work directly)
               if (
                 experimentCheck(Experiment.VIDEO_REDIRECT_WORKAROUND, !!Constants.API_HOST_LIST) &&
-                thread.status?.provider !== DataProvider.TikTok
+                thread.status?.provider !== DataProvider.TikTok &&
+                thread.status?.provider !== DataProvider.Instagram
               ) {
                 video.url = `https://${Constants.API_HOST_LIST[0]}/2/go?url=${encodeURIComponent(video.url)}`;
               }

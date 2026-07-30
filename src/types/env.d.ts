@@ -4,6 +4,7 @@ declare namespace NodeJS {
     STANDARD_DOMAIN_LIST?: string;
     STANDARD_BSKY_DOMAIN_LIST?: string;
     STANDARD_TIKTOK_DOMAIN_LIST?: string;
+    STANDARD_INSTAGRAM_DOMAIN_LIST?: string;
     DIRECT_MEDIA_DOMAINS?: string;
     TEXT_ONLY_DOMAINS?: string;
     INSTANT_VIEW_DOMAINS?: string;
@@ -22,6 +23,7 @@ declare namespace NodeJS {
     VIDEO_TRANSCODE_BSKY_DOMAIN_LIST?: string;
     PBS_PROXY_DOMAIN_LIST?: string;
     TWITTER_ROOT?: string;
+    INSTAGRAM_ROOT?: string;
     SENTRY_DSN?: string;
     RELEASE_NAME?: string;
     /** Inlined from credentials.enc.json at build (see esbuild.config.mjs). */

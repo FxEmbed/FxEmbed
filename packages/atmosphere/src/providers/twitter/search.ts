@@ -300,10 +300,7 @@ export const processGroupedTimelineInstructions = (
       (instruction as TimelineAddEntriesInstruction).entries?.forEach(_entry => {
         const entry = _entry as GraphQLTimelineTweetEntry | GraphQLConversationThread;
         const content = entry.content as
-          | GraphQLTimelineItem
-          | GraphQLTimelineCursor
-          | GraphQLTimelineModule
-          | undefined;
+          GraphQLTimelineItem | GraphQLTimelineCursor | GraphQLTimelineModule | undefined;
         const entryId = (entry as { entryId?: string }).entryId;
 
         if (typeof content === 'undefined') return;

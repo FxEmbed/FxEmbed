@@ -41,6 +41,7 @@ let envVariables = [
   'STANDARD_DOMAIN_LIST',
   'STANDARD_BSKY_DOMAIN_LIST',
   'STANDARD_TIKTOK_DOMAIN_LIST',
+  'STANDARD_INSTAGRAM_DOMAIN_LIST',
   'DIRECT_MEDIA_DOMAINS',
   'TEXT_ONLY_DOMAINS',
   'INSTANT_VIEW_DOMAINS',
@@ -59,7 +60,8 @@ let envVariables = [
   'VIDEO_TRANSCODE_BSKY_DOMAIN_LIST',
   'PBS_PROXY_DOMAIN_LIST',
   'OLD_EMBED_DOMAINS',
-  'TWITTER_ROOT'
+  'TWITTER_ROOT',
+  'INSTAGRAM_ROOT'
 ];
 
 // Inline process.env.* so Workers bundles stay static; Bun/Node read real process.env at runtime.

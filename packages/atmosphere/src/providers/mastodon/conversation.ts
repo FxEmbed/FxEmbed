@@ -186,8 +186,7 @@ export const constructMastodonThread = async (
 };
 
 export type MastodonConversationResult =
-  | { ok: true; data: SocialConversationMastodon }
-  | { ok: false; message: string };
+  { ok: true; data: SocialConversationMastodon } | { ok: false; message: string };
 
 export const constructMastodonConversation = async (
   id: string,
