@@ -246,7 +246,9 @@ const generateStatusFooter = (
         ? `<a href="${status.url}">${i18next.t('ivViewOriginal')}</a>`
         : notApplicableComment,
     aboutSection:
-      isQuote || status.provider === DataProvider.Bluesky
+      isQuote ||
+      status.provider === DataProvider.Bluesky ||
+      status.provider === DataProvider.Instagram
         ? ''
         : `<h2>${i18next.t('ivAboutAuthor')}</h2>
         {pfp}
