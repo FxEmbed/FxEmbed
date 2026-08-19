@@ -261,6 +261,7 @@ export const handleStatus = async (
       !!(
         status.media?.photos?.[0] || // Force instant view for photos for now https://bugs.telegram.org/c/33679
         status.media?.mosaic ||
+        (status.media?.videos?.length ?? 0) > 1 || // Telegram only previews one video; IV lists the rest
         (status.quote && !isTombstone(status.quote)) ||
         flags?.forceInstantView ||
         (status as APITwitterStatus)?.article ||
