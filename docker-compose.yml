@@ -1,0 +1,15 @@
+services:
+  fxembed:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: fxembed:slim
+    container_name: fxembed
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    environment:
+      NODE_ENV: production
+      WRANGLER_SEND_METRICS: "false"
+      CREDENTIAL_KEY: ${CREDENTIAL_KEY:-}
+      EXCEPTION_DISCORD_WEBHOOK: ${EXCEPTION_DISCORD_WEBHOOK:-}
