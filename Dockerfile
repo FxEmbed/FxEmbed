@@ -27,8 +27,14 @@ FROM base AS runtime
 ENV NODE_ENV=production
 ENV WRANGLER_SEND_METRICS=false
 
-COPY --from=build /app /app
+RUN groupadd --gid 1001 fxembed \
+  && useradd --uid 1001 --gid fxembed --home-dir /app --no-create-home --shell /usr/sbin/nologin fxembed
+
+COPY --from=build --chown=fxembed:fxembed /app /app
+RUN chown fxembed:fxembed /app
 
 EXPOSE 8787
+
+USER fxembed
 
 CMD ["npx", "wrangler", "dev", "./dist/worker.js", "--local", "--ip", "0.0.0.0", "--port", "8787"]
