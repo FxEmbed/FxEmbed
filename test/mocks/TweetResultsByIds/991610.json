@@ -1,0 +1,510 @@
+{
+  "data": {
+    "tweet_results": [
+      {
+        "result": {
+          "__typename": "Tweet",
+          "rest_id": "991610",
+          "core": {
+            "user_results": {
+              "result": {
+                "__typename": "User",
+                "id": "VXNlcjo5NzQwNjcxOTAzODYxNDczMjk=",
+                "rest_id": "974067190386147329",
+                "affiliates_highlighted_label": {},
+                "parody_commentary_fan_label": "None",
+                "is_blue_verified": false,
+                "profile_image_shape": "Circle",
+                "legacy": {
+                  "created_at": "Wed Mar 14 23:38:10 +0000 2018",
+                  "default_profile": false,
+                  "default_profile_image": false,
+                  "description": "Lover of this land from desert to sea. \nAmateur wildlife photographer, mostly native birdlife. \nAll photographs posted are my original images except reposts.",
+                  "entities": {
+                    "description": {
+                      "urls": []
+                    },
+                    "url": {
+                      "urls": [
+                        {
+                          "display_url": "instagram.com/divine_dropbea…",
+                          "expanded_url": "https://www.instagram.com/divine_dropbear/",
+                          "url": "https://t.co/N0ForImxXd",
+                          "indices": [
+                            0,
+                            23
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "fast_followers_count": 0,
+                  "favourites_count": 25601,
+                  "followers_count": 2516,
+                  "friends_count": 1508,
+                  "has_custom_timelines": false,
+                  "is_translator": false,
+                  "listed_count": 32,
+                  "location": "@divinedropbear.bsky.social ",
+                  "media_count": 1248,
+                  "name": "Tranquility Found",
+                  "normal_followers_count": 2516,
+                  "pinned_tweet_ids_str": [],
+                  "possibly_sensitive": false,
+                  "profile_banner_url": "https://pbs.twimg.com/profile_banners/974067190386147329/1533093346",
+                  "profile_image_url_https": "https://pbs.twimg.com/profile_images/1871316427581583360/AY58qda4_normal.jpg",
+                  "profile_interstitial_type": "",
+                  "screen_name": "DivineDropbear",
+                  "statuses_count": 11954,
+                  "translator_type": "none",
+                  "url": "https://t.co/N0ForImxXd",
+                  "verified": false,
+                  "withheld_in_countries": []
+                },
+                "tipjar_settings": {
+                  "is_enabled": false,
+                  "bandcamp_handle": "",
+                  "bitcoin_handle": "",
+                  "cash_app_handle": "",
+                  "ethereum_handle": "",
+                  "gofundme_handle": "",
+                  "patreon_handle": "",
+                  "pay_pal_handle": "",
+                  "venmo_handle": ""
+                }
+              }
+            }
+          },
+          "unmention_data": {},
+          "edit_control": {
+            "edit_tweet_ids": [
+              "991610"
+            ],
+            "editable_until_msecs": "1727816358000",
+            "is_edit_eligible": true,
+            "edits_remaining": "5"
+          },
+          "is_translatable": false,
+          "views": {
+            "count": "4186",
+            "state": "EnabledWithCount"
+          },
+          "source": "<a href=\"https://mobile.twitter.com\" rel=\"nofollow\">Twitter Web App</a>",
+          "grok_analysis_button": true,
+          "legacy": {
+            "bookmark_count": 7,
+            "bookmarked": false,
+            "created_at": "Tue Oct 01 19:59:18 +0000 2024",
+            "conversation_id_str": "991610",
+            "display_text_range": [
+              0,
+              162
+            ],
+            "entities": {
+              "hashtags": [
+                {
+                  "indices": [
+                    80,
+                    86
+                  ],
+                  "text": "birds"
+                },
+                {
+                  "indices": [
+                    87,
+                    100
+                  ],
+                  "text": "birdwatching"
+                },
+                {
+                  "indices": [
+                    101,
+                    109
+                  ],
+                  "text": "birding"
+                },
+                {
+                  "indices": [
+                    110,
+                    117
+                  ],
+                  "text": "WildOz"
+                },
+                {
+                  "indices": [
+                    118,
+                    134
+                  ],
+                  "text": "birdphotography"
+                },
+                {
+                  "indices": [
+                    135,
+                    152
+                  ],
+                  "text": "birdsofaustralia"
+                },
+                {
+                  "indices": [
+                    153,
+                    162
+                  ],
+                  "text": "cockatoo"
+                }
+              ],
+              "media": [
+                {
+                  "display_url": "pic.x.com/RoMxHhAo9X",
+                  "expanded_url": "https://example.invalid/DivineDropbear/status/991610/video/1",
+                  "id_str": "1841204388993646595",
+                  "indices": [
+                    163,
+                    186
+                  ],
+                  "media_key": "7_1841204388993646595",
+                  "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/1841204388993646595/pu/img/KKN8tSQm60z2FmtE.jpg",
+                  "type": "video",
+                  "url": "https://t.co/RoMxHhAo9X",
+                  "additional_media_info": {
+                    "monetizable": false
+                  },
+                  "ext_media_availability": {
+                    "status": "Available"
+                  },
+                  "sizes": {
+                    "large": {
+                      "h": 1080,
+                      "w": 1920,
+                      "resize": "fit"
+                    },
+                    "medium": {
+                      "h": 675,
+                      "w": 1200,
+                      "resize": "fit"
+                    },
+                    "small": {
+                      "h": 383,
+                      "w": 680,
+                      "resize": "fit"
+                    },
+                    "thumb": {
+                      "h": 150,
+                      "w": 150,
+                      "resize": "crop"
+                    }
+                  },
+                  "original_info": {
+                    "height": 1080,
+                    "width": 1920,
+                    "focus_rects": []
+                  },
+                  "video_info": {
+                    "aspect_ratio": [
+                      16,
+                      9
+                    ],
+                    "duration_millis": 29626,
+                    "variants": [
+                      {
+                        "content_type": "application/x-mpegURL",
+                        "url": "https://video.twimg.com/ext_tw_video/1841204388993646595/pu/pl/-kd3cWye2HXbiTju.m3u8?tag=12&v=cfc"
+                      },
+                      {
+                        "bitrate": 256000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/1841204388993646595/pu/vid/avc1/480x270/vxKqarkYhJW80NBu.mp4?tag=12"
+                      },
+                      {
+                        "bitrate": 832000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/1841204388993646595/pu/vid/avc1/640x360/gap6eNvJGCbYTOWH.mp4?tag=12"
+                      },
+                      {
+                        "bitrate": 2176000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/1841204388993646595/pu/vid/avc1/1280x720/NRpzIavCR5W-jWFh.mp4?tag=12"
+                      }
+                    ]
+                  },
+                  "media_results": {
+                    "result": {
+                      "media_key": "7_1841204388993646595"
+                    }
+                  }
+                },
+                {
+                  "display_url": "pic.x.com/SecondVideo",
+                  "expanded_url": "https://example.invalid/DivineDropbear/status/991610/video/1",
+                  "id_str": "9916110000000000001",
+                  "indices": [
+                    163,
+                    186
+                  ],
+                  "media_key": "7_9916110000000000001",
+                  "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/1841204388993646595/pu/img/KKN8tSQm60z2FmtE.jpg",
+                  "type": "video",
+                  "url": "https://t.co/SecondVideo",
+                  "additional_media_info": {
+                    "monetizable": false
+                  },
+                  "ext_media_availability": {
+                    "status": "Available"
+                  },
+                  "sizes": {
+                    "large": {
+                      "h": 1080,
+                      "w": 1920,
+                      "resize": "fit"
+                    },
+                    "medium": {
+                      "h": 675,
+                      "w": 1200,
+                      "resize": "fit"
+                    },
+                    "small": {
+                      "h": 383,
+                      "w": 680,
+                      "resize": "fit"
+                    },
+                    "thumb": {
+                      "h": 150,
+                      "w": 150,
+                      "resize": "crop"
+                    }
+                  },
+                  "original_info": {
+                    "height": 1080,
+                    "width": 1920,
+                    "focus_rects": []
+                  },
+                  "video_info": {
+                    "aspect_ratio": [
+                      16,
+                      9
+                    ],
+                    "duration_millis": 29626,
+                    "variants": [
+                      {
+                        "content_type": "application/x-mpegURL",
+                        "url": "https://video.twimg.com/ext_tw_video/1841204388993646595/pu/pl/-kd3cWye2HXbiTju.m3u8?tag=12&v=cfc"
+                      },
+                      {
+                        "bitrate": 256000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/1841204388993646595/pu/vid/avc1/480x270/vxKqarkYhJW80NBu.mp4?tag=12"
+                      },
+                      {
+                        "bitrate": 832000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/1841204388993646595/pu/vid/avc1/640x360/gap6eNvJGCbYTOWH.mp4?tag=12"
+                      },
+                      {
+                        "bitrate": 2176000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/1841204388993646595/pu/vid/avc1/1280x720/NRpzIavCR5W-jWFh.mp4?tag=12"
+                      }
+                    ]
+                  },
+                  "media_results": {
+                    "result": {
+                      "media_key": "7_9916110000000000001"
+                    }
+                  }
+                }
+              ],
+              "symbols": [],
+              "timestamps": [],
+              "urls": [],
+              "user_mentions": [
+                {
+                  "id_str": "490232734",
+                  "name": "Fred O'Donnell",
+                  "screen_name": "fred_od_photo",
+                  "indices": [
+                    65,
+                    79
+                  ]
+                }
+              ]
+            },
+            "extended_entities": {
+              "media": [
+                {
+                  "display_url": "pic.x.com/RoMxHhAo9X",
+                  "expanded_url": "https://example.invalid/DivineDropbear/status/991610/video/1",
+                  "id_str": "1841204388993646595",
+                  "indices": [
+                    163,
+                    186
+                  ],
+                  "media_key": "7_1841204388993646595",
+                  "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/1841204388993646595/pu/img/KKN8tSQm60z2FmtE.jpg",
+                  "type": "video",
+                  "url": "https://t.co/RoMxHhAo9X",
+                  "additional_media_info": {
+                    "monetizable": false
+                  },
+                  "ext_media_availability": {
+                    "status": "Available"
+                  },
+                  "sizes": {
+                    "large": {
+                      "h": 1080,
+                      "w": 1920,
+                      "resize": "fit"
+                    },
+                    "medium": {
+                      "h": 675,
+                      "w": 1200,
+                      "resize": "fit"
+                    },
+                    "small": {
+                      "h": 383,
+                      "w": 680,
+                      "resize": "fit"
+                    },
+                    "thumb": {
+                      "h": 150,
+                      "w": 150,
+                      "resize": "crop"
+                    }
+                  },
+                  "original_info": {
+                    "height": 1080,
+                    "width": 1920,
+                    "focus_rects": []
+                  },
+                  "video_info": {
+                    "aspect_ratio": [
+                      16,
+                      9
+                    ],
+                    "duration_millis": 29626,
+                    "variants": [
+                      {
+                        "content_type": "application/x-mpegURL",
+                        "url": "https://video.twimg.com/ext_tw_video/1841204388993646595/pu/pl/-kd3cWye2HXbiTju.m3u8?tag=12&v=cfc"
+                      },
+                      {
+                        "bitrate": 256000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/1841204388993646595/pu/vid/avc1/480x270/vxKqarkYhJW80NBu.mp4?tag=12"
+                      },
+                      {
+                        "bitrate": 832000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/1841204388993646595/pu/vid/avc1/640x360/gap6eNvJGCbYTOWH.mp4?tag=12"
+                      },
+                      {
+                        "bitrate": 2176000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/1841204388993646595/pu/vid/avc1/1280x720/NRpzIavCR5W-jWFh.mp4?tag=12"
+                      }
+                    ]
+                  },
+                  "media_results": {
+                    "result": {
+                      "media_key": "7_1841204388993646595"
+                    }
+                  }
+                },
+                {
+                  "display_url": "pic.x.com/SecondVideo",
+                  "expanded_url": "https://example.invalid/DivineDropbear/status/991610/video/1",
+                  "id_str": "9916110000000000001",
+                  "indices": [
+                    163,
+                    186
+                  ],
+                  "media_key": "7_9916110000000000001",
+                  "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/1841204388993646595/pu/img/KKN8tSQm60z2FmtE.jpg",
+                  "type": "video",
+                  "url": "https://t.co/SecondVideo",
+                  "additional_media_info": {
+                    "monetizable": false
+                  },
+                  "ext_media_availability": {
+                    "status": "Available"
+                  },
+                  "sizes": {
+                    "large": {
+                      "h": 1080,
+                      "w": 1920,
+                      "resize": "fit"
+                    },
+                    "medium": {
+                      "h": 675,
+                      "w": 1200,
+                      "resize": "fit"
+                    },
+                    "small": {
+                      "h": 383,
+                      "w": 680,
+                      "resize": "fit"
+                    },
+                    "thumb": {
+                      "h": 150,
+                      "w": 150,
+                      "resize": "crop"
+                    }
+                  },
+                  "original_info": {
+                    "height": 1080,
+                    "width": 1920,
+                    "focus_rects": []
+                  },
+                  "video_info": {
+                    "aspect_ratio": [
+                      16,
+                      9
+                    ],
+                    "duration_millis": 29626,
+                    "variants": [
+                      {
+                        "content_type": "application/x-mpegURL",
+                        "url": "https://video.twimg.com/ext_tw_video/1841204388993646595/pu/pl/-kd3cWye2HXbiTju.m3u8?tag=12&v=cfc"
+                      },
+                      {
+                        "bitrate": 256000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/1841204388993646595/pu/vid/avc1/480x270/vxKqarkYhJW80NBu.mp4?tag=12"
+                      },
+                      {
+                        "bitrate": 832000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/1841204388993646595/pu/vid/avc1/640x360/gap6eNvJGCbYTOWH.mp4?tag=12"
+                      },
+                      {
+                        "bitrate": 2176000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/1841204388993646595/pu/vid/avc1/1280x720/NRpzIavCR5W-jWFh.mp4?tag=12"
+                      }
+                    ]
+                  },
+                  "media_results": {
+                    "result": {
+                      "media_key": "7_9916110000000000001"
+                    }
+                  }
+                }
+              ]
+            },
+            "favorite_count": 296,
+            "favorited": false,
+            "full_text": "Sulphur-crested Cockatoo enjoying the warm Brisbane breeze...   \n@fred_od_photo #birds #birdwatching #birding #WildOz #birdphotography #birdsofaustralia #cockatoo https://t.co/RoMxHhAo9X",
+            "is_quote_status": false,
+            "lang": "en",
+            "possibly_sensitive": false,
+            "possibly_sensitive_editable": true,
+            "quote_count": 1,
+            "reply_count": 2,
+            "retweet_count": 68,
+            "retweeted": false,
+            "user_id_str": "974067190386147329",
+            "id_str": "991610"
+          }
+        }
+      }
+    ]
+  }
+}
