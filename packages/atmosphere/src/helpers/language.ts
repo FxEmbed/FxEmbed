@@ -39,12 +39,18 @@ export const isTranslatableLanguageCode = (language: string | null | undefined):
 };
 
 export const normalizeLanguage = (language: string) => {
+  language = language.trim().toLowerCase();
   switch (language) {
     case 'zh':
     case 'cn':
+    case 'zh-hans':
       language = 'zh-cn';
       break;
     case 'tw':
+    case 'hk':
+    case 'zh-hk':
+    case 'zh-mo':
+    case 'zh-hant':
       language = 'zh-tw';
       break;
     case 'jp':
@@ -60,4 +66,31 @@ export const normalizeLanguage = (language: string) => {
       break;
   }
   return language;
+};
+
+/**
+ * Match Grok/X inline translation destination codes to a requested target.
+ * X often reports destination_language as bare `zh` for both Simplified and Traditional;
+ * mapping that through normalizeLanguage alone would force `zh-cn` and reject `/zh-tw`.
+ */
+export const translationDestinationMatches = (
+  destinationLanguage: string | null | undefined,
+  targetLanguage: string
+): boolean => {
+  if (typeof destinationLanguage !== 'string') {
+    return false;
+  }
+  const dest = destinationLanguage.trim().toLowerCase();
+  if (dest.length === 0) {
+    return false;
+  }
+  const target = normalizeLanguage(targetLanguage);
+  if (normalizeLanguage(dest) === target) {
+    return true;
+  }
+  // Bare "zh" from Grok: accept for either Chinese script target (client language header selects script).
+  if (dest === 'zh' && (target === 'zh-cn' || target === 'zh-tw')) {
+    return true;
+  }
+  return false;
 };

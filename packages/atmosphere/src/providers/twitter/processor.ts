@@ -19,7 +19,11 @@ import type {
 import type { FetchResults } from '../../types/fetch-results.js';
 import { isTombstone, tombstoneMessageForReason } from '../../helpers/tombstone.js';
 import { translateStatusGrok } from '../../helpers/translate-grok.js';
-import { normalizeLanguage, isTranslatableLanguageCode } from '../../helpers/language.js';
+import {
+  normalizeLanguage,
+  isTranslatableLanguageCode,
+  translationDestinationMatches
+} from '../../helpers/language.js';
 import { tcoResolver } from './tcoResolver.js';
 import type { TwitterBuildHost } from './build-host.js';
 
@@ -979,14 +983,15 @@ export const buildAPITwitterStatus = async (
   }
 
   /* If a language is specified in API or by user, let's try translating it! */
+  const normalizedTarget =
+    typeof language === 'string' ? normalizeLanguage(language) : '';
   if (
     typeof language === 'string' &&
-    (language.length === 2 || language.length === 5) && // Only translate if the language is a valid ISO 639-1 or ISO 639-5 code
+    (normalizedTarget.length === 2 || normalizedTarget.length === 5) && // ISO 639-1 or regional (e.g. zh-tw)
     isTranslatableLanguageCode(status.legacy?.lang) &&
-    normalizeLanguage(language) !== normalizeLanguage(status.legacy?.lang || '') &&
+    normalizedTarget !== normalizeLanguage(status.legacy?.lang || '') &&
     apiStatus.text.length > 1 // Don't translate if the status text is too short
   ) {
-    const normalizedTarget = normalizeLanguage(language);
     console.log(`Attempting to translate status to ${normalizedTarget}...`);
     let didTranslate = false;
     const inline = status.grok_translated_post_with_availability;
@@ -995,7 +1000,7 @@ export const buildAPITwitterStatus = async (
       inline.data &&
       typeof inline.data.translation === 'string' &&
       inline.data.translation.trim().length > 0 &&
-      normalizeLanguage(inline.data.destination_language) === normalizedTarget
+      translationDestinationMatches(inline.data.destination_language, normalizedTarget)
     ) {
       const srcLang = (inline.data.source_language || apiStatus.lang || 'en').toLowerCase();
       apiStatus.translation = {
