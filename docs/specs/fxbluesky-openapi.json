@@ -440,7 +440,7 @@
                           "required": ["webp", "jpeg"]
                         }
                       },
-                      "required": ["type", "url", "width", "height", "formats"]
+                      "required": ["type", "formats"]
                     },
                     {
                       "type": "object",
@@ -504,7 +504,7 @@
                     "required": ["webp", "jpeg"]
                   }
                 },
-                "required": ["type", "url", "width", "height", "formats"]
+                "required": ["type", "formats"]
               },
               "broadcast": {
                 "type": "object",
@@ -2630,7 +2630,7 @@
                           "required": ["webp", "jpeg"]
                         }
                       },
-                      "required": ["type", "url", "width", "height", "formats"]
+                      "required": ["type", "formats"]
                     },
                     {
                       "type": "object",
@@ -2694,7 +2694,7 @@
                     "required": ["webp", "jpeg"]
                   }
                 },
-                "required": ["type", "url", "width", "height", "formats"]
+                "required": ["type", "formats"]
               },
               "broadcast": {
                 "type": "object",
