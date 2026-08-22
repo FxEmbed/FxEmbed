@@ -5,6 +5,10 @@ import {
   type PublicExploreTimelineKind
 } from '@fxembed/atmosphere/providers/twitter/trends';
 import {
+  formatSearchQueryTooLongMessage,
+  TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH
+} from '@fxembed/atmosphere/providers/twitter/searchErrors';
+import {
   APIProfileRelationshipListSchema,
   APIUserListResultsSchema,
   APISearchResultsSchema,
@@ -22,13 +26,27 @@ import {
 const twitterSearchQueryHasEffectiveContent = (raw: string): boolean =>
   raw.replace(/_/g, '').trim().length > 0;
 
-const twitterSearchQueryString = (openapiMeta: { description: string; example: string }) =>
-  z
+const twitterSearchQueryString = (openapiMeta: {
+  description: string;
+  example: string;
+  maxLength?: number;
+}) => {
+  const maxLength = openapiMeta.maxLength;
+  return z
     .string()
     .refine(twitterSearchQueryHasEffectiveContent, {
       message: 'Search query must not be empty'
     })
+    .superRefine((value, ctx) => {
+      if (maxLength !== undefined && value.length > maxLength) {
+        ctx.addIssue({
+          code: 'custom',
+          message: formatSearchQueryTooLongMessage(value.length)
+        });
+      }
+    })
     .openapi(openapiMeta);
+};
 
 const aboutAccountQuery = z.object({
   about_account: z.string().optional().openapi({
@@ -560,8 +578,9 @@ export const searchV2Route = createRoute({
   request: {
     query: z.object({
       q: twitterSearchQueryString({
-        description: 'Search query (non-empty)',
-        example: 'puppies'
+        description: `Search query (non-empty, max ${TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH} characters)`,
+        example: 'puppies',
+        maxLength: TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH
       }),
       feed: z.enum(['latest', 'top', 'media']).optional().openapi({
         description: 'Search tab (default latest)',
@@ -581,7 +600,7 @@ export const searchV2Route = createRoute({
       content: { 'application/json': { schema: APISearchResultsSchema } }
     },
     400: {
-      description: 'Invalid `q` parameter',
+      description: `Invalid \`q\` parameter (empty or longer than ${TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH} characters)`,
       content: { 'application/json': { schema: ApiQueryErrorSchema } }
     },
     404: {
