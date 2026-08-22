@@ -6,7 +6,9 @@ import { isTombstone } from '../../helpers/tombstone.js';
 import {
   isSearchTimelineClientErrorResponse,
   parseSearchTimelineClientError,
-  searchTimelineClientErrorToApiQueryError
+  searchQueryTooLongError,
+  searchTimelineClientErrorToApiQueryError,
+  TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH
 } from './searchErrors.js';
 import type { APISearchResults, APITwitterStatus, ApiQueryError } from '../../types/api-schemas.js';
 import type { FetchResults } from '../../types/fetch-results.js';
@@ -436,6 +438,10 @@ export const searchAPI = async (
   host: TwitterBuildHost,
   language?: string
 ): Promise<APISearchResults | ApiQueryError> => {
+  if (query.length > TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH) {
+    return searchQueryTooLongError(query.length);
+  }
+
   const product = feedToProduct(feed);
 
   let response: TwitterSearchTimelineResponse | null;

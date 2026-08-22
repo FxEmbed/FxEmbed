@@ -1,5 +1,6 @@
 import { test, expect } from 'vitest';
 import type { APITwitterStatus } from '../src/realms/api/schemas';
+import { TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH } from '@fxembed/atmosphere/providers/twitter/searchErrors';
 import { app } from '../src/worker';
 import { botHeaders, twitterBaseUrl } from './helpers/data';
 import harness from './helpers/harness';
@@ -103,6 +104,38 @@ test('API search accepts count parameter', async () => {
   expect(response.code).toEqual(200);
 });
 
+test('API search rejects q longer than 512 characters with 400', async () => {
+  const tooLong = 'a'.repeat(TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH + 1);
+  const result = await app.request(
+    new Request(`https://api.fxtwitter.com/2/search?q=${tooLong}`, {
+      method: 'GET',
+      headers: botHeaders
+    }),
+    undefined,
+    harness
+  );
+  expect(result.status).toEqual(400);
+  const body = (await result.json()) as { code?: number; message?: string; success?: boolean };
+  expect(body.code).toEqual(400);
+  expect(body.message).toContain(
+    `Raw query length ${tooLong.length} exceeds max allowed ${TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH}`
+  );
+  expect(body.success).toBeUndefined();
+});
+
+test('API search accepts q of exactly 512 characters', async () => {
+  const atLimit = 'a'.repeat(TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH);
+  const result = await app.request(
+    new Request(`https://api.fxtwitter.com/2/search?q=${atLimit}`, {
+      method: 'GET',
+      headers: botHeaders
+    }),
+    undefined,
+    harness
+  );
+  expect(result.status).not.toEqual(400);
+});
+
 test('API search returns 400 for upstream empty query error', async () => {
   const result = await app.request(
     new Request('https://api.fxtwitter.com/2/search?q=empty_query_error', {
@@ -131,4 +164,19 @@ test('API search returns 400 for upstream blocklisted query error', async () => 
   const body = (await result.json()) as { code?: number; message?: string };
   expect(body.code).toEqual(400);
   expect(body.message).toContain('blocked by X content controls');
+});
+
+test('API search returns 400 for upstream query too long error', async () => {
+  const result = await app.request(
+    new Request('https://api.fxtwitter.com/2/search?q=query_too_long_error', {
+      method: 'GET',
+      headers: botHeaders
+    }),
+    undefined,
+    harness
+  );
+  expect(result.status).toEqual(400);
+  const body = (await result.json()) as { code?: number; message?: string };
+  expect(body.code).toEqual(400);
+  expect(body.message).toContain(`exceeds max allowed ${TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH}`);
 });
