@@ -1,6 +1,12 @@
-import type { APIBlueskyStatus, APISearchResultsBluesky } from '../../types/api-schemas.js';
+import type {
+  APIBlueskyStatus,
+  APISearchResultsBluesky,
+  APITypeaheadResponse,
+  APIUserListResults
+} from '../../types/api-schemas.js';
 import { buildAPIBlueskyPost } from './processor.js';
-import { fetchSearchPosts } from './client.js';
+import { fetchSearchActors, fetchSearchActorsTypeahead, fetchSearchPosts } from './client.js';
+import { blueskyProfileViewToApiUser } from './profileFollowers.js';
 import { isBlueskyGalleryEmbed } from './gallery.js';
 import type { BlueskyBuildHost } from './build-host.js';
 
@@ -99,5 +105,89 @@ export const blueskySearchAPI = async (
     code: 200,
     results,
     cursor: { top: null, bottom: nextCursor }
+  };
+};
+
+/**
+ * People search via `app.bsky.actor.searchActors`. Returns the same `APIUserListResults` envelope
+ * as the follower and repost lists, so a client renders one profile list whatever produced it.
+ *
+ * `#profileView` carries no counts, so `followers`, `following`, and `statuses` come back 0 — a
+ * client that needs them fetches the full profile. `getFollowers` and `getLikes` behave the same.
+ */
+export const blueskySearchUsersAPI = async (
+  options: {
+    q: string;
+    count: number;
+    cursor: string | null;
+  },
+  opts?: { credentialKey?: string }
+): Promise<APIUserListResults> => {
+  const result = await fetchSearchActors(
+    {
+      q: options.q,
+      limit: options.count,
+      cursor: options.cursor ?? undefined
+    },
+    { credentialKey: opts?.credentialKey }
+  );
+
+  if (!result.ok) {
+    if (result.status === 400 || result.status === 404) {
+      return { code: 404, results: [], cursor: { top: null, bottom: null } };
+    }
+    return { code: 500, results: [], cursor: { top: null, bottom: null } };
+  }
+
+  const actors = result.data.actors ?? [];
+
+  return {
+    code: 200,
+    results: actors.map(blueskyProfileViewToApiUser),
+    cursor: { top: null, bottom: result.data.cursor ?? null }
+  };
+};
+
+/**
+ * Autocomplete while the user types, via `app.bsky.actor.searchActorsTypeahead`.
+ *
+ * Same envelope as FxTwitter `/2/typeahead` so one client call site serves both networks, but
+ * Bluesky indexes only accounts — there is no hashtag or event autocomplete behind it, so
+ * `topics` and `events` are always empty rather than absent.
+ */
+export const blueskyTypeaheadAPI = async (
+  options: {
+    q: string;
+    count: number;
+  },
+  opts?: { credentialKey?: string }
+): Promise<APITypeaheadResponse> => {
+  const empty = (code: number): APITypeaheadResponse => ({
+    code,
+    query: options.q,
+    num_results: 0,
+    users: [],
+    topics: [],
+    events: []
+  });
+
+  const result = await fetchSearchActorsTypeahead(
+    { q: options.q, limit: options.count },
+    { credentialKey: opts?.credentialKey }
+  );
+
+  if (!result.ok) {
+    return empty(result.status === 400 || result.status === 404 ? 404 : 500);
+  }
+
+  const users = (result.data.actors ?? []).map(blueskyProfileViewToApiUser);
+
+  return {
+    code: 200,
+    query: options.q,
+    num_results: users.length,
+    users,
+    topics: [],
+    events: []
   };
 };

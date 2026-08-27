@@ -398,6 +398,67 @@ export const fetchSearchPosts = async (
   return result;
 };
 
+/**
+ * `app.bsky.actor.searchActors` against the public AppView. Unlike `searchPosts`, actor search is
+ * served unauthenticated, so this works on a plain AppView with no proxy credentials.
+ */
+export const fetchSearchActors = async (
+  params: {
+    q: string;
+    limit: number;
+    cursor?: string;
+  },
+  opts?: BlueskyFetchOpts
+): Promise<
+  { ok: true; data: BlueskySearchActorsResponse } | { ok: false; status: number; body: string }
+> => {
+  const result = await executeBlueskyXrpc<BlueskySearchActorsResponse>(
+    'app.bsky.actor.searchActors',
+    {
+      q: params.q,
+      limit: params.limit,
+      cursor: params.cursor
+    },
+    opts
+  );
+  if (!result.ok) {
+    console.log('Bluesky searchActors failed', result.status, result.body?.slice?.(0, 200));
+  }
+  return result;
+};
+
+/**
+ * `app.bsky.actor.searchActorsTypeahead` — the prefix-matching sibling of `searchActors`, meant
+ * for autocomplete while the user is still typing. No cursor: it answers one short page by design.
+ */
+export const fetchSearchActorsTypeahead = async (
+  params: {
+    q: string;
+    limit: number;
+  },
+  opts?: BlueskyFetchOpts
+): Promise<
+  | { ok: true; data: BlueskySearchActorsTypeaheadResponse }
+  | { ok: false; status: number; body: string }
+> => {
+  const result = await executeBlueskyXrpc<BlueskySearchActorsTypeaheadResponse>(
+    'app.bsky.actor.searchActorsTypeahead',
+    {
+      q: params.q,
+      limit: params.limit
+    },
+    opts
+  );
+  if (!result.ok) {
+    console.log(
+      'Bluesky searchActorsTypeahead failed',
+      result.status,
+      result.body?.slice?.(0, 200)
+    );
+  }
+  return result;
+};
+
 const GET_PROFILES_MAX_ACTORS = 25;
 
 /** Batch `app.bsky.actor.getProfiles` (max 25 actors per request per lexicon). */

@@ -14,6 +14,7 @@ import {
   mastodonProfileMediaV2Route,
   mastodonProfileStatusesV2Route,
   mastodonProfileV2Route,
+  mastodonSearchUsersV2Route,
   mastodonSearchV2Route,
   mastodonStatusLikesV2Route,
   mastodonStatusRepostsV2Route,
@@ -33,7 +34,10 @@ import {
   mastodonProfileMediaAPI,
   mastodonProfileStatusesAPI
 } from '@fxembed/atmosphere/providers/mastodon/profileStatuses';
-import { mastodonSearchAPI } from '@fxembed/atmosphere/providers/mastodon/search';
+import {
+  mastodonSearchAPI,
+  mastodonSearchUsersAPI
+} from '@fxembed/atmosphere/providers/mastodon/search';
 import { mastodonStatusLikesAPI } from '@fxembed/atmosphere/providers/mastodon/statusLikes';
 import { mastodonStatusRepostsAPI } from '@fxembed/atmosphere/providers/mastodon/statusReposts';
 import { mastodonBuildHostFromContext } from './build-host-adapter';
@@ -161,6 +165,25 @@ export const mastodonSearchAPIRequest: RouteHandler<typeof mastodonSearchV2Route
   c.status(httpStatus);
   setApiHeaders(c);
   return jsonAfterNormalize<typeof mastodonSearchV2Route>(c, payload, httpStatus);
+};
+
+export const mastodonSearchUsersAPIRequest: RouteHandler<
+  typeof mastodonSearchUsersV2Route
+> = async c => {
+  const { domain } = c.req.valid('param');
+  const query = c.req.valid('query');
+  const searchResponse = await mastodonSearchUsersAPI(domain, {
+    q: query.q,
+    count: query.count ?? 30
+  });
+  const { httpStatus, payload } = normalizeApiJsonResponse(
+    searchResponse,
+    [200, 400, 401, 404, 500] as const,
+    'mastodonSearchUsersAPIRequest'
+  );
+  c.status(httpStatus);
+  setApiHeaders(c);
+  return jsonAfterNormalize<typeof mastodonSearchUsersV2Route>(c, payload, httpStatus);
 };
 
 export const mastodonProfileAPIRequest: RouteHandler<typeof mastodonProfileV2Route> = async c => {
