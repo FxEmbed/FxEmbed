@@ -108,7 +108,7 @@
   "devDependencies": {
     "@types/node": "^24.13.3",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   },
   "dependencies": {
     "@hono/zod-openapi": "^1.6.0",
