@@ -6,10 +6,7 @@ import {
   normalizeApiJsonResponse
 } from '../../realms/api/normalizeApiJsonResponse';
 import type {
-  APIProfileRelationshipList,
   APISearchResultsInstagram,
-  APITypeaheadResponse,
-  APIUserListResults,
   SocialThreadInstagram,
   UserAPIResponse
 } from '../../realms/api/schemas';
@@ -23,28 +20,13 @@ import {
   constructInstagramProfileStatuses,
   constructInstagramProfileVideos
 } from '@fxembed/atmosphere/providers/instagram/profile';
-import { constructInstagramStatusLikes } from '@fxembed/atmosphere/providers/instagram/likes';
-import { constructInstagramRelationshipList } from '@fxembed/atmosphere/providers/instagram/relationships';
-import {
-  constructInstagramTypeahead,
-  constructInstagramUserSearch
-} from '@fxembed/atmosphere/providers/instagram/search';
-import { constructInstagramProfileStories } from '@fxembed/atmosphere/providers/instagram/stories';
-import { constructInstagramProfileTagged } from '@fxembed/atmosphere/providers/instagram/tagged';
 import { normalizeInstagramPostId } from '@fxembed/atmosphere/providers/instagram/shortcode';
 import {
   instagramConversationV2Route,
-  instagramProfileFollowersV2Route,
-  instagramProfileFollowingV2Route,
   instagramProfileStatusesV2Route,
-  instagramProfileStoriesV2Route,
-  instagramProfileTaggedV2Route,
   instagramProfileVideosV2Route,
   instagramProfileV2Route,
-  instagramSearchUsersV2Route,
-  instagramStatusLikesV2Route,
-  instagramStatusV2Route,
-  instagramTypeaheadV2Route
+  instagramStatusV2Route
 } from './atmosphere-routes';
 
 /** Logs uncaught throws from Instagram upstream logic (network, timeouts, parse bugs). */
@@ -105,7 +87,7 @@ export const instagramStatusAPIRequest: RouteHandler<typeof instagramStatusV2Rou
   const body = await withInstagramErrorLog(
     'constructInstagramPost',
     { shortcode },
-    () => constructInstagramPost(shortcode, ua, { credentialKey: c.env?.CREDENTIAL_KEY }),
+    () => constructInstagramPost(shortcode, ua),
     instagramStatus500
   );
   const { httpStatus, payload } = normalizeApiJsonResponse(
@@ -129,7 +111,7 @@ export const instagramProfileAPIRequest: RouteHandler<typeof instagramProfileV2R
   const body = await withInstagramErrorLog(
     'constructInstagramProfile',
     { username },
-    () => constructInstagramProfile(username, ua, { credentialKey: c.env?.CREDENTIAL_KEY }),
+    () => constructInstagramProfile(username, ua),
     instagramProfile500
   );
   const { httpStatus, payload } = normalizeApiJsonResponse(
@@ -155,8 +137,7 @@ export const instagramProfileStatusesAPIRequest: RouteHandler<
       constructInstagramProfileStatuses(username, {
         count: q.count,
         cursor: q.cursor ?? null,
-        userAgent: ua,
-        credentialKey: c.env?.CREDENTIAL_KEY
+        userAgent: ua
       }),
     instagramSearch500
   );
@@ -183,8 +164,7 @@ export const instagramProfileVideosAPIRequest: RouteHandler<
       constructInstagramProfileVideos(username, {
         count: q.count,
         cursor: q.cursor ?? null,
-        userAgent: ua,
-        credentialKey: c.env?.CREDENTIAL_KEY
+        userAgent: ua
       }),
     instagramSearch500
   );
@@ -213,8 +193,7 @@ export const instagramConversationAPIRequest: RouteHandler<
         cursor: q.cursor ?? null,
         count: q.count,
         sortOrder: q.sort_order,
-        userAgent: ua,
-        credentialKey: c.env?.CREDENTIAL_KEY
+        userAgent: ua
       }),
     instagramConversationError
   );
@@ -240,209 +219,4 @@ export const instagramConversationAPIRequest: RouteHandler<
   c.status(httpStatus);
   setApiHeaders(c);
   return jsonAfterNormalize<typeof instagramConversationV2Route>(c, payload, httpStatus);
-};
-
-/** Statuses the proxy-gated Instagram routes can answer with, including 501 for "no proxy here". */
-const PROXY_ROUTE_STATUSES = [200, 400, 404, 500, 501] as const;
-
-const instagramUserList500: APIUserListResults = {
-  code: 500,
-  results: [],
-  cursor: { top: null, bottom: null }
-};
-
-const instagramRelationship500: APIProfileRelationshipList = {
-  code: 500,
-  results: [],
-  cursor: { top: null, bottom: null }
-};
-
-export const instagramStatusLikesAPIRequest: RouteHandler<
-  typeof instagramStatusLikesV2Route
-> = async c => {
-  const { id } = c.req.valid('param');
-  const q = c.req.valid('query');
-  const ua = c.req.header('user-agent') ?? undefined;
-  const shortcode = normalizeInstagramPostId(id);
-  const body = await withInstagramErrorLog(
-    'constructInstagramStatusLikes',
-    { shortcode },
-    () =>
-      constructInstagramStatusLikes(shortcode, {
-        count: q.count,
-        ctx: { userAgent: ua, credentialKey: c.env?.CREDENTIAL_KEY }
-      }),
-    instagramUserList500
-  );
-  const { httpStatus, payload } = normalizeApiJsonResponse(
-    body,
-    PROXY_ROUTE_STATUSES,
-    'instagramStatusLikesAPIRequest'
-  );
-  c.status(httpStatus);
-  setApiHeaders(c);
-  return jsonAfterNormalize<typeof instagramStatusLikesV2Route>(c, payload, httpStatus);
-};
-
-export const instagramProfileFollowersAPIRequest: RouteHandler<
-  typeof instagramProfileFollowersV2Route
-> = async c => {
-  const { username } = c.req.valid('param');
-  const q = c.req.valid('query');
-  const ua = c.req.header('user-agent') ?? undefined;
-  const body = await withInstagramErrorLog(
-    'constructInstagramRelationshipList',
-    { username, kind: 'followers' },
-    () =>
-      constructInstagramRelationshipList(username, 'followers', {
-        count: q.count,
-        cursor: q.cursor ?? null,
-        ctx: { userAgent: ua, credentialKey: c.env?.CREDENTIAL_KEY }
-      }),
-    instagramRelationship500
-  );
-  const { httpStatus, payload } = normalizeApiJsonResponse(
-    body,
-    PROXY_ROUTE_STATUSES,
-    'instagramProfileFollowersAPIRequest'
-  );
-  c.status(httpStatus);
-  setApiHeaders(c);
-  return jsonAfterNormalize<typeof instagramProfileFollowersV2Route>(c, payload, httpStatus);
-};
-
-export const instagramProfileFollowingAPIRequest: RouteHandler<
-  typeof instagramProfileFollowingV2Route
-> = async c => {
-  const { username } = c.req.valid('param');
-  const q = c.req.valid('query');
-  const ua = c.req.header('user-agent') ?? undefined;
-  const body = await withInstagramErrorLog(
-    'constructInstagramRelationshipList',
-    { username, kind: 'following' },
-    () =>
-      constructInstagramRelationshipList(username, 'following', {
-        count: q.count,
-        cursor: q.cursor ?? null,
-        ctx: { userAgent: ua, credentialKey: c.env?.CREDENTIAL_KEY }
-      }),
-    instagramRelationship500
-  );
-  const { httpStatus, payload } = normalizeApiJsonResponse(
-    body,
-    PROXY_ROUTE_STATUSES,
-    'instagramProfileFollowingAPIRequest'
-  );
-  c.status(httpStatus);
-  setApiHeaders(c);
-  return jsonAfterNormalize<typeof instagramProfileFollowingV2Route>(c, payload, httpStatus);
-};
-
-export const instagramProfileTaggedAPIRequest: RouteHandler<
-  typeof instagramProfileTaggedV2Route
-> = async c => {
-  const { username } = c.req.valid('param');
-  const q = c.req.valid('query');
-  const ua = c.req.header('user-agent') ?? undefined;
-  const body = await withInstagramErrorLog(
-    'constructInstagramProfileTagged',
-    { username },
-    () =>
-      constructInstagramProfileTagged(username, {
-        count: q.count,
-        cursor: q.cursor ?? null,
-        ctx: { userAgent: ua, credentialKey: c.env?.CREDENTIAL_KEY }
-      }),
-    instagramSearch500
-  );
-  const { httpStatus, payload } = normalizeApiJsonResponse(
-    body,
-    PROXY_ROUTE_STATUSES,
-    'instagramProfileTaggedAPIRequest'
-  );
-  c.status(httpStatus);
-  setApiHeaders(c);
-  return jsonAfterNormalize<typeof instagramProfileTaggedV2Route>(c, payload, httpStatus);
-};
-
-export const instagramProfileStoriesAPIRequest: RouteHandler<
-  typeof instagramProfileStoriesV2Route
-> = async c => {
-  const { username } = c.req.valid('param');
-  const ua = c.req.header('user-agent') ?? undefined;
-  const body = await withInstagramErrorLog(
-    'constructInstagramProfileStories',
-    { username },
-    () =>
-      constructInstagramProfileStories(username, {
-        ctx: { userAgent: ua, credentialKey: c.env?.CREDENTIAL_KEY }
-      }),
-    instagramSearch500
-  );
-  const { httpStatus, payload } = normalizeApiJsonResponse(
-    body,
-    [200, 404, 500, 501] as const,
-    'instagramProfileStoriesAPIRequest'
-  );
-  c.status(httpStatus);
-  setApiHeaders(c);
-  return jsonAfterNormalize<typeof instagramProfileStoriesV2Route>(c, payload, httpStatus);
-};
-
-export const instagramSearchUsersAPIRequest: RouteHandler<
-  typeof instagramSearchUsersV2Route
-> = async c => {
-  const q = c.req.valid('query');
-  const ua = c.req.header('user-agent') ?? undefined;
-  const body = await withInstagramErrorLog(
-    'constructInstagramUserSearch',
-    { query: q.query },
-    () =>
-      constructInstagramUserSearch(q.query, {
-        count: q.count,
-        ctx: { userAgent: ua, credentialKey: c.env?.CREDENTIAL_KEY }
-      }),
-    instagramUserList500
-  );
-  const { httpStatus, payload } = normalizeApiJsonResponse(
-    body,
-    PROXY_ROUTE_STATUSES,
-    'instagramSearchUsersAPIRequest'
-  );
-  c.status(httpStatus);
-  setApiHeaders(c);
-  return jsonAfterNormalize<typeof instagramSearchUsersV2Route>(c, payload, httpStatus);
-};
-
-export const instagramTypeaheadAPIRequest: RouteHandler<
-  typeof instagramTypeaheadV2Route
-> = async c => {
-  const q = c.req.valid('query');
-  const ua = c.req.header('user-agent') ?? undefined;
-  const typeahead500: APITypeaheadResponse = {
-    code: 500,
-    query: q.query,
-    num_results: 0,
-    users: [],
-    topics: [],
-    events: []
-  };
-  const body = await withInstagramErrorLog(
-    'constructInstagramTypeahead',
-    { query: q.query },
-    () =>
-      constructInstagramTypeahead(q.query, {
-        count: q.count,
-        ctx: { userAgent: ua, credentialKey: c.env?.CREDENTIAL_KEY }
-      }),
-    typeahead500
-  );
-  const { httpStatus, payload } = normalizeApiJsonResponse(
-    body,
-    PROXY_ROUTE_STATUSES,
-    'instagramTypeaheadAPIRequest'
-  );
-  c.status(httpStatus);
-  setApiHeaders(c);
-  return jsonAfterNormalize<typeof instagramTypeaheadV2Route>(c, payload, httpStatus);
 };

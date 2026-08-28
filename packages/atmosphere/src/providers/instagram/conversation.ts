@@ -1,41 +1,13 @@
-import type { APISubstatus, SocialConversationInstagram } from '../../types/api-schemas.js';
-import { resolveInstagramAccounts, type InstagramRequestContext } from './account-proxy.js';
+import type { SocialConversationInstagram } from '../../types/api-schemas.js';
 import { fetchCommentPageGraphql, fetchInstagramCsrfToken } from './client.js';
 import { decodeCommentCursor, encodeCommentCursor } from './cursors.js';
 import { extractCommentsConnection } from './extractors.js';
 import { fetchInstagramPageWithWebInfo } from './fetch-shortcode-page.js';
-import { fetchPrivateMediaComments } from './private-api.js';
-import { nextMaxIdFromPrivateResponse } from './private-processor.js';
 import {
-  commentRecordToSubstatus,
   extractCommentsFromGraphqlJson,
   instagramNodeToStatus,
   mapCommentEdges
 } from './processor.js';
-
-/** `media/{pk}/comments/` returns a flat `comments` array rather than GraphQL edges. */
-function substatusesFromPrivateComments(
-  json: unknown,
-  shortcode: string,
-  parentAuthor: string,
-  limit: number
-): APISubstatus[] {
-  if (!json || typeof json !== 'object') return [];
-  const comments = (json as { comments?: unknown }).comments;
-  if (!Array.isArray(comments)) return [];
-  const out: APISubstatus[] = [];
-  for (const comment of comments) {
-    if (out.length >= limit) break;
-    if (!comment || typeof comment !== 'object') continue;
-    const mapped = commentRecordToSubstatus(
-      comment as Record<string, unknown>,
-      shortcode,
-      parentAuthor
-    );
-    if (mapped) out.push(mapped);
-  }
-  return out;
-}
 
 export type InstagramConversationResult =
   | { ok: true; data: SocialConversationInstagram }
@@ -48,16 +20,10 @@ export async function constructInstagramConversation(
     count: number;
     sortOrder: 'popular' | 'recent';
     userAgent?: string;
-    credentialKey?: string;
   }
 ): Promise<InstagramConversationResult> {
   const count = Math.min(100, Math.max(1, Math.floor(options.count)));
-  const ctx: InstagramRequestContext = {
-    userAgent: options.userAgent,
-    credentialKey: options.credentialKey
-  };
-  const accounts = await resolveInstagramAccounts(ctx);
-  const page = await fetchInstagramPageWithWebInfo(shortcode, options.userAgent, ctx);
+  const page = await fetchInstagramPageWithWebInfo(shortcode, options.userAgent);
   if (!page.ok) {
     return {
       ok: true,
@@ -98,60 +64,6 @@ export async function constructInstagramConversation(
     (typeof item.pk === 'string' || typeof item.pk === 'number'
       ? String(item.pk).split('_')[0]
       : '');
-  /*
-   * With an account proxy, comments come from `media/{pk}/comments/`: it paginates past the ~24
-   * comments the embedded page carries and works on posts whose logged-out page has no comment
-   * connection at all. Falls through to the logged-out GraphQL path if the call fails.
-   */
-  if (accounts.length && mediaPk) {
-    let maxId: string | null = null;
-    if (options.cursor) {
-      const decoded = decodeCommentCursor(options.cursor);
-      if (
-        !decoded ||
-        decoded.shortcode !== shortcode ||
-        decoded.mediaId !== mediaPk ||
-        decoded.src !== 'proxy'
-      ) {
-        return { ok: false, message: 'Invalid cursor' };
-      }
-      maxId = decoded.after;
-    }
-    const res = await fetchPrivateMediaComments(mediaPk, ctx, {
-      accounts,
-      maxId,
-      count,
-      sortOrder: options.sortOrder,
-      shortcode
-    });
-    if (res.ok) {
-      const replies = substatusesFromPrivateComments(res.json, shortcode, fb.username, count);
-      const nextMaxId = nextMaxIdFromPrivateResponse(res.json);
-      const bottom = nextMaxId
-        ? encodeCommentCursor({
-            v: 1,
-            mediaId: mediaPk,
-            shortcode,
-            sort: options.sortOrder,
-            after: nextMaxId,
-            count,
-            src: 'proxy'
-          })
-        : null;
-      return {
-        ok: true,
-        data: {
-          code: 200,
-          status,
-          thread: [status],
-          replies,
-          author: status.author,
-          cursor: { bottom }
-        }
-      };
-    }
-  }
-
   const conn = page.comments ?? extractCommentsConnection(htmlBody);
   const pageInfo = conn?.page_info ?? {};
   const hasNext =
@@ -178,8 +90,7 @@ export async function constructInstagramConversation(
             shortcode,
             sort: options.sortOrder,
             after: endCursor,
-            count,
-            src: 'gql'
+            count
           })
         : null;
     return {
@@ -196,12 +107,7 @@ export async function constructInstagramConversation(
   }
 
   const decoded = decodeCommentCursor(options.cursor);
-  if (
-    !decoded ||
-    decoded.shortcode !== shortcode ||
-    decoded.mediaId !== mediaPk ||
-    decoded.src === 'proxy'
-  ) {
+  if (!decoded || decoded.shortcode !== shortcode || decoded.mediaId !== mediaPk) {
     return { ok: false, message: 'Invalid cursor' };
   }
 
@@ -283,8 +189,7 @@ export async function constructInstagramConversation(
           shortcode,
           sort: decoded.sort,
           after: pi.end_cursor,
-          count: decoded.count,
-          src: 'gql'
+          count: decoded.count
         })
       : null;
 

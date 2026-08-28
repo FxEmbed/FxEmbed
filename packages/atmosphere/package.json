@@ -70,10 +70,6 @@
       "types": "./dist/providers/mastodon/*.d.ts",
       "import": "./dist/providers/mastodon/*.js"
     },
-    "./providers/instagram-runtime": {
-      "types": "./dist/providers/instagram-runtime.d.ts",
-      "import": "./dist/providers/instagram-runtime.js"
-    },
     "./providers/instagram/*": {
       "types": "./dist/providers/instagram/*.d.ts",
       "import": "./dist/providers/instagram/*.js"

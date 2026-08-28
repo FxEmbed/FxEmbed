@@ -1,15 +1,12 @@
 import type { SocialThreadInstagram } from '../../types/api-schemas.js';
-import type { InstagramRequestContext } from './account-proxy.js';
 import { fetchInstagramPageWithWebInfo } from './fetch-shortcode-page.js';
 import { instagramNodeToStatus } from './processor.js';
 
 export async function constructInstagramPost(
   shortcode: string,
-  userAgent: string | undefined,
-  options: { credentialKey?: string } = {}
+  userAgent: string | undefined
 ): Promise<SocialThreadInstagram> {
-  const ctx: InstagramRequestContext = { userAgent, credentialKey: options.credentialKey };
-  const page = await fetchInstagramPageWithWebInfo(shortcode, userAgent, ctx);
+  const page = await fetchInstagramPageWithWebInfo(shortcode, userAgent);
   if (!page.ok) {
     return { code: page.status === 404 ? 404 : 500, status: null, thread: null, author: null };
   }
