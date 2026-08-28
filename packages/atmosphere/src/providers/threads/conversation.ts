@@ -1,6 +1,13 @@
 import type { SocialConversation } from '../../types/api-status.js';
+import { resolveThreadsAccounts, type ThreadsRequestContext } from './account-proxy.js';
 import { fetchThreadsPostPage, fetchThreadsSession, type ThreadsSession } from './client.js';
 import { decodeThreadsConversationCursor, encodeThreadsConversationCursor } from './cursors.js';
+import { fetchThreadsPostReplies } from './private-api.js';
+import {
+  containingThreadChain,
+  nextTokenFromThreadsFeed,
+  replyRowsFromThreadsReplies
+} from './private-processor.js';
 import {
   buildThreadsTombstone,
   threadsPostToStatus,
@@ -33,6 +40,96 @@ export type ThreadsConversationResult =
   | { ok: true; data: SocialConversation }
   | { ok: false; message: string; data?: SocialConversation };
 
+const conversationError = (code: number): SocialConversation => ({
+  code,
+  status: null,
+  thread: null,
+  replies: null,
+  author: null,
+  cursor: null
+});
+
+/**
+ * Replies through the account proxy (`text_feed/{post_id}/replies/`), which is what the Threads app
+ * itself calls. Logged-out `threads.com` truncates reply threads hard, so this is the better source
+ * whenever credentials exist. Returns `null` when the proxy isn't configured or the call failed, so
+ * the caller can fall back to the logged-out Relay connection.
+ */
+async function proxiedConversation(params: {
+  mediaId: string;
+  shortcode: string;
+  count: number;
+  sortOrder: 'top' | 'recent';
+  pagingToken: string | null;
+  ctx: ThreadsRequestContext;
+}): Promise<SocialConversation | null> {
+  const accounts = await resolveThreadsAccounts(params.ctx);
+  if (!accounts.length) return null;
+
+  const sortOrder = params.sortOrder === 'recent' ? 'all' : 'top';
+  const res = await fetchThreadsPostReplies(params.mediaId, params.ctx, {
+    accounts,
+    sortOrder,
+    count: params.count,
+    pagingToken: params.pagingToken,
+    shortcode: params.shortcode
+  });
+  if (!res.ok) {
+    return res.status === 404 ? conversationError(404) : null;
+  }
+
+  const chain = containingThreadChain(res.json);
+  if (!chain.length) return null;
+
+  const owner = chain[0]?.user as Record<string, unknown> | undefined;
+  const ownerFb = {
+    id: String(owner?.pk ?? owner?.id ?? ''),
+    username: String(owner?.username ?? ''),
+    fullName: typeof owner?.full_name === 'string' ? owner.full_name : undefined,
+    pic: typeof owner?.profile_pic_url === 'string' ? owner.profile_pic_url : null
+  };
+
+  const chainStatuses = chain
+    .map(post => threadsPostToStatus(post, ownerFb))
+    .filter((s): s is NonNullable<typeof s> => Boolean(s));
+  if (!chainStatuses.length) {
+    return {
+      ...conversationError(404),
+      status: buildThreadsTombstone('unavailable', { id: params.shortcode })
+    };
+  }
+
+  const status = chainStatuses[chainStatuses.length - 1]!;
+  const threadPrefix = chainStatuses.length > 1 ? chainStatuses.slice(0, -1) : [];
+
+  const replies = replyRowsFromThreadsReplies(res.json)
+    .slice(0, params.count)
+    .map(row => xdtThreadEdgeToSubstatus({ node: row }, params.shortcode, ownerFb.username))
+    .filter((r): r is NonNullable<typeof r> => Boolean(r));
+
+  const nextToken = nextTokenFromThreadsFeed(res.json);
+  const bottom = nextToken
+    ? encodeThreadsConversationCursor({
+        v: 1,
+        postId: params.mediaId,
+        shortcode: params.shortcode,
+        sort: params.sortOrder === 'recent' ? 'RECENT' : 'TOP',
+        after: nextToken,
+        count: params.count,
+        src: 'proxy'
+      })
+    : null;
+
+  return {
+    code: 200,
+    status,
+    thread: threadPrefix.length ? threadPrefix : [status],
+    replies,
+    author: status.author,
+    cursor: { bottom }
+  };
+}
+
 export async function constructThreadsConversation(
   rawId: string,
   options: {
@@ -40,6 +137,7 @@ export async function constructThreadsConversation(
     count: number;
     sortOrder: 'top' | 'recent';
     userAgent?: string;
+    ctx?: ThreadsRequestContext;
   }
 ): Promise<ThreadsConversationResult> {
   const shortcode = normalizeThreadsPostId(rawId);
@@ -52,6 +150,30 @@ export async function constructThreadsConversation(
 
   const count = Math.min(100, Math.max(1, Math.floor(options.count)));
   const sortGraphql: 'TOP' | 'RECENT' = options.sortOrder === 'recent' ? 'RECENT' : 'TOP';
+
+  const decodedCursor = options.cursor ? decodeThreadsConversationCursor(options.cursor) : null;
+  if (options.cursor && (!decodedCursor || decodedCursor.shortcode !== shortcode)) {
+    return { ok: false, message: 'Invalid cursor', data: conversationError(400) };
+  }
+
+  // A proxy cursor can only be replayed against the proxy, and vice versa.
+  if (decodedCursor?.src !== 'gql') {
+    const proxied = await proxiedConversation({
+      mediaId,
+      shortcode,
+      count,
+      sortOrder: options.sortOrder,
+      pagingToken: decodedCursor?.after ?? null,
+      ctx: { ...options.ctx, userAgent: options.ctx?.userAgent ?? options.userAgent }
+    });
+    if (proxied) {
+      return { ok: true, data: proxied };
+    }
+    if (decodedCursor?.src === 'proxy') {
+      // The cursor belongs to a source this request can no longer reach.
+      return { ok: false, message: 'Invalid cursor', data: conversationError(400) };
+    }
+  }
 
   const session: ThreadsSession | null = await fetchThreadsSession(options.userAgent);
   if (!session) {
@@ -68,25 +190,7 @@ export async function constructThreadsConversation(
     };
   }
 
-  let after: string | null = null;
-  if (options.cursor) {
-    const decoded = decodeThreadsConversationCursor(options.cursor);
-    if (!decoded || decoded.shortcode !== shortcode) {
-      return {
-        ok: false,
-        message: 'Invalid cursor',
-        data: {
-          code: 400,
-          status: null,
-          thread: null,
-          replies: null,
-          author: null,
-          cursor: null
-        }
-      };
-    }
-    after = decoded.after;
-  }
+  const after: string | null = decodedCursor?.after ?? null;
 
   const res = await fetchThreadsPostPage({
     mediaId,
@@ -192,7 +296,8 @@ export async function constructThreadsConversation(
         shortcode,
         sort: sortGraphql,
         after: afterForBottom,
-        count
+        count,
+        src: 'gql'
       })
     : null;
 

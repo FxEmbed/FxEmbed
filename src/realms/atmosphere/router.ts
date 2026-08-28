@@ -149,7 +149,7 @@ registerOpenApiJsonRoute(atmosphere, '/2/openapi.json', {
     title: 'FxEmbed Atmosphere API',
     version: '2.0.0',
     description:
-      'Multi-provider JSON API (X/Twitter, Bluesky, Mastodon/ActivityPub, TikTok, Instagram, Threads). Mastodon routes are under `/2/mastodon/{instance}/…`, TikTok under `/2/tiktok/…`, Instagram under `/2/instagram/…`, Threads under `/2/threads/…`. Twitter (`/2/twitter/…`) and Bluesky (`/2/bluesky/…`) are served by forwarding to the same logic as `api.fxtwitter.com` and `api.fxbsky.app`; use their `/2/openapi.json` for full path and schema documentation.'
+      'Multi-provider JSON API (X/Twitter, Bluesky, Mastodon/ActivityPub, TikTok, Instagram, Threads). Mastodon routes are under `/2/mastodon/{instance}/…`, TikTok under `/2/tiktok/…`, Instagram under `/2/instagram/…`, Threads under `/2/threads/…`. Twitter (`/2/twitter/…`) and Bluesky (`/2/bluesky/…`) are served by forwarding to the same logic as `api.fxtwitter.com` and `api.fxbsky.app`; use their `/2/openapi.json` for full path and schema documentation. Instagram routes for likers, follow lists, tagged posts, stories, user search and typeahead need an Instagram account proxy on the deployment and answer `501` without one.'
   },
   servers: Constants.ATMOSPHERE_API_HOST_ROOT
     ? [

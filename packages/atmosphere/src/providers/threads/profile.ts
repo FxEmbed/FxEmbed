@@ -1,4 +1,5 @@
 import type { APISearchResultsThreads, UserAPIResponse } from '../../types/api-schemas.js';
+import { resolveThreadsAccounts, type ThreadsRequestContext } from './account-proxy.js';
 import {
   fetchThreadsProfilePage,
   fetchThreadsProfileTimeline,
@@ -7,9 +8,12 @@ import {
 } from './client.js';
 import {
   decodeThreadsProfileTimelineCursor,
+  decodeThreadsTokenCursor,
   encodeThreadsProfileTimelineCursor
 } from './cursors.js';
+import { constructThreadsProfileTab } from './profile-tabs.js';
 import { threadsPostToStatus, userFromThreadsProfilePayload } from './processor.js';
+import { resolveThreadsUser } from './resolve-user.js';
 
 function userIdFromHovercard(json: unknown): string | null {
   const u = (json as { data?: { user?: Record<string, unknown> } })?.data?.user;
@@ -94,10 +98,28 @@ function profileTimelinePage(
   return { results, nextAfter };
 }
 
+/**
+ * Resolve a profile. With an account proxy configured this reads `users/{username}/usernameinfo/`,
+ * which also covers accounts logged-out `threads.com` will not show; otherwise it falls back to the
+ * logged-out hovercard + profile-page pair.
+ */
 export async function constructThreadsProfile(
   username: string,
-  userAgent: string | undefined
+  userAgent: string | undefined,
+  ctx?: ThreadsRequestContext
 ): Promise<UserAPIResponse> {
+  const requestCtx: ThreadsRequestContext = { ...ctx, userAgent: ctx?.userAgent ?? userAgent };
+  const accounts = await resolveThreadsAccounts(requestCtx);
+  if (accounts.length) {
+    const resolved = await resolveThreadsUser(username, requestCtx, { accounts });
+    if (resolved.code === 200 && resolved.user) {
+      return { code: 200, message: 'OK', user: resolved.user };
+    }
+    if (resolved.code === 404) {
+      return { code: 404, message: 'User not found' };
+    }
+  }
+
   const session = await fetchThreadsSession(userAgent);
   if (!session) {
     return { code: 500, message: 'Threads session failed' };
@@ -136,11 +158,43 @@ export async function constructThreadsProfile(
   return { code: 200, message: 'OK', user };
 }
 
+/**
+ * A profile's main Threads tab.
+ *
+ * Prefers the account proxy, which serves the same rows the app sees; falls back to the logged-out
+ * Relay connection. The two mint different cursors, so a page walk stays on whichever source
+ * started it — a proxy cursor decodes only as a token cursor, and vice versa.
+ */
 export async function constructThreadsProfileStatuses(
   username: string,
-  options: { count: number; cursor: string | null; userAgent?: string }
+  options: { count: number; cursor: string | null; userAgent?: string; ctx?: ThreadsRequestContext }
 ): Promise<APISearchResultsThreads> {
   const count = Math.min(100, Math.max(1, Math.floor(options.count)));
+  const requestCtx: ThreadsRequestContext = {
+    ...options.ctx,
+    userAgent: options.ctx?.userAgent ?? options.userAgent
+  };
+  const isProxyCursor =
+    options.cursor != null && decodeThreadsTokenCursor(options.cursor, 'threads') != null;
+  if (options.cursor == null || isProxyCursor) {
+    const proxied = await constructThreadsProfileTab(username, 'threads', {
+      count,
+      cursor: options.cursor,
+      ctx: requestCtx
+    });
+    if (isProxyCursor) {
+      // A proxy cursor means nothing to the logged-out connection, so this page walk is over
+      // either way — 501 (proxy since removed) becomes a plain bad cursor.
+      return proxied.code === 501
+        ? { code: 400, results: [], cursor: { top: null, bottom: null } }
+        : proxied;
+    }
+    // Fresh request: fall through to the logged-out path only when the proxy couldn't answer.
+    if (proxied.code !== 501 && proxied.code !== 500) {
+      return proxied;
+    }
+  }
+
   const session = await fetchThreadsSession(options.userAgent);
   if (!session) {
     return { code: 500, results: [], cursor: { top: null, bottom: null } };
