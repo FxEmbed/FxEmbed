@@ -26,3 +26,33 @@ test('Status response robot (trailing slash/query string and extra characters)',
   );
   expect(result.status).toEqual(200);
 });
+
+test('Status response robot (Discord spoiler on translated URL)', async () => {
+  const result = await app.request(
+    new Request('https://fxtwitter.com/jack/status/20/en||', {
+      method: 'GET',
+      headers: botHeaders
+    }),
+    undefined,
+    harness
+  );
+  expect(result.status).toEqual(200);
+  const text = await result.text();
+  expect(text).not.toMatch(/Owie, you crashed/);
+  expect(text).toMatch(/application\/activity\+json/);
+});
+
+test('Status response robot (percent-encoded Discord spoiler on translated URL)', async () => {
+  const result = await app.request(
+    new Request('https://fxtwitter.com/jack/status/20/en%7C%7C', {
+      method: 'GET',
+      headers: botHeaders
+    }),
+    undefined,
+    harness
+  );
+  expect(result.status).toEqual(200);
+  const text = await result.text();
+  expect(text).not.toMatch(/Owie, you crashed/);
+  expect(text).toMatch(/application\/activity\+json/);
+});

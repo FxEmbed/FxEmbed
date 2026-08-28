@@ -5,11 +5,11 @@ export const buildLanguageHeaders = (
   if (typeof language !== 'string') {
     return undefined;
   }
-  const cleaned = language.trim().toLowerCase();
-  if (cleaned.length === 0) {
+  const normalized = normalizeLanguage(language);
+  if (normalized.length === 0) {
     return undefined;
   }
-  return { 'x-twitter-client-language': normalizeLanguage(cleaned) };
+  return { 'x-twitter-client-language': normalized };
 };
 
 /**
@@ -38,8 +38,16 @@ export const isTranslatableLanguageCode = (language: string | null | undefined):
   return !NON_TRANSLATABLE_LANGUAGE_CODES.has(trimmed.toLowerCase());
 };
 
+/** Leading ISO language token (`en`, `zh-tw`, `zh-hant`). */
+const LANGUAGE_TOKEN = /^[a-z]{2,3}(?:-[a-z]{2,4})?/;
+
 export const normalizeLanguage = (language: string) => {
-  language = language.trim().toLowerCase();
+  // Discord spoiler-wrapped links append `||` to the path (`/status/id/en||`).
+  language = language.trim().toLowerCase().replace(/\|+/g, '');
+  const token = language.match(LANGUAGE_TOKEN);
+  if (token) {
+    language = token[0];
+  }
   switch (language) {
     case 'zh':
     case 'cn':
