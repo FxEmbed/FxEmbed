@@ -160,6 +160,9 @@ export async function threadsPrivateApiRequest(
           method: options.method ?? 'GET',
           headers,
           body: options.method === 'POST' ? (options.body ?? '') : undefined,
+          // Never follow redirects with account cookies — a 3xx to another origin would
+          // leak sessionid. Fetch throws TypeError on redirect, which rotates accounts.
+          redirect: 'error',
           signal
         });
         if (!response.ok) {

@@ -233,4 +233,43 @@ describe('threads account proxy', () => {
     // withTimeout retries the whole fetch+body read 4 times (initial + 3) before rotating.
     expect(fetchSpy).toHaveBeenCalledTimes(5);
   });
+
+  it('refuses to follow redirects when sending account cookies', async () => {
+    installProxyRuntime([webAccount]);
+    const fetchSpy = vi.fn(async (_url: string, init: RequestInit) => {
+      expect(init.redirect).toBe('error');
+      return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+
+    const res = await threadsPrivateApiRequest('fbsearch/text_app/trends/', {
+      credentialKey: 'key'
+    });
+    expect(res.ok).toBe(true);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy.mock.calls[0][1]).toMatchObject({
+      method: 'GET',
+      redirect: 'error'
+    });
+  });
+
+  it('treats a redirect TypeError as a failed request and rotates', async () => {
+    installProxyRuntime([webAccount, androidAccount]);
+    const fetchSpy = vi.fn(async (_url: string, init: RequestInit) => {
+      expect(init.redirect).toBe('error');
+      const cookie = String((init.headers as Record<string, string>)['Cookie']);
+      if (cookie.includes('web-session')) {
+        throw new TypeError('Failed to fetch');
+      }
+      return new Response(JSON.stringify({ status: 'ok', items: [] }), { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+
+    const res = await threadsPrivateApiRequest('fbsearch/text_app/trends/', {
+      credentialKey: 'key'
+    });
+    expect(res.ok).toBe(true);
+    expect(res.accountUsed).toBe('android_account');
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
 });
