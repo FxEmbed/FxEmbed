@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   decodeThreadsConversationCursor,
   decodeThreadsProfileTimelineCursor,
+  decodeThreadsSearchCursor,
   encodeThreadsConversationCursor,
-  encodeThreadsProfileTimelineCursor
+  encodeThreadsProfileTimelineCursor,
+  encodeThreadsSearchCursor
 } from '@fxembed/atmosphere/providers/threads/cursors';
 
 describe('threads conversation cursor', () => {
@@ -74,5 +76,25 @@ describe('threads profile timeline cursor', () => {
       after: 'QVFD',
       count: 11
     });
+  });
+});
+
+describe('threads search cursor', () => {
+  it('round-trips UTF-8 query text', () => {
+    const payload = {
+      v: 1 as const,
+      q: 'café 日本語 🧵',
+      r: false,
+      t: 'PAGE2',
+      rt: 'RANK',
+      p: 1,
+      c: 20
+    };
+    expect(decodeThreadsSearchCursor(encodeThreadsSearchCursor(payload))).toEqual(payload);
+  });
+
+  it('returns null for invalid input', () => {
+    expect(decodeThreadsSearchCursor('not-a-cursor')).toBeNull();
+    expect(decodeThreadsSearchCursor('')).toBeNull();
   });
 });

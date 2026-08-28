@@ -174,7 +174,12 @@ export function decodeThreadsSearchCursor(raw: string): ThreadsSearchCursorV1 | 
   const json = b64urlDecode(raw);
   if (!json) return null;
   try {
-    const o = JSON.parse(json) as Partial<ThreadsSearchCursorV1>;
+    const bytes = new Uint8Array(json.length);
+    for (let i = 0; i < json.length; i++) {
+      bytes[i] = json.charCodeAt(i);
+    }
+    const text = new TextDecoder('utf-8').decode(bytes);
+    const o = JSON.parse(text) as Partial<ThreadsSearchCursorV1>;
     if (o.v !== 1 || typeof o.q !== 'string' || typeof o.r !== 'boolean') return null;
     if (!validCount(o.c)) return null;
     if (typeof o.p !== 'number' || !Number.isFinite(o.p) || o.p < 0) return null;
