@@ -149,9 +149,9 @@ export async function threadsPrivateApiRequest(
       headers['Content-Type'] = 'application/x-www-form-urlencoded';
     }
     let res: Response;
-    let text = '';
+    let text: string;
     let parsed: unknown;
-    let parseFailed = false;
+    let parseFailed: boolean;
     try {
       // Fetch can resolve on headers; keep body read + JSON.parse inside the timeout so a
       // stalled body aborts and rotates instead of hanging the request.
