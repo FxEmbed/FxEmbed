@@ -89,6 +89,7 @@ jobs:
           ATMOSPHERE_API_HOST_LIST: ${{ vars.ATMOSPHERE_API_HOST_LIST }}
           TWITTER_ROOT: ${{ vars.TWITTER_ROOT }}
           INSTAGRAM_ROOT: ${{ vars.INSTAGRAM_ROOT }}
+          INSTAGRAM_API_ROOT: ${{ vars.INSTAGRAM_API_ROOT }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}

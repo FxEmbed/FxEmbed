@@ -1,9 +1,11 @@
+import { resolveInstagramAccounts, type InstagramRequestContext } from './account-proxy.js';
 import {
   fetchInstagramHtml,
   fetchInstagramSession,
   fetchPolarisPostGraphql,
   fetchRulingForContent
 } from './client.js';
+import { fetchPrivateMediaInfo } from './private-api.js';
 import {
   extractLsdFromHtml,
   extractPolarisProductFromGraphqlJson,
@@ -20,7 +22,7 @@ export type InstagramWebInfoPage =
       item: Record<string, unknown>;
       pathUsed: string;
       comments: PolarisMediaBundle['comments'];
-      source: 'polaris-graphql' | 'polaris-html' | 'web-info-html';
+      source: 'account-proxy' | 'polaris-graphql' | 'polaris-html' | 'web-info-html';
       /** Session/doc LSD for GraphQL comment pagination (Polaris GraphQL has no HTML to parse). */
       lsd: string | null;
     }
@@ -35,6 +37,15 @@ export type InstagramWebInfoPage =
       lsd: null;
     };
 
+/** `media/{pk}/info/` answers with a one-element `items` array. */
+function firstMediaItem(json: unknown): Record<string, unknown> | null {
+  if (!json || typeof json !== 'object') return null;
+  const items = (json as { items?: unknown }).items;
+  if (!Array.isArray(items) || items.length === 0) return null;
+  const first = items[0];
+  return first && typeof first === 'object' ? (first as Record<string, unknown>) : null;
+}
+
 function isLoginRedirect(finalUrl: string | undefined): boolean {
   if (!finalUrl) return false;
   try {
@@ -46,7 +57,11 @@ function isLoginRedirect(finalUrl: string | undefined): boolean {
 }
 
 /**
- * Fetches logged-out Instagram post media using the yt-dlp Polaris path:
+ * Fetches Instagram post media.
+ *
+ * When an account proxy is configured, `media/{pk}/info/` is tried first: it is one request instead
+ * of three and returns media that the logged-out surfaces gate (age-restricted posts, and the
+ * higher-quality video renditions). Everything after that is the logged-out yt-dlp Polaris path:
  *
  * 1. Homepage session (cookies + LSD from `__eqmc`)
  * 2. Optional `get_ruling_for_content` warm-up
@@ -57,18 +72,46 @@ function isLoginRedirect(finalUrl: string | undefined): boolean {
  */
 export async function fetchInstagramPageWithWebInfo(
   shortcode: string,
-  userAgent: string | undefined
+  userAgent: string | undefined,
+  ctx?: InstagramRequestContext
 ): Promise<InstagramWebInfoPage> {
+  let mediaIdForProxy: string | null;
+  try {
+    mediaIdForProxy = String(instagramShortcodeToPk(shortcode));
+  } catch {
+    mediaIdForProxy = null;
+  }
+
+  if (mediaIdForProxy) {
+    const accounts = await resolveInstagramAccounts(ctx);
+    if (accounts.length) {
+      const info = await fetchPrivateMediaInfo(mediaIdForProxy, ctx, { accounts, shortcode });
+      const item = info.ok ? firstMediaItem(info.json) : null;
+      if (item) {
+        return {
+          ok: true,
+          status: info.status,
+          html: '',
+          item,
+          pathUsed: `/p/${encodeURIComponent(shortcode)}/`,
+          comments: null,
+          source: 'account-proxy',
+          lsd: null
+        };
+      }
+      /*
+       * Deliberately no short-circuit on 404 here: a proxy account that the poster has blocked
+       * gets a 404 for a post that is perfectly visible logged-out. Falling through costs one
+       * wasted request on genuinely deleted posts, which the logged-out path reports as 404 anyway.
+       */
+    }
+  }
+
   const session = await fetchInstagramSession(userAgent);
   const cookies = session?.cookieHeader ?? '';
   const htmlOpts = cookies ? { cookies } : undefined;
 
-  let mediaId: string | null;
-  try {
-    mediaId = String(instagramShortcodeToPk(shortcode));
-  } catch {
-    mediaId = null;
-  }
+  const mediaId = mediaIdForProxy;
 
   // Prefer GraphQL when we have a full session; ignore failures (common without TLS impersonation).
   if (session && mediaId && session.lsd) {

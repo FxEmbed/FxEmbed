@@ -67,3 +67,38 @@ export const THREADS_RELAY_DEFAULTS: Record<string, boolean> = {
   __relay_internal__pv__BarcelonaShouldShowFediverseM075Featuresrelayprovider: false,
   __relay_internal__pv__BarcelonaIsInternalUserrelayprovider: false
 };
+
+/*
+ * Threads Android app constants, read out of a decompiled `com.instagram.barcelona` build
+ * (445.0.0.2.83, versionCode 511505005). The app ships the same `InstagramSpecificHeaderServiceLayer`
+ * as Instagram but stamps its own `X-IG-App-ID`, so a proxied Threads request is an Instagram
+ * session presenting the Barcelona fingerprint.
+ */
+
+/** Threads (Barcelona) app id. Distinct from Instagram's — `X-IG-App-ID` on every app request. */
+export const THREADS_ANDROID_APP_ID = '3419628305025917';
+
+/** `X-IG-Capabilities` the app sends; identical to the Instagram build's. */
+export const THREADS_ANDROID_CAPABILITIES = '3brTv10=';
+
+export const THREADS_ANDROID_VERSION_NAME = '445.0.0.2.83';
+export const THREADS_ANDROID_VERSION_CODE = '511505005';
+
+/**
+ * Android `User-Agent`, in the app's own
+ * `Barcelona <version> Android (<sdk>/<release>; <dpi>dpi; <w>x<h>; <maker>; <model>; <device>; <chipset>; <locale>; <versionCode>)`
+ * shape (built by `AbstractC870503bB.A00` from the `"%s %s Android %s"` /
+ * `"(%s/%s; %s; %s; %s; %s; %s; %s; %s)"` format strings — the maker slot collapses to one value
+ * when `Build.MANUFACTURER` equals `Build.BRAND`, which it does on the device modelled here).
+ * Kept as one fixed, plausible device so a proxied session presents a stable fingerprint.
+ */
+export const THREADS_ANDROID_USER_AGENT =
+  `Barcelona ${THREADS_ANDROID_VERSION_NAME} Android (34/14; 420dpi; 1080x2340; ` +
+  `samsung; SM-S911B; dm1q; qcom; en_US; ${THREADS_ANDROID_VERSION_CODE})`;
+
+/** Private API prefix shared with Instagram (`i.instagram.com/api/v1/…`). */
+export const THREADS_API_V1 = '/api/v1';
+
+/** `search_surface` values the app sends to `fbsearch/text_app/serp/` (`X.03cj`). */
+export const THREADS_SEARCH_SURFACE_TOP = 'ig_text_search_serp_top';
+export const THREADS_SEARCH_SURFACE_RECENT = 'ig_text_search_serp_recent';

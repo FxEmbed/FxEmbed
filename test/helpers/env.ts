@@ -28,6 +28,7 @@ export const WORKER_TEST_PROCESS_ENV = {
   SENTRY_DSN: '',
   TWITTER_ROOT: 'https://x.com',
   INSTAGRAM_ROOT: 'https://www.instagram.com',
+  INSTAGRAM_API_ROOT: 'https://i.instagram.com',
   ENCRYPTED_CREDENTIALS: '',
   CREDENTIALS_IV: ''
 } as const satisfies Record<string, string>;

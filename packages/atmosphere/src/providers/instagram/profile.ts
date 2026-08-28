@@ -3,17 +3,24 @@ import type {
   APISearchResultsInstagram,
   UserAPIResponse
 } from '../../types/api-schemas.js';
+import { resolveInstagramAccounts, type InstagramRequestContext } from './account-proxy.js';
 import {
   fetchInstagramCsrfToken,
   fetchTimelineGraphqlPage,
   fetchWebProfileInfo
 } from './client.js';
 import {
+  decodeMaxIdCursor,
   decodeProfileCursor,
+  encodeMaxIdCursor,
   encodeProfileCursor,
+  sameInstagramHandle,
   type InstagramProfileCursorV1
 } from './cursors.js';
-import { edgeNodeToStatus, fullUserFromWebProfile } from './processor.js';
+import { fetchPrivateUserFeed } from './private-api.js';
+import { mediaItemsFromPrivateFeed, nextMaxIdFromPrivateResponse } from './private-processor.js';
+import { edgeNodeToStatus, instagramNodeToStatus } from './processor.js';
+import { resolveInstagramUser } from './resolve-user.js';
 
 function getWebProfileUser(json: unknown): Record<string, unknown> | null {
   const root = json as { data?: { user?: unknown } };
@@ -156,18 +163,69 @@ function parseFelixGraphql(json: unknown): {
 
 export async function constructInstagramProfile(
   username: string,
-  userAgent: string | undefined
+  userAgent: string | undefined,
+  options: { credentialKey?: string } = {}
 ): Promise<UserAPIResponse> {
-  const res = await fetchWebProfileInfo(username, userAgent);
-  if (!res.ok) {
-    if (res.status === 404) return { code: 404, message: 'User not found' };
+  const ctx: InstagramRequestContext = { userAgent, credentialKey: options.credentialKey };
+  const resolved = await resolveInstagramUser(username, ctx);
+  if (resolved.code === 404) return { code: 404, message: 'User not found' };
+  if (resolved.code !== 200 || !resolved.user) {
     return { code: 500, message: 'Instagram profile request failed' };
   }
-  const user = fullUserFromWebProfile(res.json as Record<string, unknown>);
-  if (!user) {
-    return { code: 404, message: 'User not found' };
+  return { code: 200, message: 'OK', user: resolved.user };
+}
+
+/**
+ * One page of a profile's own posts through the account proxy (`feed/user/{pk}/`).
+ * `videosOnly` filters the page after the fact — Instagram has no logged-in reels-tab REST
+ * endpoint, so a page can come back with fewer than `count` results while still paginating.
+ */
+async function privateFeedPage(params: {
+  userId: string;
+  username: string;
+  count: number;
+  maxId: string | null;
+  videosOnly: boolean;
+  ctx: InstagramRequestContext;
+  accounts: Awaited<ReturnType<typeof resolveInstagramAccounts>>;
+}): Promise<APISearchResultsInstagram> {
+  const res = await fetchPrivateUserFeed(params.userId, params.ctx, {
+    accounts: params.accounts,
+    count: params.count,
+    maxId: params.maxId,
+    username: params.username
+  });
+  if (!res.ok) {
+    return {
+      code: res.status === 404 ? 404 : 500,
+      results: [],
+      cursor: { top: null, bottom: null }
+    };
   }
-  return { code: 200, message: 'OK', user };
+
+  const ownerFallback = { id: params.userId, username: params.username };
+  const results: APIInstagramStatus[] = [];
+  for (const item of mediaItemsFromPrivateFeed(res.json)) {
+    if (results.length >= params.count) break;
+    if (params.videosOnly && !nodeShowsVideoInGrid(item)) continue;
+    const status = instagramNodeToStatus(item, ownerFallback, {
+      userAgent: params.ctx.userAgent
+    });
+    if (status) results.push(status);
+  }
+
+  const nextMaxId = nextMaxIdFromPrivateResponse(res.json);
+  const bottom = nextMaxId
+    ? encodeMaxIdCursor({
+        v: 1,
+        k: 'feed',
+        id: params.userId,
+        u: params.username,
+        m: nextMaxId,
+        c: params.count
+      })
+    : null;
+  return { code: 200, results, cursor: { top: null, bottom } };
 }
 
 async function timelinePageFromGraphql(
@@ -225,11 +283,62 @@ async function timelinePageFromGraphql(
   return { code: 200, results, cursor: { top: null, bottom } };
 }
 
+/**
+ * Shared account-proxy entry for the profile grid / reels tab. Returns `null` when the request
+ * should fall through to the logged-out web path (no proxy, or the cursor belongs to it).
+ */
+async function tryPrivateProfileFeed(
+  username: string,
+  videosOnly: boolean,
+  options: { count: number; cursor: string | null; userAgent?: string; credentialKey?: string }
+): Promise<APISearchResultsInstagram | null> {
+  const ctx: InstagramRequestContext = {
+    userAgent: options.userAgent,
+    credentialKey: options.credentialKey
+  };
+  const accounts = await resolveInstagramAccounts(ctx);
+  if (!accounts.length) return null;
+
+  if (options.cursor) {
+    const decoded = decodeMaxIdCursor(options.cursor);
+    // A profile cursor from the logged-out path is still valid; let the caller handle it.
+    if (!decoded || decoded.k !== 'feed' || !sameInstagramHandle(decoded.u, username)) return null;
+    return privateFeedPage({
+      userId: decoded.id,
+      username,
+      count: decoded.c,
+      maxId: decoded.m,
+      videosOnly,
+      ctx,
+      accounts
+    });
+  }
+
+  const resolved = await resolveInstagramUser(username, ctx, { accounts });
+  if (resolved.code === 404) {
+    return { code: 404, results: [], cursor: { top: null, bottom: null } };
+  }
+  if (resolved.code !== 200 || !resolved.user) return null;
+
+  const page = await privateFeedPage({
+    userId: resolved.user.id,
+    username,
+    count: Math.min(100, Math.max(1, Math.floor(options.count))),
+    maxId: null,
+    videosOnly,
+    ctx,
+    accounts
+  });
+  return page.code === 200 ? page : null;
+}
+
 export async function constructInstagramProfileStatuses(
   username: string,
-  options: { count: number; cursor: string | null; userAgent?: string }
+  options: { count: number; cursor: string | null; userAgent?: string; credentialKey?: string }
 ): Promise<APISearchResultsInstagram> {
   const count = Math.min(100, Math.max(1, Math.floor(options.count)));
+  const proxied = await tryPrivateProfileFeed(username, false, options);
+  if (proxied) return proxied;
   if (options.cursor) {
     const decoded = decodeProfileCursor(options.cursor);
     if (!decoded || decoded.k !== 't') {
@@ -270,9 +379,11 @@ export async function constructInstagramProfileStatuses(
 
 export async function constructInstagramProfileVideos(
   username: string,
-  options: { count: number; cursor: string | null; userAgent?: string }
+  options: { count: number; cursor: string | null; userAgent?: string; credentialKey?: string }
 ): Promise<APISearchResultsInstagram> {
   const count = Math.min(100, Math.max(1, Math.floor(options.count)));
+  const proxied = await tryPrivateProfileFeed(username, true, options);
+  if (proxied) return proxied;
   if (options.cursor) {
     const decoded = decodeProfileCursor(options.cursor);
     if (!decoded || decoded.k !== 'r') {

@@ -24,6 +24,8 @@ declare namespace NodeJS {
     PBS_PROXY_DOMAIN_LIST?: string;
     TWITTER_ROOT?: string;
     INSTAGRAM_ROOT?: string;
+    /** Instagram private API origin used by the account proxy. */
+    INSTAGRAM_API_ROOT?: string;
     SENTRY_DSN?: string;
     RELEASE_NAME?: string;
     /** Inlined from credentials.enc.json at build (see esbuild.config.mjs). */
