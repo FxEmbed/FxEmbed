@@ -18,7 +18,11 @@ import {
   blueskyProfileFollowersAPI,
   blueskyProfileFollowingAPI
 } from '@fxembed/atmosphere/providers/bluesky/profileFollowers';
-import { blueskySearchAPI } from '@fxembed/atmosphere/providers/bluesky/search';
+import {
+  blueskySearchAPI,
+  blueskySearchUsersAPI,
+  blueskyTypeaheadAPI
+} from '@fxembed/atmosphere/providers/bluesky/search';
 import { blueskyTrendsAPI } from '@fxembed/atmosphere/providers/bluesky/trends';
 import { blueskyStatusLikesAPI } from '@fxembed/atmosphere/providers/bluesky/statusLikes';
 import { blueskyStatusRepostsAPI } from '@fxembed/atmosphere/providers/bluesky/statusReposts';
@@ -30,8 +34,10 @@ import {
   blueskyProfileMediaV2Route,
   blueskyProfileStatusesV2Route,
   blueskyProfileV2Route,
+  blueskySearchUsersV2Route,
   blueskySearchV2Route,
   blueskyTrendsV2Route,
+  blueskyTypeaheadV2Route,
   blueskyStatusLikesV2Route,
   blueskyStatusRepostsV2Route,
   blueskyStatusV2Route,
@@ -211,6 +217,50 @@ export const blueskySearchAPIRequest: RouteHandler<typeof blueskySearchV2Route> 
     c.header(header, value);
   }
   return jsonAfterNormalize<typeof blueskySearchV2Route>(c, payload, httpStatus);
+};
+
+export const blueskySearchUsersAPIRequest: RouteHandler<
+  typeof blueskySearchUsersV2Route
+> = async c => {
+  const query = c.req.valid('query');
+  const searchResponse = await blueskySearchUsersAPI(
+    {
+      q: query.q,
+      count: query.count ?? 30,
+      cursor: query.cursor ?? null
+    },
+    { credentialKey: c.env?.CREDENTIAL_KEY }
+  );
+
+  const { httpStatus, payload } = normalizeApiJsonResponse(
+    searchResponse,
+    [200, 400, 404, 500] as const,
+    'blueskySearchUsersAPIRequest'
+  );
+  c.status(httpStatus);
+  for (const [header, value] of Object.entries(Constants.API_RESPONSE_HEADERS)) {
+    c.header(header, value);
+  }
+  return jsonAfterNormalize<typeof blueskySearchUsersV2Route>(c, payload, httpStatus);
+};
+
+export const blueskyTypeaheadAPIRequest: RouteHandler<typeof blueskyTypeaheadV2Route> = async c => {
+  const query = c.req.valid('query');
+  const response = await blueskyTypeaheadAPI(
+    { q: query.q, count: query.count ?? 8 },
+    { credentialKey: c.env?.CREDENTIAL_KEY }
+  );
+
+  const { httpStatus, payload } = normalizeApiJsonResponse(
+    response,
+    [200, 400, 404, 500] as const,
+    'blueskyTypeaheadAPIRequest'
+  );
+  c.status(httpStatus);
+  for (const [header, value] of Object.entries(Constants.API_RESPONSE_HEADERS)) {
+    c.header(header, value);
+  }
+  return jsonAfterNormalize<typeof blueskyTypeaheadV2Route>(c, payload, httpStatus);
 };
 
 export const blueskyTrendsAPIRequest: RouteHandler<typeof blueskyTrendsV2Route> = async c => {

@@ -6,9 +6,17 @@ import { isTombstone } from '../../helpers/tombstone.js';
 import {
   isSearchTimelineClientErrorResponse,
   parseSearchTimelineClientError,
-  searchTimelineClientErrorToApiQueryError
+  searchQueryTooLongError,
+  searchTimelineClientErrorToApiQueryError,
+  TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH
 } from './searchErrors.js';
-import type { APISearchResults, APITwitterStatus, ApiQueryError } from '../../types/api-schemas.js';
+import type {
+  APISearchResults,
+  APITwitterStatus,
+  APIUserListResults,
+  ApiQueryError
+} from '../../types/api-schemas.js';
+import { convertToApiUser } from './profile.js';
 import type { FetchResults } from '../../types/fetch-results.js';
 import type { TwitterBuildHost } from './build-host.js';
 
@@ -436,6 +444,10 @@ export const searchAPI = async (
   host: TwitterBuildHost,
   language?: string
 ): Promise<APISearchResults | ApiQueryError> => {
+  if (query.length > TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH) {
+    return searchQueryTooLongError(query.length);
+  }
+
   const product = feedToProduct(feed);
 
   let response: TwitterSearchTimelineResponse | null;
@@ -497,6 +509,69 @@ export const searchAPI = async (
     cursor: {
       top: topCursor,
       bottom: bottomCursor
+    }
+  };
+};
+
+/**
+ * People search — the same `SearchTimeline` query with `product: 'People'`, which returns
+ * `TimelineUser` rows instead of tweets. Reuses the follower/reposter row extractor, so the
+ * envelope matches `/2/profile/{handle}/followers` and a client renders one profile list.
+ */
+export const searchUsersAPI = async (
+  query: string,
+  count: number,
+  cursor: string | null,
+  host: TwitterBuildHost,
+  language?: string
+): Promise<APIUserListResults | ApiQueryError> => {
+  if (query.length > TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH) {
+    return searchQueryTooLongError(query.length);
+  }
+
+  let response: TwitterSearchTimelineResponse | null;
+
+  try {
+    response = (await graphqlRequest(host, {
+      query: SearchTimelineQuery,
+      variables: {
+        rawQuery: query,
+        count,
+        product: 'People',
+        cursor: cursor ?? null
+      },
+      headers: buildLanguageHeaders(language),
+      validator: (_response: unknown) => {
+        if (isSearchTimelineClientErrorResponse(_response)) {
+          return true;
+        }
+        const r = _response as TwitterSearchTimelineResponse;
+        return Array.isArray(r?.data?.search_by_raw_query?.search_timeline?.timeline?.instructions);
+      }
+    })) as TwitterSearchTimelineResponse;
+  } catch (e) {
+    console.error('User search request failed', e);
+    return { code: 500, results: [], cursor: { top: null, bottom: null } };
+  }
+
+  const clientError = parseSearchTimelineClientError(response);
+  if (clientError) {
+    return searchTimelineClientErrorToApiQueryError(clientError);
+  }
+
+  const instructions = response?.data?.search_by_raw_query?.search_timeline?.timeline?.instructions;
+  if (!instructions) {
+    return { code: 404, results: [], cursor: { top: null, bottom: null } };
+  }
+
+  const { users, cursors } = processUserRelationshipTimelineInstructionsImpl(instructions);
+
+  return {
+    code: 200,
+    results: users.map(user => convertToApiUser(user)),
+    cursor: {
+      top: cursors.find(cur => cur.cursorType === 'Top')?.value ?? null,
+      bottom: cursors.find(cur => cur.cursorType === 'Bottom')?.value ?? null
     }
   };
 };

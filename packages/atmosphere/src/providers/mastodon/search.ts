@@ -1,6 +1,15 @@
-import type { APIMastodonStatus, APISearchResultsMastodon } from '../../types/api-schemas.js';
-import { assertSafeMastodonDomain, nextMaxIdFromLinkHeader, searchStatuses } from './client.js';
-import { buildAPIMastodonPost } from './processor.js';
+import type {
+  APIMastodonStatus,
+  APISearchResultsMastodon,
+  APIUserListResults
+} from '../../types/api-schemas.js';
+import {
+  assertSafeMastodonDomain,
+  nextMaxIdFromLinkHeader,
+  searchAccounts,
+  searchStatuses
+} from './client.js';
+import { buildAPIMastodonPost, mastodonAccountToApiUser } from './processor.js';
 import type { MastodonBuildHost } from './build-host.js';
 
 const decodeCursor = (cursor: string | null): { max_id?: string; offset?: number } | undefined => {
@@ -112,5 +121,49 @@ export const mastodonSearchAPI = async (
     code: 200,
     results,
     cursor: { top: null, bottom }
+  };
+};
+
+/**
+ * People search via `GET /api/v2/search?type=accounts`.
+ *
+ * Mastodon has no cross-instance account index, so results are whatever the queried instance has
+ * already federated. A large, well-connected instance therefore finds far more accounts than a
+ * small one — the domain the caller picks is the search corpus, not just the transport.
+ *
+ * Single page by design: Mastodon serves the first page of search to anonymous callers but
+ * answers any `offset` with 401 ("Search queries pagination is not supported without
+ * authentication"), and Atmosphere talks to instances unauthenticated. Emitting a cursor here
+ * would only hand the caller a "load more" that always fails, so `cursor.bottom` stays null.
+ */
+export const mastodonSearchUsersAPI = async (
+  domain: string,
+  options: {
+    q: string;
+    count: number;
+  }
+): Promise<APIUserListResults> => {
+  try {
+    assertSafeMastodonDomain(domain);
+  } catch {
+    return { code: 400, results: [], cursor: { top: null, bottom: null } };
+  }
+
+  const result = await searchAccounts(domain, options.q, { limit: options.count });
+
+  if (!result.ok) {
+    if (result.status === 401) {
+      return { code: 401, results: [], cursor: { top: null, bottom: null } };
+    }
+    if (result.status === 404 || result.status === 400) {
+      return { code: 404, results: [], cursor: { top: null, bottom: null } };
+    }
+    return { code: 500, results: [], cursor: { top: null, bottom: null } };
+  }
+
+  return {
+    code: 200,
+    results: (result.data.accounts ?? []).map(a => mastodonAccountToApiUser(a, domain)),
+    cursor: { top: null, bottom: null }
   };
 };

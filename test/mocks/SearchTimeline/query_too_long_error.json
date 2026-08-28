@@ -1,0 +1,21 @@
+{
+  "errors": [
+    {
+      "message": "BadRequest: Raw query length 2268 exceeds max allowed 512",
+      "locations": [{ "line": 4, "column": 7 }],
+      "path": ["search_by_raw_query", "search_timeline", "timeline"],
+      "extensions": {
+        "name": "BadRequestError",
+        "source": "Client",
+        "code": 214,
+        "kind": "Validation",
+        "tracing": { "trace_id": "00000000000000000000000000000000" }
+      },
+      "code": 214,
+      "kind": "Validation",
+      "name": "BadRequestError",
+      "source": "Client"
+    }
+  ],
+  "data": {}
+}

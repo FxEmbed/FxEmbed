@@ -1,6 +1,7 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import {
   APIProfileRelationshipListSchema,
+  APITypeaheadResponseSchema,
   APIUserListResultsSchema,
   ApiQueryErrorSchema,
   APISearchResultsBlueskySchema,
@@ -310,6 +311,86 @@ export const blueskySearchV2Route = createRoute({
     500: {
       description: 'Upstream or processing error',
       content: { 'application/json': { schema: APISearchResultsBlueskySchema } }
+    }
+  }
+});
+
+export const blueskySearchUsersV2Route = createRoute({
+  method: 'get',
+  path: '/2/search/users',
+  summary: 'Search people',
+  description:
+    'Search accounts via Bluesky `app.bsky.actor.searchActors`. Same envelope as `/2/profile/{handle}/followers` (`code`, `results`, `cursor`); pass `cursor.bottom` back as `cursor` for the next page. Rows come from `#profileView`, which carries no counts, so `followers`, `following`, and `statuses` are 0 — fetch `/2/profile/{handle}` for a full profile.',
+  request: {
+    query: z.object({
+      q: blueskySearchQueryString({
+        description: 'Search query (non-empty)',
+        example: 'jay'
+      }),
+      count: z.coerce.number().int().min(1).max(100).optional().openapi({
+        description: 'Page size (default 30)',
+        default: 30
+      }),
+      cursor: z
+        .string()
+        .optional()
+        .openapi({ description: 'Pagination cursor from prior response (`cursor.bottom`)' })
+    })
+  },
+  responses: {
+    200: {
+      description: 'Matching accounts',
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
+    },
+    400: {
+      description: 'Invalid `q` parameter',
+      content: { 'application/json': { schema: ApiQueryErrorSchema } }
+    },
+    404: {
+      description: 'No results or search unavailable',
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
+    },
+    500: {
+      description: 'Upstream or processing error',
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
+    }
+  }
+});
+
+export const blueskyTypeaheadV2Route = createRoute({
+  method: 'get',
+  path: '/2/typeahead',
+  summary: 'Search typeahead suggestions',
+  description:
+    'Account autocomplete via Bluesky `app.bsky.actor.searchActorsTypeahead`, in the same envelope as FxTwitter `GET /2/typeahead`. Bluesky indexes only accounts for autocomplete, so `topics` and `events` are always empty. Unpaginated by design — use `/2/search/users` for a full, cursored people search.',
+  request: {
+    query: z.object({
+      q: blueskySearchQueryString({
+        description: 'Prefix or query string',
+        example: 'jac'
+      }),
+      count: z.coerce.number().int().min(1).max(50).optional().openapi({
+        description: 'Maximum suggestions (default 8)',
+        default: 8
+      })
+    })
+  },
+  responses: {
+    200: {
+      description: 'Typeahead payload',
+      content: { 'application/json': { schema: APITypeaheadResponseSchema } }
+    },
+    400: {
+      description: 'Invalid `q` parameter',
+      content: { 'application/json': { schema: ApiQueryErrorSchema } }
+    },
+    404: {
+      description: 'No suggestions or upstream returned an error payload',
+      content: { 'application/json': { schema: APITypeaheadResponseSchema } }
+    },
+    500: {
+      description: 'Upstream or processing error',
+      content: { 'application/json': { schema: APITypeaheadResponseSchema } }
     }
   }
 });

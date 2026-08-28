@@ -5,6 +5,10 @@ import {
   type PublicExploreTimelineKind
 } from '@fxembed/atmosphere/providers/twitter/trends';
 import {
+  formatSearchQueryTooLongMessage,
+  TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH
+} from '@fxembed/atmosphere/providers/twitter/searchErrors';
+import {
   APIProfileRelationshipListSchema,
   APIUserListResultsSchema,
   APISearchResultsSchema,
@@ -22,13 +26,27 @@ import {
 const twitterSearchQueryHasEffectiveContent = (raw: string): boolean =>
   raw.replace(/_/g, '').trim().length > 0;
 
-const twitterSearchQueryString = (openapiMeta: { description: string; example: string }) =>
-  z
+const twitterSearchQueryString = (openapiMeta: {
+  description: string;
+  example: string;
+  maxLength?: number;
+}) => {
+  const maxLength = openapiMeta.maxLength;
+  return z
     .string()
     .refine(twitterSearchQueryHasEffectiveContent, {
       message: 'Search query must not be empty'
     })
+    .superRefine((value, ctx) => {
+      if (maxLength !== undefined && value.length > maxLength) {
+        ctx.addIssue({
+          code: 'custom',
+          message: formatSearchQueryTooLongMessage(value.length)
+        });
+      }
+    })
     .openapi(openapiMeta);
+};
 
 const aboutAccountQuery = z.object({
   about_account: z.string().optional().openapi({
@@ -560,8 +578,9 @@ export const searchV2Route = createRoute({
   request: {
     query: z.object({
       q: twitterSearchQueryString({
-        description: 'Search query (non-empty)',
-        example: 'puppies'
+        description: `Search query (non-empty, max ${TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH} characters)`,
+        example: 'puppies',
+        maxLength: TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH
       }),
       feed: z.enum(['latest', 'top', 'media']).optional().openapi({
         description: 'Search tab (default latest)',
@@ -581,7 +600,7 @@ export const searchV2Route = createRoute({
       content: { 'application/json': { schema: APISearchResultsSchema } }
     },
     400: {
-      description: 'Invalid `q` parameter',
+      description: `Invalid \`q\` parameter (empty or longer than ${TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH} characters)`,
       content: { 'application/json': { schema: ApiQueryErrorSchema } }
     },
     404: {
@@ -591,6 +610,47 @@ export const searchV2Route = createRoute({
     500: {
       description: 'Upstream or processing error',
       content: { 'application/json': { schema: APISearchResultsSchema } }
+    }
+  }
+});
+
+export const searchUsersV2Route = createRoute({
+  method: 'get',
+  path: '/2/search/users',
+  summary: 'Search people',
+  description:
+    'Search accounts using the People tab of X search. Same envelope as `/2/profile/{handle}/followers` (`code`, `results`, `cursor`). Pass `cursor.bottom` back as `cursor` for the next page. `/2/typeahead` is the lighter, unpaginated autocomplete over the same corpus.',
+  request: {
+    query: z.object({
+      q: twitterSearchQueryString({
+        description: `Search query (non-empty, max ${TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH} characters)`,
+        example: 'jack',
+        maxLength: TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH
+      }),
+      count: z.coerce.number().int().min(1).max(100).optional().openapi({
+        description: 'Page size (default 30)',
+        default: 30
+      }),
+      cursor: z.string().optional(),
+      ...langQuery.shape
+    })
+  },
+  responses: {
+    200: {
+      description: 'Matching accounts',
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
+    },
+    400: {
+      description: `Invalid \`q\` parameter (empty or longer than ${TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH} characters)`,
+      content: { 'application/json': { schema: ApiQueryErrorSchema } }
+    },
+    404: {
+      description: 'No results or timeline unavailable',
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
+    },
+    500: {
+      description: 'Upstream or processing error',
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
     }
   }
 });

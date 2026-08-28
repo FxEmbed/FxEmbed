@@ -255,6 +255,43 @@ export const mastodonSearchV2Route = createRoute({
   }
 });
 
+export const mastodonSearchUsersV2Route = createRoute({
+  method: 'get',
+  path: '/2/mastodon/{domain}/search/users',
+  summary: 'Search accounts on an instance',
+  description:
+    'Uses Mastodon `GET /api/v2/search?type=accounts`, which (unlike the statuses half of the same endpoint) is served to unauthenticated callers. Same envelope as `/2/mastodon/{domain}/profile/{handle}/followers` (`code`, `results`, `cursor`). There is no cross-instance account index, so results are whatever `{domain}` has already federated — a large instance is a much larger corpus than a small one. Single page: Mastodon rejects any paginated search from an anonymous caller, so `cursor.bottom` is always null.',
+  request: {
+    params: domainParam,
+    query: z.object({
+      q: mastodonSearchQueryString({ description: 'Search query', example: 'gargron' }),
+      count: z.coerce.number().int().min(1).max(100).optional().openapi({ default: 30 })
+    })
+  },
+  responses: {
+    200: {
+      description: 'Matching accounts',
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
+    },
+    400: {
+      description: 'Invalid query',
+      content: { 'application/json': { schema: ApiQueryErrorSchema } }
+    },
+    401: {
+      description: 'Upstream requires authentication',
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
+    },
+    404: {
+      description: 'No results',
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
+    },
+    500: {
+      description: 'Upstream error',
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
+    }
+  }
+});
+
 export const mastodonProfileV2Route = createRoute({
   method: 'get',
   path: '/2/mastodon/{domain}/profile/{handle}',
