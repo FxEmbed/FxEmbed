@@ -97,6 +97,11 @@ export const handleStatus = async (
 ): Promise<Response> => {
   console.log('flags', JSON.stringify(flags));
 
+  if (typeof language === 'string') {
+    const normalized = normalizeLanguage(language);
+    language = normalized.length > 0 ? normalized : undefined;
+  }
+
   const isTelegram = (userAgent || '').indexOf('TelegramBot') > -1;
   const isDiscord = (userAgent || '').indexOf('Discordbot') > -1;
 
@@ -829,7 +834,7 @@ export const handleStatus = async (
       i: statusId
     };
     /* Convert necessary flags into snowcode data */
-    if (language !== status.lang) {
+    if (language && language !== status.lang) {
       data.l = language;
     }
     if (status.provider === DataProvider.Bluesky) {

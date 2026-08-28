@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest';
 import {
+  buildLanguageHeaders,
   isTranslatableLanguageCode,
   NON_TRANSLATABLE_LANGUAGE_CODES,
   normalizeLanguage,
@@ -32,6 +33,21 @@ test('isTranslatableLanguageCode rejects pseudo and unknown language codes', () 
   expect(isTranslatableLanguageCode('')).toBe(false);
   expect(isTranslatableLanguageCode(null)).toBe(false);
   expect(isTranslatableLanguageCode(undefined)).toBe(false);
+});
+
+test('normalizeLanguage strips Discord spoiler markers from language codes', () => {
+  expect(normalizeLanguage('en||')).toBe('en');
+  expect(normalizeLanguage('EN||')).toBe('en');
+  expect(normalizeLanguage('zh-tw||')).toBe('zh-tw');
+  expect(normalizeLanguage('zh-hant||')).toBe('zh-tw');
+  expect(normalizeLanguage('jp||')).toBe('ja');
+  expect(normalizeLanguage('en%7c%7c')).toBe('en');
+  expect(normalizeLanguage('||')).toBe('');
+});
+
+test('buildLanguageHeaders uses sanitized language codes', () => {
+  expect(buildLanguageHeaders('en||')).toEqual({ 'x-twitter-client-language': 'en' });
+  expect(buildLanguageHeaders('||')).toBeUndefined();
 });
 
 test('normalizeLanguage maps Traditional Chinese aliases to zh-tw', () => {
