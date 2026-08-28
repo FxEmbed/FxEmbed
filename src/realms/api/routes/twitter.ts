@@ -12,7 +12,7 @@ import {
   profileAboutAPI
 } from '@fxembed/atmosphere/providers/twitter/profile';
 import { attachAboutAccountData } from '@fxembed/atmosphere/providers/twitter/aboutAccount';
-import { searchAPI } from '@fxembed/atmosphere/providers/twitter/search';
+import { searchAPI, searchUsersAPI } from '@fxembed/atmosphere/providers/twitter/search';
 import {
   profileArticlesAPI,
   profileFollowersAPI,
@@ -38,6 +38,7 @@ import {
   profileAboutV2Route,
   profileStatusesV2Route,
   profileV2Route,
+  searchUsersV2Route,
   searchV2Route,
   statusV2Route,
   statusRepostsV2Route,
@@ -390,6 +391,29 @@ export const searchAPIRequest: RouteHandler<typeof searchV2Route> = async c => {
     c.header(header, value);
   }
   return jsonAfterNormalize<typeof searchV2Route>(c, payload, httpStatus);
+};
+
+export const searchUsersAPIRequest: RouteHandler<typeof searchUsersV2Route> = async c => {
+  const host = twitterBuildHostFromContext(c);
+  const query = c.req.valid('query');
+
+  const searchResponse = await searchUsersAPI(
+    query.q,
+    query.count ?? 30,
+    query.cursor ?? null,
+    host,
+    query.lang
+  );
+  const { httpStatus, payload } = normalizeApiJsonResponse(
+    searchResponse,
+    [200, 400, 404, 500] as const,
+    'searchUsersAPIRequest'
+  );
+  c.status(httpStatus);
+  for (const [header, value] of Object.entries(Constants.API_RESPONSE_HEADERS)) {
+    c.header(header, value);
+  }
+  return jsonAfterNormalize<typeof searchUsersV2Route>(c, payload, httpStatus);
 };
 
 export const trendsAPIRequest: RouteHandler<typeof trendsV2Route> = async c => {

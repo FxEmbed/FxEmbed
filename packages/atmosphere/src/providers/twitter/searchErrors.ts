@@ -1,6 +1,22 @@
 import type { ApiQueryError } from '../../types/api-schemas.js';
 
-export type SearchTimelineClientErrorKind = 'empty_query' | 'blocklisted';
+/** X SearchTimeline rejects `rawQuery` longer than this; match that cap on FxTwitter `/2/search`. */
+export const TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH = 512;
+
+export type SearchTimelineClientErrorKind = 'empty_query' | 'blocklisted' | 'query_too_long';
+
+const QUERY_TOO_LONG_RE = /Raw query length \d+ exceeds max allowed \d+/i;
+
+export function formatSearchQueryTooLongMessage(length: number): string {
+  return `Raw query length ${length} exceeds max allowed ${TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH}`;
+}
+
+export function searchQueryTooLongError(length: number): ApiQueryError {
+  return {
+    code: 400,
+    message: formatSearchQueryTooLongMessage(length)
+  };
+}
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   if (value !== null && typeof value === 'object') {
@@ -49,6 +65,9 @@ export function parseSearchTimelineClientError(
   if (message.includes('denylisted in Search Content Control tool')) {
     return 'blocklisted';
   }
+  if (QUERY_TOO_LONG_RE.test(message)) {
+    return 'query_too_long';
+  }
   return null;
 }
 
@@ -69,6 +88,11 @@ export function searchTimelineClientErrorToApiQueryError(
       return {
         code: 400,
         message: 'Search query is blocked by X content controls'
+      };
+    case 'query_too_long':
+      return {
+        code: 400,
+        message: `Raw query length exceeds max allowed ${TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH}`
       };
   }
 }

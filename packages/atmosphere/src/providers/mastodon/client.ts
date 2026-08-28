@@ -36,15 +36,24 @@ const mastodonFetchInit = (signal: AbortSignal): RequestInit => ({
 const isRedirectStatus = (s: number): boolean =>
   s === 301 || s === 302 || s === 303 || s === 307 || s === 308;
 
+/**
+ * Result of the redirect hop. Tagged explicitly rather than by `instanceof Response`: the two
+ * arms are told apart by a field we set ourselves, so this does not depend on the runtime's
+ * `Response` global being the same class the local `fetch` constructs. It is not, on React
+ * Native — and an `instanceof` test there silently returned the raw `Response` as if it were a
+ * result object, giving callers `ok: true` with `data: undefined`.
+ */
+type MastodonRedirectResult = { redirected: true; res: Response } | MastodonFetchErr;
+
 /** Single same-host hop (e.g. trailing slash / canonical URL) without following cross-origin redirects. */
 async function resolveMastodonRedirectIfNeeded(
   initialUrl: string,
   res: Response,
   expectedHost: string,
   signal: AbortSignal
-): Promise<Response | MastodonFetchErr> {
+): Promise<MastodonRedirectResult> {
   if (!isRedirectStatus(res.status)) {
-    return res;
+    return { redirected: true, res };
   }
   const loc = res.headers.get('Location');
   if (!loc) {
@@ -63,11 +72,11 @@ async function resolveMastodonRedirectIfNeeded(
       body: `Mastodon redirect to different host rejected (${resolved.hostname})`
     };
   }
-  return fetch(resolved.href, mastodonFetchInit(signal));
+  return { redirected: true, res: await fetch(resolved.href, mastodonFetchInit(signal)) };
 }
 
-function isMastodonFetchErr(x: Response | MastodonFetchErr): x is MastodonFetchErr {
-  return !(x instanceof Response);
+function isMastodonFetchErr(x: MastodonRedirectResult): x is MastodonFetchErr {
+  return !('redirected' in x);
 }
 
 async function mastodonFetch<T>(
@@ -92,7 +101,7 @@ async function mastodonFetch<T>(
       clearTimeout(t);
       return afterRedirect;
     }
-    res = afterRedirect;
+    res = afterRedirect.res;
   } catch (e) {
     clearTimeout(t);
     const msg = e instanceof Error ? e.message : String(e);
@@ -220,6 +229,25 @@ export const fetchAccountFollowing = async (
     `/api/v1/accounts/${encodeURIComponent(accountId)}/following`,
     { limit: params.limit, max_id: params.max_id }
   );
+
+/**
+ * `GET /api/v2/search?type=accounts`. Unlike the statuses half of the same endpoint, account
+ * search is served to unauthenticated callers, and unlike `/api/v1/accounts/search` it does not
+ * require a token at all. `resolve` stays off so a query never makes the instance go fetch a
+ * remote account on our behalf.
+ */
+export const searchAccounts = async (
+  domain: string,
+  q: string,
+  params: { limit: number; offset?: number }
+): Promise<MastodonFetchResult<MastodonSearchResponse>> =>
+  mastodonFetch<MastodonSearchResponse>(domain, '/api/v2/search', {
+    q,
+    type: 'accounts',
+    resolve: false,
+    limit: params.limit,
+    offset: params.offset
+  });
 
 export const searchStatuses = async (
   domain: string,

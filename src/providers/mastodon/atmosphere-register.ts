@@ -7,6 +7,7 @@ import {
   mastodonProfileMediaAPIRequest,
   mastodonProfileStatusesAPIRequest,
   mastodonSearchAPIRequest,
+  mastodonSearchUsersAPIRequest,
   mastodonStatusAPIRequest,
   mastodonStatusLikesAPIRequest,
   mastodonStatusRepostsAPIRequest,
@@ -19,6 +20,7 @@ import {
   mastodonProfileMediaV2Route,
   mastodonProfileStatusesV2Route,
   mastodonProfileV2Route,
+  mastodonSearchUsersV2Route,
   mastodonSearchV2Route,
   mastodonStatusLikesV2Route,
   mastodonStatusRepostsV2Route,
@@ -33,6 +35,7 @@ export const registerMastodonAtmosphereRoutes = (atmosphere: OpenAPIHono) => {
   atmosphere.openapi(mastodonThreadV2Route, mastodonThreadAPIRequest);
   atmosphere.openapi(mastodonConversationV2Route, mastodonConversationAPIRequest);
   atmosphere.openapi(mastodonSearchV2Route, mastodonSearchAPIRequest);
+  atmosphere.openapi(mastodonSearchUsersV2Route, mastodonSearchUsersAPIRequest);
   atmosphere.openapi(mastodonProfileV2Route, mastodonProfileAPIRequest);
   atmosphere.openapi(mastodonProfileFollowersV2Route, mastodonProfileFollowersAPIRequest);
   atmosphere.openapi(mastodonProfileFollowingV2Route, mastodonProfileFollowingAPIRequest);
