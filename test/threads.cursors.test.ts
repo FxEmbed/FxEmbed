@@ -22,8 +22,25 @@ describe('threads conversation cursor', () => {
       shortcode: 'DXhZAMkljvS',
       sort: 'TOP',
       after: 'opaque-cursor',
-      count: 20
+      count: 20,
+      // A cursor minted before the proxy existed came from the logged-out connection.
+      src: 'gql'
     });
+  });
+
+  it('keeps proxy and logged-out cursors distinguishable', () => {
+    const proxy = decodeThreadsConversationCursor(
+      encodeThreadsConversationCursor({
+        v: 1,
+        postId: '1',
+        shortcode: 'a',
+        sort: 'TOP',
+        after: 'paging-token',
+        count: 20,
+        src: 'proxy'
+      })
+    );
+    expect(proxy?.src).toBe('proxy');
   });
 
   it('returns encoded shortcode unchanged (caller must validate mismatch)', () => {

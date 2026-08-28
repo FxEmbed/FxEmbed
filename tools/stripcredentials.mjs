@@ -1,6 +1,7 @@
 /**
  * Strip sensitive fields from credentials.complete.json → credentials.json
- * Output shape: { "twitter": { "accounts": [...] }, "bluesky": { "accounts": [...] } }
+ * Output shape: { "twitter": { "accounts": [...] }, "bluesky": { "accounts": [...] },
+ *                 "instagram": { "accounts": [...] } }
  *
  * Accepts complete file as either:
  *   - { "twitter": { "accounts": [...] } }  (preferred)
@@ -22,13 +23,15 @@ const twitterAccounts = Array.isArray(raw.twitter?.accounts)
     : null;
 
 const blueskyAccounts = Array.isArray(raw.bluesky?.accounts) ? raw.bluesky.accounts : null;
+const instagramAccounts = Array.isArray(raw.instagram?.accounts) ? raw.instagram.accounts : null;
 
 if (
   (!Array.isArray(twitterAccounts) || twitterAccounts.length === 0) &&
-  (!Array.isArray(blueskyAccounts) || blueskyAccounts.length === 0)
+  (!Array.isArray(blueskyAccounts) || blueskyAccounts.length === 0) &&
+  (!Array.isArray(instagramAccounts) || instagramAccounts.length === 0)
 ) {
   console.error(
-    'credentials.complete.json must have twitter.accounts (or legacy accounts), and/or bluesky.accounts, as non-empty arrays'
+    'credentials.complete.json must have twitter.accounts (or legacy accounts), bluesky.accounts, and/or instagram.accounts, as non-empty arrays'
   );
   process.exit(1);
 }
@@ -106,8 +109,45 @@ if (Array.isArray(blueskyAccounts) && blueskyAccounts.length > 0) {
   };
 }
 
+if (Array.isArray(instagramAccounts) && instagramAccounts.length > 0) {
+  for (let i = 0; i < instagramAccounts.length; i++) {
+    const cred = instagramAccounts[i];
+    const id = `instagram.accounts[${i}]`;
+    if (cred === null || typeof cred !== 'object' || Array.isArray(cred)) {
+      console.error(`${id}: each account must be a plain object`);
+      process.exit(1);
+    }
+    if (typeof cred.sessionId !== 'string' || cred.sessionId.length === 0) {
+      console.error(`${id}: "sessionId" must be a non-empty string (the \`sessionid\` cookie)`);
+      process.exit(1);
+    }
+    if (cred.platform !== undefined && cred.platform !== 'web' && cred.platform !== 'android') {
+      console.error(`${id}: "platform" must be "web" or "android" when present`);
+      process.exit(1);
+    }
+  }
+
+  /* Only cookie-jar fields survive; the login password (if the complete file carries one) does not. */
+  const optionalFields = ['userId', 'csrfToken', 'mid', 'deviceId', 'androidDeviceId', 'username'];
+  out.instagram = {
+    accounts: instagramAccounts.map(cred => {
+      const stripped = { sessionId: cred.sessionId };
+      for (const field of optionalFields) {
+        if (typeof cred[field] === 'string' && cred[field].length > 0) {
+          stripped[field] = cred[field];
+        }
+      }
+      if (cred.platform === 'web' || cred.platform === 'android') {
+        stripped.platform = cred.platform;
+      }
+      return stripped;
+    })
+  };
+}
+
 fs.writeFileSync(outPath, JSON.stringify(out, null, 2) + '\n', 'utf8');
 const parts = [];
 if (out.twitter) parts.push(`${out.twitter.accounts.length} twitter account(s)`);
 if (out.bluesky) parts.push(`${out.bluesky.accounts.length} bluesky account(s)`);
+if (out.instagram) parts.push(`${out.instagram.accounts.length} instagram account(s)`);
 console.log(`Wrote ${outPath} (${parts.join(', ')})`);

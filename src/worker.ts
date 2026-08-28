@@ -11,6 +11,10 @@ import {
   setBlueskyProviderEnv,
   setBlueskyProxyRuntime
 } from '@fxembed/atmosphere/providers/bluesky-runtime';
+import {
+  setInstagramProviderEnv,
+  setInstagramProxyRuntime
+} from '@fxembed/atmosphere/providers/instagram-runtime';
 import { setMastodonProviderEnv } from '@fxembed/atmosphere/providers/mastodon-runtime';
 import {
   setTwitterProviderEnv,
@@ -32,6 +36,19 @@ setBlueskyProxyRuntime({
   hasBlueskyProxyAccounts: proxyCreds.hasBlueskyProxyAccounts,
   getShuffledBlueskyAccounts: proxyCreds.getShuffledBlueskyAccounts,
   blueskyProxyServiceHostname: proxyCreds.blueskyProxyServiceHostname
+});
+
+setInstagramProviderEnv({
+  webRoot: Constants.INSTAGRAM_ROOT,
+  apiRoot: Constants.INSTAGRAM_API_ROOT,
+  friendlyUserAgent: Constants.FRIENDLY_USER_AGENT
+});
+
+setInstagramProxyRuntime({
+  initCredentials: proxyCreds.initCredentials,
+  hasBundledEncryptedCredentials: proxyCreds.hasBundledEncryptedCredentials,
+  hasInstagramProxyAccounts: proxyCreds.hasInstagramProxyAccounts,
+  getShuffledInstagramAccounts: proxyCreds.getShuffledInstagramAccounts
 });
 
 setMastodonProviderEnv({

@@ -1,7 +1,11 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import {
   ApiQueryErrorSchema,
+  APIProfileRelationshipListSchema,
   APISearchResultsThreadsSchema,
+  APITrendsResponseSchema,
+  APITypeaheadResponseSchema,
+  APIUserListResultsSchema,
   SocialConversationSchema,
   SocialThreadSchema,
   UserAPIResponseSchema
@@ -12,7 +16,7 @@ export const threadsStatusV2Route = createRoute({
   path: '/2/threads/status/{id}',
   summary: 'Get a single Threads post',
   description:
-    'Resolves a post by shortcode or Threads permalink. Data is sourced from logged-out `threads.com` GraphQL.',
+    'Resolves a post by shortcode or Threads permalink. Reads the Threads app API when an account proxy is configured, and falls back to logged-out `threads.com` GraphQL otherwise.',
   request: {
     params: z.object({
       id: z
@@ -110,7 +114,7 @@ export const threadsConversationV2Route = createRoute({
   path: '/2/threads/conversation/{id}',
   summary: 'Threads post with replies',
   description:
-    'Returns the focal post plus direct replies as `substatus` rows (`type: substatus`, `provider: threads`).',
+    'Returns the focal post plus direct replies as `substatus` rows (`type: substatus`, `provider: threads`). Replies come from the Threads app API when an account proxy is configured — logged-out `threads.com` truncates them hard — and fall back to the logged-out connection otherwise. A cursor is only valid against the source that minted it.',
   request: {
     params: z.object({
       id: z
@@ -142,6 +146,292 @@ export const threadsConversationV2Route = createRoute({
     500: {
       description: 'Upstream error',
       content: { 'application/json': { schema: SocialConversationSchema } }
+    }
+  }
+});
+
+/**
+ * Threads gates search, trends, likers, follow lists and the Replies / Reposts / Media profile tabs
+ * behind a login. Those routes answer 501 when the deployment has no account proxy configured,
+ * rather than returning an empty list that reads as "this account has none".
+ *
+ * Threads accounts are Instagram accounts, so the pool is the Instagram one — the proxy only swaps
+ * in the Threads app fingerprint.
+ */
+const PROXY_ONLY_NOTE =
+  'Requires an Instagram account proxy (`CREDENTIAL_KEY` + bundled `instagram.accounts`); returns 501 without one.';
+
+const NO_PROXY_DESCRIPTION = 'No Instagram account proxy configured on this deployment';
+
+const profileTabRequest = {
+  params: z.object({ username: z.string().openapi({ example: 'zuck' }) }),
+  query: z.object({
+    count: z.coerce.number().int().min(1).max(100).default(20).openapi({ default: 20 }),
+    cursor: z
+      .string()
+      .optional()
+      .openapi({ description: 'Opaque pagination cursor (`cursor.bottom`)' })
+  })
+};
+
+const profileTabResponses = {
+  200: {
+    description: 'Timeline page',
+    content: { 'application/json': { schema: APISearchResultsThreadsSchema } }
+  },
+  400: {
+    description: 'Invalid cursor',
+    content: { 'application/json': { schema: ApiQueryErrorSchema } }
+  },
+  404: {
+    description: 'Not found',
+    content: { 'application/json': { schema: APISearchResultsThreadsSchema } }
+  },
+  500: {
+    description: 'Upstream error',
+    content: { 'application/json': { schema: APISearchResultsThreadsSchema } }
+  },
+  501: {
+    description: NO_PROXY_DESCRIPTION,
+    content: { 'application/json': { schema: APISearchResultsThreadsSchema } }
+  }
+};
+
+export const threadsProfileRepliesV2Route = createRoute({
+  method: 'get',
+  path: '/2/threads/profile/{username}/replies',
+  summary: 'List a Threads profile’s replies',
+  description: `The Replies tab, which logged-out \`threads.com\` does not serve. ${PROXY_ONLY_NOTE}`,
+  request: profileTabRequest,
+  responses: profileTabResponses
+});
+
+export const threadsProfileRepostsV2Route = createRoute({
+  method: 'get',
+  path: '/2/threads/profile/{username}/reposts',
+  summary: 'List a Threads profile’s reposts',
+  description: `The Reposts tab — Threads' equivalent of an X profile's retweets. ${PROXY_ONLY_NOTE}`,
+  request: profileTabRequest,
+  responses: profileTabResponses
+});
+
+export const threadsProfileMediaV2Route = createRoute({
+  method: 'get',
+  path: '/2/threads/profile/{username}/media',
+  summary: 'List a Threads profile’s posts with media',
+  description: `The Media tab, matching X's \`/2/profile/{handle}/media\`. ${PROXY_ONLY_NOTE}`,
+  request: profileTabRequest,
+  responses: profileTabResponses
+});
+
+const relationshipResponses = {
+  200: {
+    description: 'Relationship page',
+    content: { 'application/json': { schema: APIProfileRelationshipListSchema } }
+  },
+  400: {
+    description: 'Invalid cursor',
+    content: { 'application/json': { schema: ApiQueryErrorSchema } }
+  },
+  404: {
+    description: 'Not found',
+    content: { 'application/json': { schema: APIProfileRelationshipListSchema } }
+  },
+  500: {
+    description: 'Upstream error',
+    content: { 'application/json': { schema: APIProfileRelationshipListSchema } }
+  },
+  501: {
+    description: NO_PROXY_DESCRIPTION,
+    content: { 'application/json': { schema: APIProfileRelationshipListSchema } }
+  }
+};
+
+export const threadsProfileFollowersV2Route = createRoute({
+  method: 'get',
+  path: '/2/threads/profile/{username}/followers',
+  summary: 'List a Threads account’s followers',
+  description: `Threads shares Instagram's social graph, so this is the Instagram follower list — unfiltered, to match the counts the Threads profile shows. ${PROXY_ONLY_NOTE}`,
+  request: profileTabRequest,
+  responses: relationshipResponses
+});
+
+export const threadsProfileFollowingV2Route = createRoute({
+  method: 'get',
+  path: '/2/threads/profile/{username}/following',
+  summary: 'List the accounts a Threads account follows',
+  description: `Threads shares Instagram's social graph, so this is the Instagram following list — unfiltered, to match the counts the Threads profile shows. ${PROXY_ONLY_NOTE}`,
+  request: profileTabRequest,
+  responses: relationshipResponses
+});
+
+export const threadsStatusLikesV2Route = createRoute({
+  method: 'get',
+  path: '/2/threads/status/{id}/likes',
+  summary: 'List accounts that liked a Threads post',
+  description: `Threads serves one un-paginated page, so \`cursor.bottom\` is always null. ${PROXY_ONLY_NOTE}`,
+  request: {
+    params: z.object({
+      id: z
+        .string()
+        .openapi({ description: 'Post shortcode or permalink fragment', example: 'DXhZAMkljvS' })
+    }),
+    query: z.object({
+      count: z.coerce.number().int().min(1).max(100).default(20).openapi({ default: 20 })
+    })
+  },
+  responses: {
+    200: {
+      description: 'Likers',
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
+    },
+    400: {
+      description: 'Invalid shortcode',
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
+    },
+    404: {
+      description: 'Not found',
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
+    },
+    500: {
+      description: 'Upstream error',
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
+    },
+    501: {
+      description: NO_PROXY_DESCRIPTION,
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
+    }
+  }
+});
+
+export const threadsSearchV2Route = createRoute({
+  method: 'get',
+  path: '/2/threads/search',
+  summary: 'Search Threads posts',
+  description: `Threads' search results page, matching X's \`/2/search\`. \`sort_order\` picks between the Top and Recent tabs; the two rank differently and their cursors are not interchangeable. ${PROXY_ONLY_NOTE}`,
+  request: {
+    query: z.object({
+      q: z.string().min(1).max(512).openapi({ example: 'meta' }),
+      sort_order: z.enum(['top', 'recent']).default('top').openapi({ default: 'top' }),
+      count: z.coerce.number().int().min(1).max(100).default(20).openapi({ default: 20 }),
+      cursor: z
+        .string()
+        .optional()
+        .openapi({ description: 'Opaque pagination cursor (`cursor.bottom`)' })
+    })
+  },
+  responses: {
+    200: {
+      description: 'Search results page',
+      content: { 'application/json': { schema: APISearchResultsThreadsSchema } }
+    },
+    400: {
+      description: 'Invalid query or cursor',
+      content: { 'application/json': { schema: ApiQueryErrorSchema } }
+    },
+    404: {
+      description: 'Not found',
+      content: { 'application/json': { schema: APISearchResultsThreadsSchema } }
+    },
+    500: {
+      description: 'Upstream error',
+      content: { 'application/json': { schema: APISearchResultsThreadsSchema } }
+    },
+    501: {
+      description: NO_PROXY_DESCRIPTION,
+      content: { 'application/json': { schema: APISearchResultsThreadsSchema } }
+    }
+  }
+});
+
+export const threadsSearchUsersV2Route = createRoute({
+  method: 'get',
+  path: '/2/threads/search/users',
+  summary: 'Search Threads accounts',
+  description: `Ranked account search, filtered to accounts that are actually on Threads. One page, no cursor. ${PROXY_ONLY_NOTE}`,
+  request: {
+    query: z.object({
+      q: z.string().min(1).max(512).openapi({ example: 'meta' }),
+      count: z.coerce.number().int().min(1).max(50).default(20).openapi({ default: 20 })
+    })
+  },
+  responses: {
+    200: {
+      description: 'Matching accounts',
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
+    },
+    400: {
+      description: 'Invalid query',
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
+    },
+    500: {
+      description: 'Upstream error',
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
+    },
+    501: {
+      description: NO_PROXY_DESCRIPTION,
+      content: { 'application/json': { schema: APIUserListResultsSchema } }
+    }
+  }
+});
+
+export const threadsTrendsV2Route = createRoute({
+  method: 'get',
+  path: '/2/threads/trends',
+  summary: 'Get Threads trending topics',
+  description: `Threads' trending topics, matching X's \`/2/trends\`. One ranked page, no cursor. ${PROXY_ONLY_NOTE}`,
+  request: {
+    query: z.object({
+      count: z.coerce.number().int().min(1).max(100).default(20).openapi({ default: 20 })
+    })
+  },
+  responses: {
+    200: {
+      description: 'Trends',
+      content: { 'application/json': { schema: APITrendsResponseSchema } }
+    },
+    404: {
+      description: 'Not found',
+      content: { 'application/json': { schema: APITrendsResponseSchema } }
+    },
+    500: {
+      description: 'Upstream error',
+      content: { 'application/json': { schema: APITrendsResponseSchema } }
+    },
+    501: {
+      description: NO_PROXY_DESCRIPTION,
+      content: { 'application/json': { schema: APITrendsResponseSchema } }
+    }
+  }
+});
+
+export const threadsTypeaheadV2Route = createRoute({
+  method: 'get',
+  path: '/2/threads/typeahead',
+  summary: 'Threads search typeahead',
+  description: `Blended account + keyword suggestions, matching \`/2/instagram/typeahead\`. \`events\` is always empty — Threads has no equivalent. ${PROXY_ONLY_NOTE}`,
+  request: {
+    query: z.object({
+      query: z.string().min(1).max(512).openapi({ example: 'meta' }),
+      count: z.coerce.number().int().min(1).max(50).default(20).openapi({ default: 20 })
+    })
+  },
+  responses: {
+    200: {
+      description: 'Suggestions',
+      content: { 'application/json': { schema: APITypeaheadResponseSchema } }
+    },
+    400: {
+      description: 'Invalid query',
+      content: { 'application/json': { schema: APITypeaheadResponseSchema } }
+    },
+    500: {
+      description: 'Upstream error',
+      content: { 'application/json': { schema: APITypeaheadResponseSchema } }
+    },
+    501: {
+      description: NO_PROXY_DESCRIPTION,
+      content: { 'application/json': { schema: APITypeaheadResponseSchema } }
     }
   }
 });

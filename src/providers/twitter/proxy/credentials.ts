@@ -1,6 +1,7 @@
 import type {
   BlueskyProxyCredentials,
   CredentialStore,
+  InstagramCredentials,
   TwitterCredentials
 } from '@fxembed/atmosphere/types/proxy-credentials';
 
@@ -95,7 +96,8 @@ export function hasBlueskyProxyAccounts(): boolean {
   return (credentialStore?.bluesky?.accounts?.length ?? 0) > 0;
 }
 
-function shuffleBlueskyAccountsCopy(acc: BlueskyProxyCredentials[]): BlueskyProxyCredentials[] {
+/** Fisher-Yates shuffle for spreading load across proxy accounts. */
+function shuffledCopy<T>(acc: T[]): T[] {
   const copy = [...acc];
   for (let i = copy.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -104,6 +106,21 @@ function shuffleBlueskyAccountsCopy(acc: BlueskyProxyCredentials[]): BlueskyProx
     copy[j] = t;
   }
   return copy;
+}
+
+function shuffleBlueskyAccountsCopy(acc: BlueskyProxyCredentials[]): BlueskyProxyCredentials[] {
+  return shuffledCopy(acc);
+}
+
+export function hasInstagramProxyAccounts(): boolean {
+  return (credentialStore?.instagram?.accounts?.length ?? 0) > 0;
+}
+
+/** Instagram proxy accounts in random order, so no single session absorbs every request. */
+export function getShuffledInstagramAccounts(): InstagramCredentials[] {
+  const acc = credentialStore?.instagram?.accounts ?? [];
+  if (!acc.length) return [];
+  return shuffledCopy(acc);
 }
 
 /** Hostname of a Bluesky proxy `service` URL (PDS), lowercased; empty if unparseable. */
@@ -118,7 +135,6 @@ export function blueskyProxyServiceHostname(service: string): string {
 }
 
 /**
- * Fisher–Yates shuffle for spreading load across PDS proxy accounts.
  * When `preferredHostname` matches one or more accounts' service host, those are shuffled first,
  * then the rest (Discord activity hint path).
  */
