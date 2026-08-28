@@ -184,10 +184,9 @@ describe('instagram account proxy', () => {
     const fetchSpy = vi.fn(async (_url: string, init: RequestInit) => {
       const cookie = (init.headers as Record<string, string>)['Cookie'];
       if (cookie.includes('web-session')) {
-        return new Response(
-          JSON.stringify({ status: 'fail', message: 'checkpoint_required' }),
-          { status: 200 }
-        );
+        return new Response(JSON.stringify({ status: 'fail', message: 'checkpoint_required' }), {
+          status: 200
+        });
       }
       return new Response(JSON.stringify({ status: 'ok', items: [] }), { status: 200 });
     });
