@@ -41,7 +41,7 @@
     "@microsoft/eslint-formatter-sarif": "^3.1.0",
     "@sentry/esbuild-plugin": "^5.4.0",
     "@typescript-eslint/eslint-plugin": "^8.67.0",
-    "@typescript-eslint/parser": "^8.67.0",
+    "@typescript-eslint/parser": "^8.68.0",
     "dotenv": "^17.4.2",
     "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
@@ -52,10 +52,10 @@
     "prettier": "^3.9.6",
     "ts-loader": "^9.6.2",
     "tsx": "^4.23.12",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.0",
     "typescript-eslint": "^8.67.0",
     "vitest": "^4.1.11",
-    "wrangler": "^4.107.1"
+    "wrangler": "^4.125.1"
   },
   "dependencies": {
     "@fxembed/atmosphere": "*",
