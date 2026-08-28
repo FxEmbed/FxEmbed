@@ -217,6 +217,60 @@ describe('instagram account proxy', () => {
     expect(res.json).toEqual({ status: 'fail', message: 'feedback_required' });
   });
 
+  it('keeps the HTTP status when JSON.parse fails and rotates', async () => {
+    installProxyRuntime([webAccount, androidAccount]);
+    const fetchSpy = vi.fn(async (_url: string, init: RequestInit) => {
+      const cookie = (init.headers as Record<string, string>)['Cookie'];
+      if (cookie.includes('web-session')) {
+        return new Response('{not json', { status: 200 });
+      }
+      return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+    const res = await instagramPrivateApiRequest('/media/1/info/', { credentialKey: 'key' });
+    expect(res.ok).toBe(true);
+    expect(res.accountUsed).toBe('android_account');
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('reports the HTTP status as last result when malformed JSON is the only response', async () => {
+    installProxyRuntime([webAccount]);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('{not json', { status: 200 }))
+    );
+    const res = await instagramPrivateApiRequest('/media/1/info/', { credentialKey: 'key' });
+    expect(res.ok).toBe(false);
+    expect(res.status).toBe(200);
+    expect(res.json).toBeNull();
+    expect(res.accountUsed).toBe('web_account');
+  });
+
+  it('rotates when the response body aborts inside the request timeout', async () => {
+    installProxyRuntime([webAccount, androidAccount]);
+    const fetchSpy = vi.fn(async (_url: string, init: RequestInit) => {
+      const cookie = (init.headers as Record<string, string>)['Cookie'];
+      if (cookie.includes('web-session')) {
+        return {
+          ok: true,
+          status: 200,
+          async text() {
+            const err = new Error('The operation was aborted');
+            err.name = 'AbortError';
+            throw err;
+          }
+        } as Response;
+      }
+      return new Response(JSON.stringify({ status: 'ok', items: [] }), { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+    const res = await instagramPrivateApiRequest('/media/1/info/', { credentialKey: 'key' });
+    expect(res.ok).toBe(true);
+    expect(res.accountUsed).toBe('android_account');
+    // withTimeout retries the whole fetch+body read 4 times (initial + 3) before rotating.
+    expect(fetchSpy).toHaveBeenCalledTimes(5);
+  });
+
   it('does not auto-follow redirects and skips off-origin Location hops', async () => {
     installProxyRuntime([webAccount]);
     const fetchSpy = vi.fn(async (input: string) => {
