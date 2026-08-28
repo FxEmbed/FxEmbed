@@ -115,8 +115,9 @@ export type InstagramPrivateApiResult = {
 
 /**
  * Calls an `i.instagram.com/api/v1/…` endpoint through a proxy account, rotating accounts on
- * auth/rate-limit failures. Returns `{ ok: false, status: 0 }` when no proxy account is configured
- * so callers can fall back to their logged-out path.
+ * auth/rate-limit failures and on a 200 `{ status: 'fail' }` body (checkpoint / spam block).
+ * Returns `{ ok: false, status: 0 }` when no proxy account is configured so callers can fall
+ * back to their logged-out path.
  */
 export async function instagramPrivateApiRequest(
   path: string,
@@ -189,16 +190,28 @@ export async function instagramPrivateApiRequest(
       last = { ok: false, status: res.status, json: null, accountUsed: account.username };
       continue;
     }
+    let parsed: unknown;
     try {
-      return {
-        ok: true,
-        status: res.status,
-        json: JSON.parse(text) as unknown,
-        accountUsed: account.username
-      };
+      parsed = JSON.parse(text) as unknown;
     } catch {
       last = { ok: false, status: res.status, json: null, accountUsed: account.username };
+      continue;
     }
+    // The private API answers 200 with `{ status: 'fail' }` for soft failures (checkpoint,
+    // spam block, feedback_required). Rotate rather than surfacing an empty page as success.
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      (parsed as { status?: unknown }).status === 'fail'
+    ) {
+      console.error('[instagram] private API returned status=fail', {
+        path,
+        account: account.username
+      });
+      last = { ok: false, status: 502, json: parsed, accountUsed: account.username };
+      continue;
+    }
+    return { ok: true, status: res.status, json: parsed, accountUsed: account.username };
   }
   return last;
 }

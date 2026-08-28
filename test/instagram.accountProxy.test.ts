@@ -178,4 +178,43 @@ describe('instagram account proxy', () => {
     expect(res.accountUsed).toBe('android_account');
     expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
+
+  it('treats a 200 `status: fail` body as a failure worth rotating past', async () => {
+    installProxyRuntime([webAccount, androidAccount]);
+    const fetchSpy = vi.fn(async (_url: string, init: RequestInit) => {
+      const cookie = (init.headers as Record<string, string>)['Cookie'];
+      if (cookie.includes('web-session')) {
+        return new Response(
+          JSON.stringify({ status: 'fail', message: 'checkpoint_required' }),
+          { status: 200 }
+        );
+      }
+      return new Response(JSON.stringify({ status: 'ok', items: [] }), { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+    const res = await instagramPrivateApiRequest('/media/1/info/', { credentialKey: 'key' });
+    expect(res.ok).toBe(true);
+    expect(res.json).toEqual({ status: 'ok', items: [] });
+    expect(res.accountUsed).toBe('android_account');
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('reports 502 when every account answers `status: fail`', async () => {
+    installProxyRuntime([webAccount]);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ status: 'fail', message: 'feedback_required' }), {
+            status: 200
+          })
+      )
+    );
+    const res = await instagramPrivateApiRequest('/friendships/1/followers/', {
+      credentialKey: 'key'
+    });
+    expect(res.ok).toBe(false);
+    expect(res.status).toBe(502);
+    expect(res.json).toEqual({ status: 'fail', message: 'feedback_required' });
+  });
 });
