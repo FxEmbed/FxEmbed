@@ -57,5 +57,7 @@ export default {
   'uk': { translation: uk },
   'vi': { translation: vi },
   'zh-CN': { translation: zhCN },
-  'zh-TW': { translation: zhTW }
+  'zh-cn': { translation: zhCN },
+  'zh-TW': { translation: zhTW },
+  'zh-tw': { translation: zhTW }
 };

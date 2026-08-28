@@ -198,9 +198,10 @@ export const APIMosaicPhotoSchema = z.object({
   id: z.string().optional(),
   format: z.string().optional(),
   type: z.literal('mosaic_photo'),
-  url: z.string(),
-  width: z.number(),
-  height: z.number(),
+  // Runtime mosaic responses only guarantee type + formats; url/width/height are optional.
+  url: z.string().optional(),
+  width: z.number().optional(),
+  height: z.number().optional(),
   formats: z.object({
     webp: z.string(),
     jpeg: z.string()
