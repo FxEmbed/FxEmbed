@@ -77,5 +77,5 @@ export const handleMosaic = async (
       jpeg: `${baseUrl}jpeg/${id}${path}`,
       webp: `${baseUrl}webp/${id}${path}`
     }
-  } as APIMosaicPhoto;
+  };
 };

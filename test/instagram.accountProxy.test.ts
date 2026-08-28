@@ -178,4 +178,168 @@ describe('instagram account proxy', () => {
     expect(res.accountUsed).toBe('android_account');
     expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
+
+  it('treats a 200 `status: fail` body as a failure worth rotating past', async () => {
+    installProxyRuntime([webAccount, androidAccount]);
+    const fetchSpy = vi.fn(async (_url: string, init: RequestInit) => {
+      const cookie = (init.headers as Record<string, string>)['Cookie'];
+      if (cookie.includes('web-session')) {
+        return new Response(JSON.stringify({ status: 'fail', message: 'checkpoint_required' }), {
+          status: 200
+        });
+      }
+      return new Response(JSON.stringify({ status: 'ok', items: [] }), { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+    const res = await instagramPrivateApiRequest('/media/1/info/', { credentialKey: 'key' });
+    expect(res.ok).toBe(true);
+    expect(res.json).toEqual({ status: 'ok', items: [] });
+    expect(res.accountUsed).toBe('android_account');
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('reports 502 when every account answers `status: fail`', async () => {
+    installProxyRuntime([webAccount]);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ status: 'fail', message: 'feedback_required' }), {
+            status: 200
+          })
+      )
+    );
+    const res = await instagramPrivateApiRequest('/friendships/1/followers/', {
+      credentialKey: 'key'
+    });
+    expect(res.ok).toBe(false);
+    expect(res.status).toBe(502);
+    expect(res.json).toEqual({ status: 'fail', message: 'feedback_required' });
+  });
+
+  it('keeps the HTTP status when JSON.parse fails and rotates', async () => {
+    installProxyRuntime([webAccount, androidAccount]);
+    const fetchSpy = vi.fn(async (_url: string, init: RequestInit) => {
+      const cookie = (init.headers as Record<string, string>)['Cookie'];
+      if (cookie.includes('web-session')) {
+        return new Response('{not json', { status: 200 });
+      }
+      return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+    const res = await instagramPrivateApiRequest('/media/1/info/', { credentialKey: 'key' });
+    expect(res.ok).toBe(true);
+    expect(res.accountUsed).toBe('android_account');
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('reports the HTTP status as last result when malformed JSON is the only response', async () => {
+    installProxyRuntime([webAccount]);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('{not json', { status: 200 }))
+    );
+    const res = await instagramPrivateApiRequest('/media/1/info/', { credentialKey: 'key' });
+    expect(res.ok).toBe(false);
+    expect(res.status).toBe(200);
+    expect(res.json).toBeNull();
+    expect(res.accountUsed).toBe('web_account');
+  });
+
+  it('rotates when the response body aborts inside the request timeout', async () => {
+    installProxyRuntime([webAccount, androidAccount]);
+    const fetchSpy = vi.fn(async (_url: string, init: RequestInit) => {
+      const cookie = (init.headers as Record<string, string>)['Cookie'];
+      if (cookie.includes('web-session')) {
+        return {
+          ok: true,
+          status: 200,
+          async text() {
+            const err = new Error('The operation was aborted');
+            err.name = 'AbortError';
+            throw err;
+          }
+        } as Response;
+      }
+      return new Response(JSON.stringify({ status: 'ok', items: [] }), { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+    const res = await instagramPrivateApiRequest('/media/1/info/', { credentialKey: 'key' });
+    expect(res.ok).toBe(true);
+    expect(res.accountUsed).toBe('android_account');
+    // withTimeout retries the whole fetch+body read 4 times (initial + 3) before rotating.
+    expect(fetchSpy).toHaveBeenCalledTimes(5);
+  });
+
+  it('does not auto-follow redirects and skips off-origin Location hops', async () => {
+    installProxyRuntime([webAccount]);
+    const fetchSpy = vi.fn(async (input: string) => {
+      if (String(input).includes('evil.example')) {
+        return new Response(JSON.stringify({ status: 'ok', leaked: true }), { status: 200 });
+      }
+      return new Response(null, {
+        status: 302,
+        headers: { Location: 'https://evil.example/steal' }
+      });
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+    const res = await instagramPrivateApiRequest('/users/x/usernameinfo/', {
+      credentialKey: 'key'
+    });
+    expect(res.ok).toBe(false);
+    expect(res.status).toBe(302);
+    expect(res.json).toBeNull();
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy.mock.calls[0][1]).toMatchObject({ redirect: 'manual' });
+  });
+
+  it('does not follow http Location even on the same host', async () => {
+    installProxyRuntime([webAccount]);
+    const fetchSpy = vi.fn(async (input: string) => {
+      if (String(input).startsWith('http://')) {
+        return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
+      }
+      return new Response(null, {
+        status: 302,
+        headers: { Location: 'http://i.instagram.com/api/v1/users/x/usernameinfo/' }
+      });
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+    const res = await instagramPrivateApiRequest('/users/x/usernameinfo/', {
+      credentialKey: 'key'
+    });
+    expect(res.ok).toBe(false);
+    expect(res.status).toBe(302);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('follows same-origin HTTPS redirects with the original cookies', async () => {
+    installProxyRuntime([webAccount]);
+    const fetchSpy = vi.fn(async (input: string, init: RequestInit) => {
+      const href = String(input);
+      expect(String((init.headers as Record<string, string>)['Cookie'])).toContain(
+        'sessionid=web-session'
+      );
+      if (href.includes('/canonical/')) {
+        return new Response(JSON.stringify({ status: 'ok', user: { pk: 1 } }), { status: 200 });
+      }
+      return new Response(null, {
+        status: 302,
+        headers: {
+          Location: 'https://i.instagram.com/api/v1/users/x/usernameinfo/canonical/'
+        }
+      });
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+    const res = await instagramPrivateApiRequest('/users/x/usernameinfo/', {
+      credentialKey: 'key'
+    });
+    expect(res.ok).toBe(true);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy.mock.calls[0][1]).toMatchObject({ redirect: 'manual' });
+    expect(fetchSpy.mock.calls[1][1]).toMatchObject({ redirect: 'manual' });
+    expect(String(fetchSpy.mock.calls[1][0])).toBe(
+      'https://i.instagram.com/api/v1/users/x/usernameinfo/canonical/'
+    );
+  });
 });

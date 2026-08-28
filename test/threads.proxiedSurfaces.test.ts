@@ -362,6 +362,117 @@ describe('proxied Threads surfaces', () => {
     expect(decodeThreadsConversationCursor(res.data.cursor?.bottom ?? '')?.src).toBe('proxy');
   });
 
+  it('asks replies for count and surfaces the next reply on the following page', async () => {
+    installProxy();
+    const focal = {
+      pk: '1',
+      code: 'DXhZAMkljvS',
+      taken_at: 1700000000,
+      caption: { text: 'focal' },
+      user: { pk: 314216, username: 'zuck' }
+    };
+    const replies = [threadRow('AAA', 'first reply'), threadRow('BBB', 'second reply')];
+    const requested: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string) => {
+        const url = new URL(input);
+        requested.push(url.pathname + url.search);
+        if (!url.pathname.includes('/replies/')) {
+          return new Response('{}', { status: 404 });
+        }
+        const count = Number(url.searchParams.get('count') ?? 20);
+        const token = url.searchParams.get('paging_token');
+        const start = token === 'R2' ? 1 : 0;
+        const page = replies.slice(start, start + count);
+        const hasMore = start + count < replies.length;
+        return new Response(
+          JSON.stringify({
+            containing_thread: { thread_items: [{ post: focal }] },
+            reply_threads: page,
+            paging_tokens: hasMore ? { downwards: 'R2' } : undefined,
+            has_more: hasMore
+          }),
+          { status: 200 }
+        );
+      })
+    );
+
+    const page1 = await constructThreadsConversation('DXhZAMkljvS', {
+      cursor: null,
+      count: 1,
+      sortOrder: 'top',
+      ctx
+    });
+    expect(page1.ok).toBe(true);
+    if (!page1.ok) return;
+    expect(page1.data.replies?.map(r => r.id)).toEqual(['AAA']);
+    expect(requested.some(u => u.includes('/replies/') && u.includes('count=1'))).toBe(true);
+
+    const page2 = await constructThreadsConversation('DXhZAMkljvS', {
+      cursor: page1.data.cursor?.bottom ?? null,
+      count: 1,
+      sortOrder: 'top',
+      ctx
+    });
+    expect(page2.ok).toBe(true);
+    if (!page2.ok) return;
+    expect(page2.data.replies?.map(r => r.id)).toEqual(['BBB']);
+    expect(requested.some(u => u.includes('paging_token=R2'))).toBe(true);
+  });
+
+  it('asks the profile feed for count and surfaces the next post on the following page', async () => {
+    installProxy();
+    const items = [threadRow('AAA', 'first'), threadRow('BBB', 'second')];
+    const requested: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string) => {
+        const url = new URL(input);
+        requested.push(url.pathname + url.search);
+        if (url.pathname.startsWith('/api/v1/users/zuck/usernameinfo/')) {
+          return new Response(JSON.stringify(zuck), { status: 200 });
+        }
+        if (url.pathname.startsWith('/api/v1/text_feed/314216/profile/replies/')) {
+          const count = Number(url.searchParams.get('count') ?? 20);
+          const maxId = url.searchParams.get('max_id');
+          const start = maxId === 'PAGE2' ? 1 : 0;
+          const page = items.slice(start, start + count);
+          const hasMore = start + count < items.length;
+          return new Response(
+            JSON.stringify({
+              items: page,
+              paging_tokens: hasMore ? { downwards: 'PAGE2' } : undefined,
+              has_more: hasMore
+            }),
+            { status: 200 }
+          );
+        }
+        return new Response('{}', { status: 404 });
+      })
+    );
+
+    const page1 = await constructThreadsProfileTab('zuck', 'replies', {
+      count: 1,
+      cursor: null,
+      ctx
+    });
+    expect(page1.code).toBe(200);
+    expect(page1.results.map(s => s.id)).toEqual(['AAA']);
+    expect(requested.some(u => u.includes('/profile/replies/') && u.includes('count=1'))).toBe(
+      true
+    );
+
+    const page2 = await constructThreadsProfileTab('zuck', 'replies', {
+      count: 1,
+      cursor: page1.cursor.bottom,
+      ctx
+    });
+    expect(page2.code).toBe(200);
+    expect(page2.results.map(s => s.id)).toEqual(['BBB']);
+    expect(requested.some(u => u.includes('max_id=PAGE2'))).toBe(true);
+  });
+
   it('resolves a profile through usernameinfo when a proxy is available', async () => {
     installProxy();
     const requested = stubApi({

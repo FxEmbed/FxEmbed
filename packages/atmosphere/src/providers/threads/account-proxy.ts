@@ -1,3 +1,4 @@
+import { fetchSameOriginHttps } from '../../helpers/same-origin-https-fetch.js';
 import { withTimeout } from '../../helpers/with-timeout.js';
 import { getInstagramProviderEnv } from '../instagram-runtime.js';
 import {
@@ -149,15 +150,33 @@ export async function threadsPrivateApiRequest(
       headers['Content-Type'] = 'application/x-www-form-urlencoded';
     }
     let res: Response;
+    let text: string;
+    let parsed: unknown;
+    let parseFailed: boolean;
     try {
-      res = await withTimeout(signal =>
-        fetch(url.toString(), {
+      // Fetch can resolve on headers; keep body read + JSON.parse inside the timeout so a
+      // stalled body aborts and rotates instead of hanging the request.
+      const timed = await withTimeout(async signal => {
+        const response = await fetchSameOriginHttps(url.toString(), {
           method: options.method ?? 'GET',
           headers,
           body: options.method === 'POST' ? (options.body ?? '') : undefined,
           signal
-        })
-      );
+        });
+        if (!response.ok) {
+          return { response, text: '', parsed: null, parseFailed: false };
+        }
+        const body = await response.text();
+        try {
+          return { response, text: body, parsed: JSON.parse(body) as unknown, parseFailed: false };
+        } catch {
+          return { response, text: body, parsed: null, parseFailed: true };
+        }
+      });
+      res = timed.response;
+      text = timed.text;
+      parsed = timed.parsed;
+      parseFailed = timed.parseFailed;
     } catch (err) {
       console.error('[threads] private API request threw', {
         path: resolvedPath,
@@ -179,7 +198,6 @@ export async function threadsPrivateApiRequest(
       return last;
     }
 
-    const text = await res.text();
     const trimmed = text.trim();
     // A logged-out or checkpointed session gets an HTML login page rather than JSON.
     if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
@@ -190,10 +208,7 @@ export async function threadsPrivateApiRequest(
       last = { ok: false, status: res.status, json: null, accountUsed: account.username };
       continue;
     }
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(text) as unknown;
-    } catch {
+    if (parseFailed) {
       last = { ok: false, status: res.status, json: null, accountUsed: account.username };
       continue;
     }

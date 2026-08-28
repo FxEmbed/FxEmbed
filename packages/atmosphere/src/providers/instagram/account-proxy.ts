@@ -1,3 +1,4 @@
+import { fetchSameOriginHttps } from '../../helpers/same-origin-https-fetch.js';
 import { withTimeout } from '../../helpers/with-timeout.js';
 import { getInstagramProviderEnv, getInstagramProxyRuntime } from '../instagram-runtime.js';
 import type { InstagramCredentials } from '../../types/proxy-credentials.js';
@@ -115,8 +116,9 @@ export type InstagramPrivateApiResult = {
 
 /**
  * Calls an `i.instagram.com/api/v1/…` endpoint through a proxy account, rotating accounts on
- * auth/rate-limit failures. Returns `{ ok: false, status: 0 }` when no proxy account is configured
- * so callers can fall back to their logged-out path.
+ * auth/rate-limit failures and on a 200 `{ status: 'fail' }` body (checkpoint / spam block).
+ * Returns `{ ok: false, status: 0 }` when no proxy account is configured so callers can fall
+ * back to their logged-out path.
  */
 export async function instagramPrivateApiRequest(
   path: string,
@@ -148,15 +150,33 @@ export async function instagramPrivateApiRequest(
       headers['Content-Type'] = 'application/x-www-form-urlencoded';
     }
     let res: Response;
+    let text: string;
+    let parsed: unknown;
+    let parseFailed: boolean;
     try {
-      res = await withTimeout(signal =>
-        fetch(url.toString(), {
+      // Fetch can resolve on headers; keep body read + JSON.parse inside the timeout so a
+      // stalled body aborts and rotates instead of hanging the request.
+      const timed = await withTimeout(async signal => {
+        const response = await fetchSameOriginHttps(url.toString(), {
           method: options.method ?? 'GET',
           headers,
           body: options.method === 'POST' ? (options.body ?? '') : undefined,
           signal
-        })
-      );
+        });
+        if (!response.ok) {
+          return { response, text: '', parsed: null, parseFailed: false };
+        }
+        const body = await response.text();
+        try {
+          return { response, text: body, parsed: JSON.parse(body) as unknown, parseFailed: false };
+        } catch {
+          return { response, text: body, parsed: null, parseFailed: true };
+        }
+      });
+      res = timed.response;
+      text = timed.text;
+      parsed = timed.parsed;
+      parseFailed = timed.parseFailed;
     } catch (err) {
       console.error('[instagram] private API request threw', {
         path,
@@ -178,7 +198,6 @@ export async function instagramPrivateApiRequest(
       return last;
     }
 
-    const text = await res.text();
     const trimmed = text.trim();
     // A logged-out or checkpointed session gets an HTML login page rather than JSON.
     if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
@@ -189,16 +208,25 @@ export async function instagramPrivateApiRequest(
       last = { ok: false, status: res.status, json: null, accountUsed: account.username };
       continue;
     }
-    try {
-      return {
-        ok: true,
-        status: res.status,
-        json: JSON.parse(text) as unknown,
-        accountUsed: account.username
-      };
-    } catch {
+    if (parseFailed) {
       last = { ok: false, status: res.status, json: null, accountUsed: account.username };
+      continue;
     }
+    // The private API answers 200 with `{ status: 'fail' }` for soft failures (checkpoint,
+    // spam block, feedback_required). Rotate rather than surfacing an empty page as success.
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      (parsed as { status?: unknown }).status === 'fail'
+    ) {
+      console.error('[instagram] private API returned status=fail', {
+        path,
+        account: account.username
+      });
+      last = { ok: false, status: 502, json: parsed, accountUsed: account.username };
+      continue;
+    }
+    return { ok: true, status: res.status, json: parsed, accountUsed: account.username };
   }
   return last;
 }
