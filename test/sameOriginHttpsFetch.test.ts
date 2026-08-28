@@ -21,7 +21,7 @@ describe('sameOriginHttpsRedirectUrl', () => {
     expect(sameOriginHttpsRedirectUrl(FROM, '//evil.example/steal')).toBeNull();
     expect(sameOriginHttpsRedirectUrl(FROM, 'https://i.instagram.com.evil.example/')).toBeNull();
     expect(sameOriginHttpsRedirectUrl(FROM, null)).toBeNull();
-    expect(sameOriginHttpsRedirectUrl(FROM, '::::')).toBeNull();
+    expect(sameOriginHttpsRedirectUrl(FROM, 'http://[')).toBeNull();
   });
 });
 
