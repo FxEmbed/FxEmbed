@@ -216,4 +216,76 @@ describe('instagram account proxy', () => {
     expect(res.status).toBe(502);
     expect(res.json).toEqual({ status: 'fail', message: 'feedback_required' });
   });
+
+  it('does not auto-follow redirects and skips off-origin Location hops', async () => {
+    installProxyRuntime([webAccount]);
+    const fetchSpy = vi.fn(async (input: string) => {
+      if (String(input).includes('evil.example')) {
+        return new Response(JSON.stringify({ status: 'ok', leaked: true }), { status: 200 });
+      }
+      return new Response(null, {
+        status: 302,
+        headers: { Location: 'https://evil.example/steal' }
+      });
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+    const res = await instagramPrivateApiRequest('/users/x/usernameinfo/', {
+      credentialKey: 'key'
+    });
+    expect(res.ok).toBe(false);
+    expect(res.status).toBe(302);
+    expect(res.json).toBeNull();
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy.mock.calls[0][1]).toMatchObject({ redirect: 'manual' });
+  });
+
+  it('does not follow http Location even on the same host', async () => {
+    installProxyRuntime([webAccount]);
+    const fetchSpy = vi.fn(async (input: string) => {
+      if (String(input).startsWith('http://')) {
+        return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
+      }
+      return new Response(null, {
+        status: 302,
+        headers: { Location: 'http://i.instagram.com/api/v1/users/x/usernameinfo/' }
+      });
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+    const res = await instagramPrivateApiRequest('/users/x/usernameinfo/', {
+      credentialKey: 'key'
+    });
+    expect(res.ok).toBe(false);
+    expect(res.status).toBe(302);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('follows same-origin HTTPS redirects with the original cookies', async () => {
+    installProxyRuntime([webAccount]);
+    const fetchSpy = vi.fn(async (input: string, init: RequestInit) => {
+      const href = String(input);
+      expect(String((init.headers as Record<string, string>)['Cookie'])).toContain(
+        'sessionid=web-session'
+      );
+      if (href.includes('/canonical/')) {
+        return new Response(JSON.stringify({ status: 'ok', user: { pk: 1 } }), { status: 200 });
+      }
+      return new Response(null, {
+        status: 302,
+        headers: {
+          Location: 'https://i.instagram.com/api/v1/users/x/usernameinfo/canonical/'
+        }
+      });
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+    const res = await instagramPrivateApiRequest('/users/x/usernameinfo/', {
+      credentialKey: 'key'
+    });
+    expect(res.ok).toBe(true);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy.mock.calls[0][1]).toMatchObject({ redirect: 'manual' });
+    expect(fetchSpy.mock.calls[1][1]).toMatchObject({ redirect: 'manual' });
+    expect(String(fetchSpy.mock.calls[1][0])).toBe(
+      'https://i.instagram.com/api/v1/users/x/usernameinfo/canonical/'
+    );
+  });
 });

@@ -1,3 +1,4 @@
+import { fetchSameOriginHttps } from '../../helpers/same-origin-https-fetch.js';
 import { withTimeout } from '../../helpers/with-timeout.js';
 import { getInstagramProviderEnv, getInstagramProxyRuntime } from '../instagram-runtime.js';
 import type { InstagramCredentials } from '../../types/proxy-credentials.js';
@@ -151,7 +152,7 @@ export async function instagramPrivateApiRequest(
     let res: Response;
     try {
       res = await withTimeout(signal =>
-        fetch(url.toString(), {
+        fetchSameOriginHttps(url.toString(), {
           method: options.method ?? 'GET',
           headers,
           body: options.method === 'POST' ? (options.body ?? '') : undefined,
