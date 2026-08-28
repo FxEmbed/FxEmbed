@@ -1117,6 +1117,123 @@ export const APISearchResultsThreadsSchema = z
 
 export type APISearchResultsThreads = z.infer<typeof APISearchResultsThreadsSchema>;
 
+/** TikTok post, normalized from the public web / embed surfaces (API v2 baseline). */
+export type APITikTokStatus = {
+  type: 'status';
+  id: string;
+  url: string;
+  text: string;
+  created_at: string;
+  created_timestamp: number;
+  likes: number;
+  reposts: number;
+  quotes?: number;
+  replies: number;
+  /** Play count. TikTok exposes this on every surface, unlike the other providers. */
+  views?: number | null;
+  quote?: APITikTokStatus | APIStatusTombstone;
+  poll?: z.infer<typeof APIPollSchema>;
+  author: z.infer<typeof APIUserSchema>;
+  media: z.infer<typeof APIMediaContainerSchema>;
+  raw_text: {
+    text: string;
+    facets: z.infer<typeof APIFacetSchema>[];
+  };
+  lang: string | null;
+  translation?: z.infer<typeof APITranslateSchema>;
+  possibly_sensitive: boolean;
+  replying_to: APIReplyingTo | null;
+  source: string | null;
+  embed_card: 'tweet' | 'summary' | 'summary_large_image' | 'player';
+  provider: 'tiktok';
+  reposted_by?: z.infer<typeof APIRepostedBySchema>;
+};
+
+export const APITikTokStatusSchema: z.ZodType<APITikTokStatus> = z.lazy(() =>
+  z
+    .object({
+      type: z.literal('status').openapi({ description: 'Discriminator: single TikTok post.' }),
+      id: z.string(),
+      url: z.string(),
+      text: z.string(),
+      created_at: z.string(),
+      created_timestamp: z.number(),
+      likes: z.number(),
+      reposts: z.number(),
+      quotes: z.number().optional(),
+      replies: z.number(),
+      views: z.number().nullable().optional().openapi({ description: 'Play count.' }),
+      quote: z.union([APITikTokStatusSchema, APIStatusTombstoneSchema]).optional(),
+      poll: APIPollSchema.optional(),
+      author: APIUserSchema,
+      media: APIMediaContainerSchema,
+      raw_text: z.object({
+        text: z.string(),
+        facets: z.array(APIFacetSchema)
+      }),
+      lang: z.string().nullable(),
+      translation: APITranslateSchema.optional(),
+      possibly_sensitive: z.boolean(),
+      replying_to: APIReplyingToSchema.nullable(),
+      source: z.string().nullable(),
+      embed_card: z.enum(['tweet', 'summary', 'summary_large_image', 'player']),
+      provider: z.literal('tiktok'),
+      reposted_by: APIRepostedBySchema.optional()
+    })
+    .openapi('APITikTokStatus')
+);
+
+export const SocialThreadTikTokSchema = z
+  .object({
+    code: z.number().openapi({ description: 'HTTP-style status; mirrors response status code' }),
+    status: APITikTokStatusSchema.nullable(),
+    thread: z.array(z.union([APITikTokStatusSchema, APIStatusTombstoneSchema])).nullable(),
+    author: APIUserSchema.nullable()
+  })
+  .openapi('SocialThreadTikTok');
+
+export type SocialThreadTikTok = z.infer<typeof SocialThreadTikTokSchema>;
+
+export const APISearchResultsTikTokSchema = z
+  .object({
+    code: z.number(),
+    results: z.array(APITikTokStatusSchema),
+    cursor: SearchCursorSchema
+  })
+  .openapi('APISearchResultsTikTok');
+
+export type APISearchResultsTikTok = z.infer<typeof APISearchResultsTikTokSchema>;
+
+/** Hashtag or sound header returned alongside a TikTok playlist timeline. */
+export const APITikTokCollectionSchema = z
+  .object({
+    id: z.string().nullable(),
+    name: z.string(),
+    url: z.string(),
+    description: z.string().nullable(),
+    cover_url: z.string().nullable(),
+    /** Total views across the collection. Hashtags report this; sounds do not. */
+    views: z.number().nullable(),
+    /** Total posts in the collection. */
+    statuses: z.number().nullable(),
+    /** Sounds only: the account that uploaded the audio. Null for hashtags. */
+    author_name: z.string().nullable()
+  })
+  .openapi('APITikTokCollection');
+
+export type APITikTokCollection = z.infer<typeof APITikTokCollectionSchema>;
+
+export const APITikTokCollectionResultsSchema = z
+  .object({
+    code: z.number(),
+    collection: APITikTokCollectionSchema.nullable(),
+    results: z.array(APITikTokStatusSchema),
+    cursor: SearchCursorSchema
+  })
+  .openapi('APITikTokCollectionResults');
+
+export type APITikTokCollectionResults = z.infer<typeof APITikTokCollectionResultsSchema>;
+
 /** Status or tombstone row allowed in shared `SocialThread` / `SocialConversation` parents. */
 export const SocialThreadStatusItemSchema = z.union([
   APITwitterStatusSchema,
@@ -1124,6 +1241,7 @@ export const SocialThreadStatusItemSchema = z.union([
   APIMastodonStatusSchema,
   APIInstagramStatusSchema,
   APIThreadsStatusSchema,
+  APITikTokStatusSchema,
   APIStatusTombstoneSchema
 ]);
 

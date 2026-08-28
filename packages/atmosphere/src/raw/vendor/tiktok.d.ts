@@ -19,6 +19,21 @@ declare interface TikTokAuthor {
   videoCount?: number;
   diggCount?: number;
   privateAccount?: boolean;
+  /** Link in the profile bio, when the account has one. */
+  bioLink?: {
+    link: string;
+    risk: number;
+  };
+  /** Set when the account is a business / commerce account. */
+  commerceUserInfo?: {
+    commerceUser?: boolean;
+    category?: string;
+    categoryButton?: boolean;
+  };
+  ttSeller?: boolean;
+  isOrganization?: number;
+  region?: string;
+  language?: string;
 }
 
 declare interface TikTokMusic {
@@ -200,31 +215,196 @@ declare interface TikTokSigiState {
   };
 }
 
+declare interface TikTokUserDetail {
+  userInfo?: {
+    user?: TikTokAuthor;
+    stats?: TikTokAuthorStats;
+    statsV2?: TikTokAuthorStatsV2;
+  };
+  shareMeta?: {
+    title?: string;
+    desc?: string;
+  };
+  statusCode?: number;
+  statusMsg?: string;
+}
+
+/** A/B variant of `webapp.video-detail`; the item struct has been seen at three depths. */
+declare interface TikTokReflowVideoDetail {
+  itemInfo?: {
+    itemStruct?: TikTokItemInfo;
+  };
+  videoDetail?: {
+    itemInfo?: {
+      itemStruct?: TikTokItemInfo;
+    };
+  };
+  itemStruct?: TikTokItemInfo;
+}
+
 declare interface TikTokUniversalData {
   'webapp.video-detail'?: {
     itemInfo?: {
       itemStruct?: TikTokItemInfo;
     };
+    statusCode?: number;
   };
-  'webapp.user-detail'?: {
-    userInfo?: {
-      user?: TikTokAuthor;
-      stats?: {
-        followerCount: number;
-        followingCount: number;
-        heartCount: number;
-        videoCount: number;
-        diggCount: number;
+  'webapp.reflow.video.detail'?: TikTokReflowVideoDetail;
+  'webapp.user-detail'?: TikTokUserDetail;
+  '__DEFAULT_SCOPE__'?: TikTokUniversalData;
+}
+
+/* `/embed/…` pages (Frontity app). Server-rendered, unsigned, and keyed by request path. */
+
+declare interface TikTokFrontityState {
+  source?: {
+    data?: Record<string, TikTokEmbedRouteData | unknown>;
+  };
+}
+
+declare interface TikTokEmbedRouteData {
+  route?: string;
+  link?: string;
+  page?: number;
+  isError?: boolean;
+  errorCode?: number;
+  errorStatus?: number;
+  pageName?: string;
+  playlistType?: string;
+  playlistId?: string;
+  /** `/embed/v2/:id` and `/embed/:id`. */
+  videoData?: TikTokEmbedVideoData;
+  /** `/embed/@handle`. */
+  userInfo?: TikTokEmbedUserInfo;
+  /** `/embed/tag/:tag` and `/embed/music/:id`. */
+  embedInfo?: TikTokEmbedPlaylistInfo;
+  /** Present on every playlist-shaped embed route. */
+  videoList?: TikTokEmbedItem[];
+}
+
+declare interface TikTokEmbedVideoData {
+  itemInfos?: {
+    id: string;
+    text: string;
+    /** Unix seconds, as a decimal string. */
+    createTime: string;
+    authorId: string;
+    musicId: string;
+    covers?: string[];
+    coversOrigin?: string[];
+    coversDynamic?: string[];
+    video?: {
+      urls?: string[];
+      videoMeta?: {
+        width?: number;
+        height?: number;
+        ratio?: string;
+        duration?: number;
       };
     };
+    diggCount?: number;
+    shareCount?: number;
+    commentCount?: number;
+    playCount?: number;
+    isAd?: boolean;
+    locationCreated?: string;
   };
-  '__DEFAULT_SCOPE__'?: {
-    'webapp.video-detail'?: {
-      itemInfo?: {
-        itemStruct?: TikTokItemInfo;
-      };
-    };
+  authorInfos?: {
+    userId?: string;
+    secUid?: string;
+    uniqueId?: string;
+    nickName?: string;
+    covers?: string[];
+    verified?: boolean;
+    signature?: string;
   };
+  authorStats?: {
+    followingCount?: number;
+    followerCount?: number;
+    /** Sometimes a string, sometimes a number, depending on magnitude. */
+    heartCount?: number | string;
+    videoCount?: number;
+    diggCount?: number;
+  };
+  musicInfos?: {
+    musicId?: string;
+    musicName?: string;
+    authorName?: string;
+    original?: boolean;
+    playUrl?: string[];
+  };
+  /** Hashtags used by the post; `textExtra` carries their offsets in `itemInfos.text`. */
+  challengeInfoList?: {
+    challengeId?: string;
+    challengeName?: string;
+  }[];
+  textExtra?: {
+    Start?: number;
+    End?: number;
+    Type?: number;
+    HashtagName?: string;
+    HashtagId?: string;
+    AwemeId?: string;
+  }[];
+  imagePostInfo?: {
+    images?: {
+      imageURL?: { urlList?: string[] };
+      imageWidth?: number;
+      imageHeight?: number;
+    }[];
+    title?: string;
+  } | null;
+}
+
+declare interface TikTokEmbedUserInfo {
+  id: string;
+  uniqueId: string;
+  nickname: string;
+  avatarThumbUrl?: string;
+  verified?: boolean;
+  signature?: string;
+  privateAccount?: boolean;
+  followingCount?: number;
+  followerCount?: number;
+  heartCount?: number;
+  code?: number;
+  customErrorCode?: number;
+}
+
+/**
+ * Hashtag (`/embed/tag`) or sound (`/embed/music`) header block.
+ *
+ * The two routes do not return the same fields: hashtags carry `viewCount` / `description` and
+ * send both counters as decimal strings; sounds carry `artist` and send `videoCount` as a number.
+ */
+declare interface TikTokEmbedPlaylistInfo {
+  id?: string;
+  title?: string;
+  description?: string;
+  coverUrl?: string;
+  viewCount?: string | number;
+  videoCount?: string | number;
+  /** Sound pages only: the account that uploaded the audio. */
+  artist?: string;
+  statusCode?: number;
+  code?: number;
+}
+
+/** One row of an embed `videoList`. Flatter than `TikTokItemInfo` — no author stats, no formats. */
+declare interface TikTokEmbedItem {
+  id: string;
+  desc: string;
+  height?: number;
+  width?: number;
+  ratio?: string;
+  coverUrl?: string;
+  originCoverUrl?: string;
+  dynamicCoverUrl?: string;
+  playAddr?: string;
+  playCount?: number;
+  privateItem?: boolean;
+  authorUniqueId?: string;
+  createTime?: number | string;
 }
 
 declare interface TikTokOEmbedResponse {
@@ -376,6 +556,8 @@ declare interface TikTokAwemeImage {
 
 declare interface TikTokThread {
   video: TikTokItemInfo | TikTokAwemeDetail | null;
+  /** Set instead of `video` when only the `/embed/v2/:id` player page answered. */
+  embed?: TikTokEmbedVideoData | null;
   author: TikTokAuthor | TikTokAwemeAuthor | null;
   cookies: string | null;
   code: number;

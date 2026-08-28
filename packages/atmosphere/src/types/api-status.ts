@@ -14,6 +14,7 @@ import type {
   APIReplyingTo,
   APIInstagramStatus,
   APIThreadsStatus,
+  APITikTokStatus,
   APISubstatus,
   APITranslate,
   APITwitterStatus,
@@ -75,12 +76,13 @@ export interface APIStatus {
   type: 'status';
 }
 
-export interface APITikTokStatus extends APIStatus {
-  provider: DataProvider.TikTok;
-  views?: number | null;
-}
-
-export type { APIBlueskyNotification, APIInstagramStatus, APIThreadsStatus, APISubstatus };
+export type {
+  APIBlueskyNotification,
+  APIInstagramStatus,
+  APIThreadsStatus,
+  APITikTokStatus,
+  APISubstatus
+};
 
 export interface SocialPost {
   status: APIStatus | APITwitterStatus | null;
@@ -91,6 +93,7 @@ export type ThreadOrStatusItem =
   | APIStatus
   | APIInstagramStatus
   | APIThreadsStatus
+  | APITikTokStatus
   | APITwitterStatus
   | APIStatusTombstone
   | APIBlueskyStatus;
