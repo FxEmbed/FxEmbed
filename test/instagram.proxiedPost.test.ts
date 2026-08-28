@@ -157,6 +157,75 @@ describe('Instagram post and conversation through the account proxy', () => {
     expect(requested.some(u => u.includes('max_id=COMMENTS2'))).toBe(true);
   });
 
+  it('asks the comments API for count and surfaces the next comment on the following page', async () => {
+    installProxy();
+    const comments = [
+      {
+        pk: '18000000000000001',
+        text: 'first',
+        created_at: 1770000100,
+        user: { pk: 99, username: 'fan', full_name: 'A Fan' }
+      },
+      {
+        pk: '18000000000000002',
+        text: 'second',
+        created_at: 1770000200,
+        user: { pk: 98, username: 'other', full_name: 'Someone Else' }
+      }
+    ];
+    const requested: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string) => {
+        const url = new URL(input);
+        requested.push(url.pathname + url.search);
+        if (url.pathname.startsWith(`/api/v1/media/${MEDIA_PK}/info/`)) {
+          return new Response(JSON.stringify({ items: [mediaItem] }), { status: 200 });
+        }
+        if (url.pathname.startsWith(`/api/v1/media/${MEDIA_PK}/comments/`)) {
+          const count = Number(url.searchParams.get('count') ?? 20);
+          const maxId = url.searchParams.get('max_id');
+          const start = maxId === 'C2' ? 1 : 0;
+          const page = comments.slice(start, start + count);
+          const hasMore = start + count < comments.length;
+          return new Response(
+            JSON.stringify({
+              comments: page,
+              next_max_id: hasMore ? 'C2' : undefined,
+              has_more_comments: hasMore
+            }),
+            { status: 200 }
+          );
+        }
+        return new Response('{}', { status: 404 });
+      })
+    );
+
+    const page1 = await constructInstagramConversation(SHORTCODE, {
+      cursor: null,
+      count: 1,
+      sortOrder: 'popular',
+      userAgent: 'FxEmbedTest/1.0',
+      credentialKey
+    });
+    expect(page1.ok).toBe(true);
+    if (!page1.ok) return;
+    expect(page1.data.replies?.map(r => r.text)).toEqual(['first']);
+    expect(requested.some(u => u.includes('/comments/') && u.includes('count=1'))).toBe(true);
+
+    const page2 = await constructInstagramConversation(SHORTCODE, {
+      cursor: page1.data.cursor?.bottom ?? null,
+      count: 1,
+      sortOrder: 'popular',
+      userAgent: 'FxEmbedTest/1.0',
+      credentialKey
+    });
+    expect(page2.ok).toBe(true);
+    if (!page2.ok) return;
+    expect(page2.data.replies?.map(r => r.text)).toEqual(['second']);
+    expect(requested.some(u => u.includes('max_id=C2'))).toBe(true);
+  });
+
   it('refuses a GraphQL cursor on the proxy path rather than serving the wrong page', async () => {
     installProxy();
     stubApi({

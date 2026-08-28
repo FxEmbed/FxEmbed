@@ -50,6 +50,7 @@ export function fetchThreadsProfileFeed(
   ctx: ThreadsRequestContext | undefined,
   options: ThreadsApiOptions & {
     maxId?: string | null;
+    count?: number;
     username?: string;
   } = {}
 ): Promise<ThreadsPrivateApiResult> {
@@ -57,6 +58,7 @@ export function fetchThreadsProfileFeed(
     pathParams: { user_id: userId },
     query: {
       user_id: userId,
+      count: options.count,
       max_id: options.maxId ?? undefined,
       is_app_start: false
     },
@@ -71,6 +73,7 @@ export function fetchThreadsPostReplies(
   ctx: ThreadsRequestContext | undefined,
   options: ThreadsApiOptions & {
     pagingToken?: string | null;
+    count?: number;
     sortOrder?: 'top' | 'all';
     shortcode?: string;
     username?: string;
@@ -81,6 +84,7 @@ export function fetchThreadsPostReplies(
     query: {
       post_id: postId,
       sort_order: options.sortOrder ?? 'top',
+      count: options.count,
       paging_token: options.pagingToken ?? undefined,
       check_for_unavailable_replies: true
     },

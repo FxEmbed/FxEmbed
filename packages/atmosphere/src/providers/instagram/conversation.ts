@@ -120,6 +120,7 @@ export async function constructInstagramConversation(
     const res = await fetchPrivateMediaComments(mediaPk, ctx, {
       accounts,
       maxId,
+      count,
       sortOrder: options.sortOrder,
       shortcode
     });
