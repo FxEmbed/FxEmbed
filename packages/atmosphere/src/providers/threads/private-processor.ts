@@ -142,7 +142,7 @@ export function usersFromThreadsList(
 
 /** Whether an Instagram user record belongs to someone who actually uses Threads. */
 export function isThreadsUser(rec: Record<string, unknown>): boolean {
-  return Boolean(rec.is_active_on_text_post_app ?? rec.has_onboarded_to_text_post_app);
+  return Boolean(rec.is_active_on_text_post_app) || Boolean(rec.has_onboarded_to_text_post_app);
 }
 
 const num = (...vals: unknown[]): number => {
