@@ -406,7 +406,7 @@ export const instagramSearchUsersAPIRequest: RouteHandler<
   );
   const { httpStatus, payload } = normalizeApiJsonResponse(
     body,
-    PROXY_ROUTE_STATUSES,
+    [200, 400, 500, 501] as const,
     'instagramSearchUsersAPIRequest'
   );
   c.status(httpStatus);
@@ -439,7 +439,7 @@ export const instagramTypeaheadAPIRequest: RouteHandler<
   );
   const { httpStatus, payload } = normalizeApiJsonResponse(
     body,
-    PROXY_ROUTE_STATUSES,
+    [200, 400, 500, 501] as const,
     'instagramTypeaheadAPIRequest'
   );
   c.status(httpStatus);

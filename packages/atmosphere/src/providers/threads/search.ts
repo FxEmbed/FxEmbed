@@ -201,13 +201,14 @@ export async function constructThreadsTypeahead(
   if (!q) {
     return emptyTypeahead(400, query);
   }
+  const count = Math.min(50, Math.max(1, Math.floor(options.count ?? 20)));
   const accounts = await resolveThreadsAccounts(options.ctx);
   if (!accounts.length) {
     return emptyTypeahead(501, q);
   }
 
   const [userRes, keywordRes] = await Promise.all([
-    fetchThreadsUserSearch(q, options.ctx, { accounts, count: options.count }),
+    fetchThreadsUserSearch(q, options.ctx, { accounts, count: count * 2 }),
     fetchThreadsKeywordSearch(q, options.ctx, { accounts })
   ]);
   // Users are the half people actually navigate with, so only a failure there is fatal.
@@ -215,7 +216,7 @@ export async function constructThreadsTypeahead(
     return emptyTypeahead(500, q);
   }
 
-  const users = usersFromThreadsList(userRes.json, { threadsOnly: true });
+  const users = usersFromThreadsList(userRes.json, { threadsOnly: true }).slice(0, count);
   const topics = keywordRes.ok ? topicsFromKeywordSearch(keywordRes.json) : [];
   return {
     code: 200,

@@ -103,7 +103,7 @@ export function decodeCommentCursor(raw: string): InstagramCommentCursorV1 | nul
  */
 export type InstagramMaxIdCursorV1 = {
   v: 1;
-  k: 'followers' | 'following' | 'tagged' | 'feed';
+  k: 'followers' | 'following' | 'tagged' | 'feed' | 'feed_videos';
   /** User pk the list belongs to. */
   id: string;
   /**
@@ -120,7 +120,8 @@ const MAX_ID_CURSOR_KINDS = new Set<InstagramMaxIdCursorV1['k']>([
   'followers',
   'following',
   'tagged',
-  'feed'
+  'feed',
+  'feed_videos'
 ]);
 
 export function encodeMaxIdCursor(p: InstagramMaxIdCursorV1): string {

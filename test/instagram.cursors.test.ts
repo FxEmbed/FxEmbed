@@ -75,6 +75,11 @@ describe('instagram cursors', () => {
       c: 20
     };
     expect(decodeMaxIdCursor(encodeMaxIdCursor(cur))).toEqual(cur);
+    expect(
+      decodeMaxIdCursor(
+        encodeMaxIdCursor({ v: 1, k: 'feed_videos', id: '1', u: 'a', m: 'x', c: 20 })
+      )?.k
+    ).toBe('feed_videos');
 
     const badKind = btoa(JSON.stringify({ v: 1, k: 'likers', id: '1', u: 'a', m: 'x', c: 20 }))
       .replace(/\+/g, '-')

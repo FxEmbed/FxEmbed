@@ -218,7 +218,7 @@ async function privateFeedPage(params: {
   const bottom = nextMaxId
     ? encodeMaxIdCursor({
         v: 1,
-        k: 'feed',
+        k: params.videosOnly ? 'feed_videos' : 'feed',
         id: params.userId,
         u: params.username,
         m: nextMaxId,
@@ -302,7 +302,11 @@ async function tryPrivateProfileFeed(
   if (options.cursor) {
     const decoded = decodeMaxIdCursor(options.cursor);
     // A profile cursor from the logged-out path is still valid; let the caller handle it.
-    if (!decoded || decoded.k !== 'feed' || !sameInstagramHandle(decoded.u, username)) return null;
+    if (!decoded) return null;
+    const expectedKind = videosOnly ? 'feed_videos' : 'feed';
+    if (decoded.k !== expectedKind || !sameInstagramHandle(decoded.u, username)) {
+      return { code: 400, results: [], cursor: { top: null, bottom: null } };
+    }
     return privateFeedPage({
       userId: decoded.id,
       username,

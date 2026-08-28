@@ -7,8 +7,21 @@ import { Strings } from '../../../strings';
 import { InputFlags } from '../../../types/types';
 import { resolveShortUrl, isShortCode } from '@fxembed/atmosphere/providers/tiktok/conversation';
 
+/**
+ * Where a human clicking one of our links should land. We keep the handle and the `video`/`photo`
+ * segment from the incoming URL when there are any; `/t/:code` links carry neither, and TikTok
+ * redirects `/@a/video/:id` to the canonical post either way.
+ */
+const tiktokPostUrl = (c: Context, handle: string | undefined, id: string): string => {
+  const cleanHandle = handle?.replace(/^@/, '') ?? '';
+  const known = /^[A-Za-z0-9._]{1,24}$/.test(cleanHandle) ? cleanHandle : 'a';
+  const kind = new URL(c.req.url).pathname.includes('/photo/') ? 'photo' : 'video';
+  return `${Constants.TIKTOK_ROOT}/@${known}/${kind}/${id}`;
+};
+
 export const tiktokVideoRequest = async (c: Context) => {
   console.log('tiktok video request!!!');
+  const { handle } = c.req.param();
   let { id } = c.req.param();
 
   // Check if this is a shorthand URL (e.g., /t/ZP8yxgATu)
@@ -85,8 +98,7 @@ export const tiktokVideoRequest = async (c: Context) => {
         Since we obviously have no media to give the user, we'll just redirect to the status.
         Embeds will return as usual to bots as if direct media was never specified. */
       if (!isBotUA && !flags.api && !flags.direct) {
-        const url = `${Constants.TIKTOK_ROOT}/@demo/video/${id}`;
-        return c.redirect(url, 302);
+        return c.redirect(tiktokPostUrl(c, handle, id), 302);
       }
 
       c.status(200);
@@ -97,10 +109,10 @@ export const tiktokVideoRequest = async (c: Context) => {
       return c.text(Strings.ERROR_UNKNOWN, 500);
     }
   } else {
-    /* A human has clicked a fxbsky.app/profil/:screen_name/post/:id link!
-      Obviously we just need to redirect to the status directly.*/
+    /* A human has clicked a vxtiktok.com/@:handle/video/:id link!
+      Obviously we just need to redirect to the post directly.*/
     console.log('Matched human UA', userAgent);
 
-    return c.redirect(`${Constants.TIKTOK_ROOT}/@demo/video/${id}`, 302);
+    return c.redirect(tiktokPostUrl(c, handle, id), 302);
   }
 };
