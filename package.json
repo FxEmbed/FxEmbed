@@ -36,7 +36,7 @@
     "@aws-sdk/client-s3": "^3.1115.0",
     "@aws-sdk/s3-request-presigner": "^3.1115.0",
     "@cloudflare/vitest-pool-workers": "^0.22.0",
-    "@cloudflare/workers-types": "^5.20260821.1",
+    "@cloudflare/workers-types": "^5.20260828.1",
     "@eslint/js": "^10.0.1",
     "@microsoft/eslint-formatter-sarif": "^3.1.0",
     "@sentry/esbuild-plugin": "^5.4.0",
@@ -55,7 +55,7 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.67.0",
     "vitest": "^4.1.11",
-    "wrangler": "^4.125.1"
+    "wrangler": "^4.127.0"
   },
   "dependencies": {
     "@fxembed/atmosphere": "*",
