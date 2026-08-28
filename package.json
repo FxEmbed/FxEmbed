@@ -60,7 +60,7 @@
   "dependencies": {
     "@fxembed/atmosphere": "*",
     "@hono/sentry": "^1.2.2",
-    "@hono/zod-openapi": "^1.6.0",
+    "@hono/zod-openapi": "^1.6.1",
     "cheerio": "^1.2.0",
     "hono": "^4.13.2",
     "i18next": "^26.3.6",
