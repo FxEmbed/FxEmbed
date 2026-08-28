@@ -57,6 +57,7 @@ export async function constructThreadsProfileTab(
   const res = await fetchThreadsProfileFeed(userId, tab, options.ctx, {
     accounts,
     maxId,
+    count,
     username: handle
   });
   if (!res.ok) {

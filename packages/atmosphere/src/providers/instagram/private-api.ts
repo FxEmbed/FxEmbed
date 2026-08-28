@@ -65,6 +65,7 @@ export function fetchPrivateMediaComments(
   options: InstagramApiOptions & {
     maxId?: string | null;
     minId?: string | null;
+    count?: number;
     sortOrder?: 'popular' | 'recent';
     shortcode?: string;
   } = {}
@@ -74,6 +75,7 @@ export function fetchPrivateMediaComments(
       can_support_threading: 'true',
       permalink_enabled: 'false',
       sort_order: options.sortOrder ?? 'popular',
+      count: options.count,
       max_id: options.maxId ?? undefined,
       min_id: options.minId ?? undefined
     },

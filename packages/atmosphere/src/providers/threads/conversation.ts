@@ -70,6 +70,7 @@ async function proxiedConversation(params: {
   const res = await fetchThreadsPostReplies(params.mediaId, params.ctx, {
     accounts,
     sortOrder,
+    count: params.count,
     pagingToken: params.pagingToken,
     shortcode: params.shortcode
   });
