@@ -41,8 +41,9 @@ tiktok.get('/api/:id', async c => {
   return c.json(thread);
 });
 
-// Regular video URLs: /@username/video/1234567890
+// Regular post URLs: /@username/video/1234567890 and /@username/photo/1234567890
 tiktok.get('/:handle/video/:id', tiktokVideoRequest);
+tiktok.get('/:handle/photo/:id', tiktokVideoRequest);
 
 // Shorthand URLs: /t/ZP8yxgATu
 // The :id parameter will be detected as a shorthand code and resolved in tiktokVideoRequest
