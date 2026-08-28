@@ -106,7 +106,10 @@ test('profile is read from the server-rendered profile page', async () => {
   stubTikTok();
   const res = await get('/2/tiktok/profile/tiktok');
   expect(res.status).toBe(200);
-  const body = (await res.json()) as { code: number; user: { screen_name: string; followers: number } };
+  const body = (await res.json()) as {
+    code: number;
+    user: { screen_name: string; followers: number };
+  };
   expect(body.code).toBe(200);
   expect(body.user.screen_name).toBe('tiktok');
   expect(body.user.followers).toBe(95384989);
@@ -179,7 +182,12 @@ test('music accepts the slug-id fragment from a sound URL', async () => {
   expect(res.status).toBe(200);
   expect(requested).toContain('/embed/music/7571176808381467422');
   const body = (await res.json()) as {
-    collection: { name: string; author_name: string | null; statuses: number; views: number | null };
+    collection: {
+      name: string;
+      author_name: string | null;
+      statuses: number;
+      views: number | null;
+    };
   };
   expect(body.collection.author_name).toBe('Harbee');
   expect(body.collection.statuses).toBe(1);

@@ -73,7 +73,8 @@ function isLoginRedirect(finalUrl: string | undefined): boolean {
 export async function fetchInstagramPageWithWebInfo(
   shortcode: string,
   userAgent: string | undefined,
-  ctx?: InstagramRequestContext
+  ctx?: InstagramRequestContext,
+  options?: { skipAccountProxy?: boolean }
 ): Promise<InstagramWebInfoPage> {
   let mediaIdForProxy: string | null;
   try {
@@ -82,7 +83,7 @@ export async function fetchInstagramPageWithWebInfo(
     mediaIdForProxy = null;
   }
 
-  if (mediaIdForProxy) {
+  if (mediaIdForProxy && !options?.skipAccountProxy) {
     const accounts = await resolveInstagramAccounts(ctx);
     if (accounts.length) {
       const info = await fetchPrivateMediaInfo(mediaIdForProxy, ctx, { accounts, shortcode });

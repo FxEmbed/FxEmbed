@@ -10,10 +10,7 @@ import {
   extractEmbedState,
   extractUniversalData
 } from '@fxembed/atmosphere/providers/tiktok/client';
-import {
-  isShortCode,
-  parseVideoUrl
-} from '@fxembed/atmosphere/providers/tiktok/conversation';
+import { isShortCode, parseVideoUrl } from '@fxembed/atmosphere/providers/tiktok/conversation';
 import { normalizeTikTokHandle } from '@fxembed/atmosphere/providers/tiktok/profile';
 
 const user: TikTokAuthor = {
@@ -178,7 +175,12 @@ describe('TikTok embed player payload', () => {
       covers: ['https://cdn.example/avatar.jpg'],
       verified: false
     },
-    authorStats: { followerCount: 62200, followingCount: 181, heartCount: '1200000', videoCount: 445 },
+    authorStats: {
+      followerCount: 62200,
+      followingCount: 181,
+      heartCount: '1200000',
+      videoCount: 445
+    },
     musicInfos: { musicName: 'original sound - Harbee', authorName: 'Harbee' }
   };
 
@@ -205,7 +207,11 @@ describe('TikTok embed player payload', () => {
       itemInfos: { ...data.itemInfos!, video: undefined },
       imagePostInfo: {
         images: [
-          { imageURL: { urlList: ['https://cdn.example/1.jpg'] }, imageWidth: 1080, imageHeight: 1920 }
+          {
+            imageURL: { urlList: ['https://cdn.example/1.jpg'] },
+            imageWidth: 1080,
+            imageHeight: 1920
+          }
         ]
       }
     });
@@ -262,7 +268,7 @@ describe('TikTok page payload extraction', () => {
       {
         source: {
           data: {
-            strategy: { ignored: true },
+            'strategy': { ignored: true },
             '/embed/@tiktok/': { userInfo: { uniqueId: 'tiktok' }, videoList: [] }
           }
         }

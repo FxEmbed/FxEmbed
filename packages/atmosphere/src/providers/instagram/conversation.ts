@@ -72,8 +72,6 @@ export async function constructInstagramConversation(
     };
   }
   const item = page.item;
-  const htmlBody = page.html;
-  const refererForGraphql = page.pathUsed ?? `/p/${encodeURIComponent(shortcode)}/`;
   const owner =
     (item.user as Record<string, unknown> | undefined) ??
     (item.owner as Record<string, unknown> | undefined);
@@ -151,7 +149,27 @@ export async function constructInstagramConversation(
     }
   }
 
-  const conn = page.comments ?? extractCommentsConnection(htmlBody);
+  let htmlBody = page.html;
+  let commentsConn = page.comments;
+  let pageLsd = page.lsd;
+  let refererForGraphql = page.pathUsed ?? `/p/${encodeURIComponent(shortcode)}/`;
+  /*
+   * Proxy media has no HTML/LSD. If comments also failed, refetch logged-out so the first page
+   * is not an empty 200 and later GraphQL pages still have a session token.
+   */
+  if (accounts.length && mediaPk && !options.cursor && page.source === 'account-proxy') {
+    const loggedOut = await fetchInstagramPageWithWebInfo(shortcode, options.userAgent, ctx, {
+      skipAccountProxy: true
+    });
+    if (loggedOut.ok) {
+      htmlBody = loggedOut.html;
+      commentsConn = loggedOut.comments;
+      pageLsd = loggedOut.lsd;
+      refererForGraphql = loggedOut.pathUsed ?? refererForGraphql;
+    }
+  }
+
+  const conn = commentsConn ?? extractCommentsConnection(htmlBody);
   const pageInfo = conn?.page_info ?? {};
   const hasNext =
     Boolean((pageInfo as { has_next_page?: boolean }).has_next_page) ||
@@ -205,7 +223,7 @@ export async function constructInstagramConversation(
   }
 
   // Prefer LSD preserved on the page result (required for polaris-graphql, which has empty HTML).
-  const lsd = page.lsd;
+  const lsd = pageLsd;
   if (!lsd) {
     return {
       ok: false,

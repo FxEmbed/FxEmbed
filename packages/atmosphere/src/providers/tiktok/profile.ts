@@ -62,7 +62,11 @@ export const fetchTikTokProfile = async (handleInput: string): Promise<TikTokPro
   }
 
   console.error('Could not resolve TikTok profile', handle, status, embed.status);
-  return { user: null, code: status === 404 || embed.status === 404 ? 404 : 500 };
+  // A 200 page with no usable user is "not found", matching `fetchTikTokProfileStatuses`.
+  return {
+    user: null,
+    code: status === 404 || embed.status === 404 || embed.status === 200 ? 404 : 500
+  };
 };
 
 /** `/2/tiktok/profile/{handle}` envelope. */

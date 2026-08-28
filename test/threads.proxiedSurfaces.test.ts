@@ -12,6 +12,7 @@ import { constructThreadsPost } from '@fxembed/atmosphere/providers/threads/post
 import { constructThreadsConversation } from '@fxembed/atmosphere/providers/threads/conversation';
 import { constructThreadsProfile } from '@fxembed/atmosphere/providers/threads/profile';
 import {
+  decodeThreadsConversationCursor,
   decodeThreadsSearchCursor,
   decodeThreadsTokenCursor
 } from '@fxembed/atmosphere/providers/threads/cursors';
@@ -193,7 +194,7 @@ describe('proxied Threads surfaces', () => {
     expect(requested[0]).toContain('max_id=PAGE2');
   });
 
-  it('searches posts on the top tab and pins the tab into the cursor', async () => {
+  it('searches posts on the top tab, pins the tab into the cursor, and rejects a cursor from another query', async () => {
     installProxy();
     const requested = stubApi({
       '/api/v1/fbsearch/text_app/serp/': {
@@ -212,9 +213,16 @@ describe('proxied Threads surfaces', () => {
 
     const decoded = decodeThreadsSearchCursor(page.cursor.bottom ?? '');
     expect(decoded).toMatchObject({ q: 'meta', r: false, t: 'PAGE2', rt: 'RANK', p: 1 });
+
+    const withOtherQuery = await constructThreadsSearch('threads', {
+      count: 20,
+      cursor: page.cursor.bottom,
+      ctx
+    });
+    expect(withOtherQuery.code).toBe(400);
   });
 
-  it('sends the recent surface for the recent tab and rejects a cursor from another query', async () => {
+  it('sends the recent surface for the recent tab', async () => {
     installProxy();
     const requested = stubApi({
       '/api/v1/fbsearch/text_app/serp/': {
@@ -232,13 +240,6 @@ describe('proxied Threads surfaces', () => {
     expect(requested[0]).toContain('search_surface=ig_text_search_serp_recent');
     expect(requested[0]).toContain('recent=1');
     expect(page.cursor.bottom).toBeNull();
-
-    const withOtherQuery = await constructThreadsSearch('threads', {
-      count: 20,
-      cursor: 'not-a-cursor-for-this-query',
-      ctx
-    });
-    expect(withOtherQuery.code).toBe(400);
   });
 
   it('filters user search down to accounts that are on Threads', async () => {
@@ -358,6 +359,7 @@ describe('proxied Threads surfaces', () => {
     expect(res.data.replies?.map(r => r.id)).toEqual(['RRR']);
     expect(requested[0]).toContain('/replies/');
     expect(requested[0]).toContain('sort_order=top');
+    expect(decodeThreadsConversationCursor(res.data.cursor?.bottom ?? '')?.src).toBe('proxy');
   });
 
   it('resolves a profile through usernameinfo when a proxy is available', async () => {

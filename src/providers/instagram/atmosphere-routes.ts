@@ -248,7 +248,7 @@ const relationshipResponses = {
   },
   400: {
     description: 'Invalid cursor',
-    content: { 'application/json': { schema: ApiQueryErrorSchema } }
+    content: { 'application/json': { schema: APIProfileRelationshipListSchema } }
   },
   404: {
     description: 'Not found',
@@ -304,7 +304,7 @@ export const instagramProfileTaggedV2Route = createRoute({
     },
     400: {
       description: 'Invalid cursor',
-      content: { 'application/json': { schema: ApiQueryErrorSchema } }
+      content: { 'application/json': { schema: APISearchResultsInstagramSchema } }
     },
     404: {
       description: 'Not found',
