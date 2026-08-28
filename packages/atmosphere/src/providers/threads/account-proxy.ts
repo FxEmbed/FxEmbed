@@ -1,3 +1,4 @@
+import { fetchSameOriginHttps } from '../../helpers/same-origin-https-fetch.js';
 import { withTimeout } from '../../helpers/with-timeout.js';
 import { getInstagramProviderEnv } from '../instagram-runtime.js';
 import {
@@ -156,7 +157,7 @@ export async function threadsPrivateApiRequest(
       // Fetch can resolve on headers; keep body read + JSON.parse inside the timeout so a
       // stalled body aborts and rotates instead of hanging the request.
       const timed = await withTimeout(async signal => {
-        const response = await fetch(url.toString(), {
+        const response = await fetchSameOriginHttps(url.toString(), {
           method: options.method ?? 'GET',
           headers,
           body: options.method === 'POST' ? (options.body ?? '') : undefined,
