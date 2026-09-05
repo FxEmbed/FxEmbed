@@ -116,6 +116,6 @@
   },
   "dependencies": {
     "@hono/zod-openapi": "^1.6.1",
-    "zod": "^4.4.3"
+    "zod": "^4.5.2"
   }
 }
