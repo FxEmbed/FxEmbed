@@ -135,6 +135,8 @@ interface StatusTextResult {
   articleMedia: TwitterApiMedia[];
 }
 
+const escapeAngleBrackets = (text: string) => text.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+
 const getStatusText = (status: APIStatus): StatusTextResult => {
   let text: string;
 
@@ -155,7 +157,7 @@ const getStatusText = (status: APIStatus): StatusTextResult => {
     }
   }
 
-  const convertedStatusText = status.text.trim().replace(/\n/g, '<br>︀︀');
+  const convertedStatusText = escapeAngleBrackets(status.text).trim().replace(/\n/g, '<br>︀︀');
 
   if (status.translation) {
     console.log('translation', JSON.stringify(status.translation));
@@ -167,7 +169,8 @@ const getStatusText = (status: APIStatus): StatusTextResult => {
       })
     });
 
-    text = `${formatText}<br><br>${formatStatus(translation?.text ?? '', status)}<br><br>`;
+    const translationText = escapeAngleBrackets(translation?.text ?? '');
+    text = `${formatText}<br><br>${formatStatus(translationText, status)}<br><br>`;
     text += `<blockquote><b>${i18next.t('ivOriginalText')}</b><br>${formatStatus(convertedStatusText, status)}</blockquote>`;
   } else {
     text = formatStatus(convertedStatusText, status) + '<br><br>';
@@ -176,7 +179,7 @@ const getStatusText = (status: APIStatus): StatusTextResult => {
     if (isTombstone(status.quote)) {
       text += `<blockquote><i>${status.quote.message}</i></blockquote>`;
     } else {
-      const quoteText = (status.quote.translation?.text ?? status.quote.text)
+      const quoteText = escapeAngleBrackets(status.quote.translation?.text ?? status.quote.text)
         .trim()
         .replace(/\n/g, '<br>︀︀');
       text += `<blockquote><b>${i18next.t('ivQuoteHeader').format({
