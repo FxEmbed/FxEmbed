@@ -44,21 +44,21 @@ export const getActivitySocialProof = (status: APIStatus, twitterRoot: string): 
     let authorText = '';
     if (status.replies > 0) {
       if (status.provider === DataProvider.Twitter) {
-        authorText += `<a href="${twitterRoot}/intent/tweet?in_reply_to=${status.id}">💬</a> ${formatNumber(status.replies)}&ensp;`;
+        authorText += `💬 <a href="${twitterRoot}/intent/tweet?in_reply_to=${status.id}">${formatNumber(status.replies)}</a>&ensp;`;
       } else {
         authorText += `💬 ${formatNumber(status.replies)}&ensp;`;
       }
     }
     if (status.reposts > 0) {
       if (status.provider === DataProvider.Twitter) {
-        authorText += `<a href="${twitterRoot}/intent/retweet?tweet_id=${status.id}">🔁</a> ${formatNumber(status.reposts)}&ensp;`;
+        authorText += `🔁 <a href="${twitterRoot}/intent/retweet?tweet_id=${status.id}">${formatNumber(status.reposts)}</a>&ensp;`;
       } else {
         authorText += `🔁 ${formatNumber(status.reposts)}&ensp;`;
       }
     }
     if (status.likes > 0) {
       if (status.provider === DataProvider.Twitter) {
-        authorText += `<a href="${twitterRoot}/intent/like?tweet_id=${status.id}">❤️</a> ${formatNumber(status.likes)}&ensp;`;
+        authorText += `❤️ <a href="${twitterRoot}/intent/like?tweet_id=${status.id}">${formatNumber(status.likes)}</a>&ensp;`;
       } else {
         authorText += `❤️ ${formatNumber(status.likes)}&ensp;`;
       }
