@@ -28,7 +28,14 @@
     "credentials:encrypt-push": "node tools/credential-tools.mjs encrypt-push",
     "credentials:presign": "node tools/credential-tools.mjs presign",
     "credentials:pull": "node tools/credential-tools.mjs pull",
-    "credentials:change-country": "tsx tools/change_country.ts"
+    "credentials:change-country": "tsx tools/change_country.ts",
+    "orcarouter:login": "tsx tools/orcarouter-login.ts login",
+    "orcarouter:key": "tsx tools/orcarouter-login.ts key",
+    "orcarouter:status": "tsx tools/orcarouter-login.ts status",
+    "orcarouter:logout": "tsx tools/orcarouter-login.ts logout",
+    "orcarouter:models": "tsx tools/orcarouter-models.ts",
+    "preorcarouter:test-live": "npm run build:atmosphere",
+    "orcarouter:test-live": "vitest run --config vitest.orcarouter-live.config.mts"
   },
   "author": "dangered wolf",
   "license": "MIT",
