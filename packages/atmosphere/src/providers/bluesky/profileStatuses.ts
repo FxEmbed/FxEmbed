@@ -323,6 +323,7 @@ export const blueskyProfileMediaAPIPaginated = async (
   actor: string,
   maxTotal: number,
   host: BlueskyBuildHost,
+  withReplies = false,
   language?: string
 ): Promise<APISearchResultsBluesky> => {
   const target = Math.min(BLUESKY_PROFILE_FEED_TARGET_CAP, Math.max(1, maxTotal));
@@ -363,6 +364,7 @@ export const blueskyProfileMediaAPIPaginated = async (
     }
 
     for (const r of page.results) {
+      if (!withReplies && r.replying_to) continue;
       if (seenIds.has(r.id)) continue;
       seenIds.add(r.id);
       merged.push(r);
