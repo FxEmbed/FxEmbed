@@ -143,6 +143,7 @@ async function blueskyAuthorFeedSearchPage(
     filter: BlueskyAuthorFeedFilter;
     language?: string;
     groupThreads?: boolean;
+    excludeReplies?: boolean;
   },
   host: BlueskyBuildHost
 ): Promise<APISearchResultsBluesky | APIGroupedSearchResultsBluesky> {
@@ -163,7 +164,8 @@ async function blueskyAuthorFeedSearchPage(
     return { code: 500, results: [], cursor: { top: null, bottom: null } };
   }
 
-  const feed = result.data.feed ?? [];
+  const rawFeed = result.data.feed ?? [];
+  const feed = options.excludeReplies ? rawFeed.filter(item => !item.post?.record?.reply) : rawFeed;
   const nextCursor = result.data.cursor ?? null;
   const results = options.groupThreads
     ? await feedViewPostsToGroupedTimeline(host, feed, options.language)
@@ -206,7 +208,7 @@ export const blueskyProfileStatusesAPI = async (
 
 export const blueskyProfileMediaAPI = async (
   actor: string,
-  options: { count: number; cursor: string | null; language?: string },
+  options: { count: number; cursor: string | null; language?: string; withReplies?: boolean },
   host: BlueskyBuildHost
 ): Promise<APISearchResultsBluesky> =>
   blueskyAuthorFeedSearchPage(
@@ -215,7 +217,8 @@ export const blueskyProfileMediaAPI = async (
       count: options.count,
       cursor: options.cursor,
       filter: 'posts_with_media',
-      language: options.language
+      language: options.language,
+      excludeReplies: options.withReplies === false
     },
     host
   );
@@ -338,7 +341,7 @@ export const blueskyProfileMediaAPIPaginated = async (
     pages += 1;
     const page = await blueskyProfileMediaAPI(
       actor,
-      { count: BLUESKY_PROFILE_FEED_PER_PAGE, cursor, language },
+      { count: BLUESKY_PROFILE_FEED_PER_PAGE, cursor, language, withReplies },
       host
     );
 
@@ -359,12 +362,7 @@ export const blueskyProfileMediaAPIPaginated = async (
     anySuccessfulPage = true;
     lastCursors = page.cursor;
 
-    if (page.results.length === 0) {
-      break;
-    }
-
     for (const r of page.results) {
-      if (!withReplies && r.replying_to) continue;
       if (seenIds.has(r.id)) continue;
       seenIds.add(r.id);
       merged.push(r);

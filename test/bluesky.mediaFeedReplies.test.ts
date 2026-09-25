@@ -51,3 +51,42 @@ test.each(['media.xml', 'media.atom.xml'])(
     expect(repliesXml).not.toContain('/post/next');
   }
 );
+
+test('media feed skips a full page of replies, including handle-based parent URIs', async () => {
+  const makePost = (rkey: string, reply: boolean) => {
+    const entry = structuredClone(authorFeed.feed[0]);
+    entry.post.uri = `at://did:plc:test111/app.bsky.feed.post/${rkey}`;
+    entry.post.record.text = rkey;
+    if (reply) {
+      Object.assign(entry.post.record, {
+        reply: { parent: { uri: 'at://author.test/app.bsky.feed.post/parent' } }
+      });
+    }
+    return entry;
+  };
+
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async input => {
+    const url = new URL(typeof input === 'string' ? input : input.url);
+    if (url.pathname.endsWith('getAuthorFeed')) {
+      return Response.json(
+        url.searchParams.has('cursor')
+          ? { feed: [makePost('main', false)] }
+          : { feed: [makePost('reply', true)], cursor: 'next-page' }
+      );
+    }
+    throw new Error(`Unexpected fetch: ${url}`);
+  });
+
+  const feedUrl = 'https://fxbsky.app/profile/author.test/media.xml?count=1';
+  const withoutReplies = await app.request(feedUrl);
+  expect(withoutReplies.status).toBe(200);
+  const defaultXml = await withoutReplies.text();
+  expect(defaultXml).toContain('/post/main');
+  expect(defaultXml).not.toContain('/post/reply');
+
+  const withReplies = await app.request(`${feedUrl}&with_replies=1`);
+  expect(withReplies.status).toBe(200);
+  const repliesXml = await withReplies.text();
+  expect(repliesXml).toContain('/post/reply');
+  expect(repliesXml).not.toContain('/post/main');
+});
