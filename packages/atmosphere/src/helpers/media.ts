@@ -59,6 +59,9 @@ export const convertFormatToVariant = (format: APIVideoFormat): TweetMediaVarian
 const defaultShouldTranscodeGifs = (): boolean => false;
 const defaultKitchensink = (): boolean => false;
 
+export const isWebpGifUserAgent = (userAgent: string | undefined): boolean =>
+  userAgent?.includes('Discordbot') === true || userAgent?.includes('Fluxerbot') === true;
+
 /* Help populate API response for media */
 export const processMedia = (
   host: TwitterBuildHost,
@@ -102,7 +105,7 @@ export const processMedia = (
       let extension = '.gif';
       if (
         (host.useWebpInsteadOfGifForKitchensink?.() ?? defaultKitchensink()) &&
-        userAgent.includes('Discordbot')
+        isWebpGifUserAgent(userAgent)
       ) {
         const url = new URL(requestUrl);
         if (!isParamTruthy(url.searchParams.get('gif') ?? undefined)) {
