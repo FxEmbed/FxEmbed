@@ -20,8 +20,16 @@ bluesky.get('/owoembed', oembed);
 bluesky.get('/api/v1/statuses/:snowcode', activityRequest);
 bluesky.get('/:prefix/:handle/post/:id', blueskyStatusRequest);
 bluesky.get('/:prefix/:handle/post/:id/photo/:mediaNumber{[1-9][0-9]*}', blueskyStatusRequest);
+bluesky.get(
+  '/:prefix/:handle/post/:id/photo/:mediaNumber{[1-9][0-9]*}/:language',
+  blueskyStatusRequest
+);
 bluesky.get('/profile/:handle/post/:id', blueskyStatusRequest);
 bluesky.get('/profile/:handle/post/:id/photo/:mediaNumber{[1-9][0-9]*}', blueskyStatusRequest);
+bluesky.get(
+  '/profile/:handle/post/:id/photo/:mediaNumber{[1-9][0-9]*}/:language',
+  blueskyStatusRequest
+);
 bluesky.get('/:prefix/profile/:handle/post/:id/:language', blueskyStatusRequest);
 bluesky.get('/profile/:handle/post/:id/:language', blueskyStatusRequest);
 bluesky.get('/profile/:handle/feed.xml', profileFeedRssBluesky);
