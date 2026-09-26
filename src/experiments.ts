@@ -9,7 +9,8 @@ export enum Experiment {
   KITCHENSINK_GIF = 'KITCHENSINK_GIF',
   USE_HORIZON_WEB = 'USE_HORIZON_WEB',
   ENABLE_CUSTOM_BRANDING = 'ENABLE_CUSTOM_BRANDING',
-  TELEGRAM_PBS_PROXY = 'TELEGRAM_PBS_PROXY'
+  TELEGRAM_PBS_PROXY = 'TELEGRAM_PBS_PROXY',
+  COMPONENT_EMBED = 'COMPONENT_EMBED'
 }
 
 type ExperimentConfig = {
@@ -73,6 +74,12 @@ const Experiments: { [key in Experiment]: ExperimentConfig } = {
     name: 'Telegram PBS proxy',
     description: 'Proxy pbs.twimg.com post photos through PBS proxy for Telegram',
     percentage: 1
+  },
+  [Experiment.COMPONENT_EMBED]: {
+    name: 'Discord component embed',
+    description:
+      'Use Discord component embeds (Components V2 link previews) instead of the activity embed',
+    percentage: 0
   }
 };
 

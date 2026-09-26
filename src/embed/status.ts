@@ -30,6 +30,12 @@ import { constructTikTokVideo } from '@fxembed/atmosphere/providers/tiktok/conve
 import { constructInstagramPost } from '@fxembed/atmosphere/providers/instagram/post';
 import { InputFlags } from '../types/types';
 import { formatRuntime } from '../helpers/runtime';
+import {
+  buildStatusComponentEmbed,
+  renderComponentEmbedScript,
+  supportsComponentEmbed,
+  validateComponentEmbed
+} from './components';
 
 /**
  * Check if the tweet text is essentially just an article URL with no meaningful additional content.
@@ -137,6 +143,21 @@ export const handleStatus = async (
     useActivity = true;
   }
 
+  const activityEmbedSelected = useActivity;
+  let useComponentEmbed = false;
+
+  if (
+    experimentCheck(Experiment.COMPONENT_EMBED, isDiscord) &&
+    !flags.direct &&
+    !flags.gallery &&
+    !flags.api &&
+    !flags.noActivity
+  ) {
+    useComponentEmbed = true;
+    useActivity = false;
+    useLanguage = language;
+  }
+
   let blueskyActivityPdsOut: { pdsHostHint?: string } | undefined;
 
   if (provider === DataProvider.Twitter) {
@@ -242,6 +263,11 @@ export const handleStatus = async (
   }
   /* Should sensitive statuses be allowed Instant View? */
   let useIV = false;
+
+  if (useComponentEmbed && !supportsComponentEmbed(status as APIStatus)) {
+    useComponentEmbed = false;
+    useActivity = activityEmbedSelected;
+  }
 
   if (
     (status.media?.all?.length ?? 0) <= 0 &&
@@ -896,6 +922,35 @@ export const handleStatus = async (
         }
       )
     );
+  }
+
+  if (useComponentEmbed) {
+    try {
+      const payload = buildStatusComponentEmbed(status as APIStatus, {
+        statusUrl:
+          status.provider === DataProvider.Twitter
+            ? twitterPublicStatusUrl
+            : status.provider === DataProvider.Bluesky
+              ? bskyPublicStatusUrl
+              : status.provider === DataProvider.Instagram
+                ? instagramPublicStatusUrl
+                : status.url,
+        accentColor: getBranding(c).color,
+        mediaNumber,
+        textOnly: flags.textOnly,
+        transcodeGifs: shouldTranscodeGif(c)
+      });
+      if (payload) {
+        const errors = validateComponentEmbed(payload);
+        if (errors.length === 0) {
+          headers.push(renderComponentEmbedScript(payload));
+        } else {
+          console.log('Invalid component embed, falling back', JSON.stringify(errors));
+        }
+      }
+    } catch (e) {
+      console.log('Error rendering component embed', e, (e as Error)?.stack);
+    }
   }
 
   /* When dealing with a Tweet of unknown lang, fall back to en */
