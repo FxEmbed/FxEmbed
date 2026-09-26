@@ -108,6 +108,7 @@ const BODY_TEXT_BUDGET = 1800;
 const TRANSLATION_ORIGINAL_BUDGET = 400;
 const QUOTE_TEXT_BUDGET = 400;
 const COMMUNITY_NOTE_BUDGET = 400;
+const ARTICLE_TITLE_BUDGET = 200;
 const ARTICLE_PREVIEW_BUDGET = 300;
 
 const truncate = (text: string, max: number): string => {
@@ -129,7 +130,7 @@ export const escapeMarkdown = (text: string): string => {
   const escapeSegment = (segment: string) =>
     segment
       .replace(/([\\*_~`|[\]<>])/g, '\\$1')
-      .replace(/^(\s*)([#>-]|\d+\.)(?=\s)/gm, (_match, indent: string, marker: string) =>
+      .replace(/^(\s*)(#{1,3}|-#|[>-]|\d+\.)(?=\s)/gm, (_match, indent: string, marker: string) =>
         marker.endsWith('.') ? `${indent}${marker.slice(0, -1)}\\.` : `${indent}\\${marker}`
       );
 
@@ -159,6 +160,17 @@ const fitText = (text: string, budget: number, quote = false): string => {
   }
   return result;
 };
+
+const textLength = (children: ContainerChild[]): number =>
+  children.reduce((total, child) => {
+    if (child.type === ComponentType.TextDisplay) {
+      return total + child.content.length;
+    }
+    if (child.type === ComponentType.Section) {
+      return total + child.components.reduce((sum, text) => sum + text.content.length, 0);
+    }
+    return total;
+  }, 0);
 
 const isHttpUrl = (url: string | null | undefined): url is string =>
   typeof url === 'string' && /^https?:\/\//.test(url);
@@ -243,8 +255,8 @@ export const buildStatusComponentEmbed = (
   options: ComponentEmbedOptions
 ): ComponentEmbedPayload | null => {
   if (
-    (status.media?.all?.length ?? 0) === 0 &&
-    (status.media?.external?.url || status.media?.broadcast?.stream?.url)
+    status.media?.broadcast ||
+    ((status.media?.all?.length ?? 0) === 0 && status.media?.external?.url)
   ) {
     return null;
   }
@@ -278,29 +290,36 @@ export const buildStatusComponentEmbed = (
     children.push(headerText);
   }
 
-  let body = '';
-  if (status.translation?.text) {
-    const translatedFrom = i18next.t('translatedFrom').format({
-      language: i18next.t(`language_${status.translation.source_lang}`)
-    });
-    body =
-      `-# 📑 ${escapeMarkdown(translatedFrom)}\n` +
-      fitText(status.translation.text.trim(), BODY_TEXT_BUDGET);
-    if (status.text.trim()) {
-      body +=
-        `\n${blockquote(`**${escapeMarkdown(i18next.t('ivOriginalText'))}**`)}\n` +
-        fitText(status.text.trim(), TRANSLATION_ORIGINAL_BUDGET, true);
+  const bodyIndex = children.length;
+  const buildBody = (budget: number): string => {
+    const original = status.text.trim();
+    if (status.translation?.text) {
+      const translatedFrom = i18next.t('translatedFrom').format({
+        language: i18next.t(`language_${status.translation.source_lang}`)
+      });
+      const heading = `-# 📑 ${escapeMarkdown(translatedFrom)}\n`;
+      const originalHeading = original
+        ? `\n${blockquote(`**${escapeMarkdown(i18next.t('ivOriginalText'))}**`)}\n`
+        : '';
+      const originalBudget = original
+        ? Math.max(1, Math.min(TRANSLATION_ORIGINAL_BUDGET, Math.floor(budget / 4)))
+        : 0;
+      const translationBudget = Math.max(
+        1,
+        budget - heading.length - originalHeading.length - originalBudget
+      );
+      let body = heading + fitText(status.translation.text.trim(), translationBudget);
+      if (original) {
+        body += originalHeading + fitText(original, originalBudget, true);
+      }
+      return body;
     }
-  } else if (status.text.trim()) {
-    body = fitText(status.text.trim(), BODY_TEXT_BUDGET);
-  }
-  if (body) {
-    children.push({ type: ComponentType.TextDisplay, content: body });
-  }
+    return original ? fitText(original, Math.max(1, budget)) : '';
+  };
 
   if (twitterStatus.article) {
     const { article } = twitterStatus;
-    let content = `**📰 [${escapeMarkdown(article.title)}](${options.statusUrl})**`;
+    let content = `**📰 [${fitText(article.title, ARTICLE_TITLE_BUDGET)}](${options.statusUrl})**`;
     if (article.preview_text) {
       content += `\n${fitText(article.preview_text, ARTICLE_PREVIEW_BUDGET)}`;
     }
@@ -406,6 +425,13 @@ export const buildStatusComponentEmbed = (
     children.push(socialText);
   } else if (openButton) {
     children.push({ type: ComponentType.ActionRow, components: [openButton] });
+  }
+
+  const body = buildBody(
+    Math.min(BODY_TEXT_BUDGET, ComponentEmbedLimits.MAX_TEXT_LENGTH - textLength(children))
+  );
+  if (body) {
+    children.splice(bodyIndex, 0, { type: ComponentType.TextDisplay, content: body });
   }
 
   const container: ContainerComponent = { type: ComponentType.Container, components: children };

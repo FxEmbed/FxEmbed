@@ -81,6 +81,12 @@ describe('escapeMarkdown', () => {
     );
   });
 
+  test('escapes multi-character heading and subtext markers', () => {
+    expect(escapeMarkdown('## two\n### three\n-# small\n  ## indented')).toBe(
+      '\\## two\n\\### three\n\\-# small\n  \\## indented'
+    );
+  });
+
   test('leaves URLs intact so they stay clickable', () => {
     expect(escapeMarkdown('see https://example.com/a_b_(c) *now*')).toBe(
       'see https://example.com/a_b_(c) \\*now\\*'
@@ -285,7 +291,7 @@ describe('buildStatusComponentEmbed', () => {
     expect(validateComponentEmbed(payload!)).toEqual([]);
   });
 
-  test('skips posts whose only media is a link card or a broadcast', () => {
+  test('skips posts whose only media is a link card', () => {
     expect(
       buildStatusComponentEmbed(
         makeStatus({
@@ -294,6 +300,60 @@ describe('buildStatusComponentEmbed', () => {
         { statusUrl }
       )
     ).toBeNull();
+  });
+
+  test('skips broadcasts even when a stream video is in the media list', () => {
+    const stream = {
+      type: 'video' as const,
+      url: 'https://stream-test.fxembed.com/download.mp4?url=x',
+      width: 1280,
+      height: 720,
+      duration: 0,
+      formats: []
+    };
+    expect(
+      buildStatusComponentEmbed(
+        makeStatus({
+          media: {
+            broadcast: { url: 'https://x.com/i/broadcasts/1', stream: { url: 'https://a.b/c' } },
+            videos: [stream],
+            all: [stream]
+          }
+        } as unknown as Partial<APIStatus>),
+        { statusUrl }
+      )
+    ).toBeNull();
+  });
+
+  test('fits every block into the text limit when a post has all of them', () => {
+    const long = (label: string) => `${label} *${'_'.repeat(3000)}*`;
+    const quote = makeStatus({ id: '21', url: 'https://x.com/biz/status/21', text: long('quote') });
+    const payload = buildStatusComponentEmbed(
+      makeStatus({
+        text: long('original'),
+        translation: { text: long('translated'), source_lang: 'es', target_lang: 'en' },
+        quote,
+        poll: {
+          choices: Array.from({ length: 4 }, (_, i) => ({
+            label: `*_${i}_*`.repeat(6),
+            count: 1,
+            percentage: 25
+          })),
+          total_votes: 4,
+          ends_at: '',
+          time_left_en: 'Final results'
+        },
+        article: {
+          title: long('title'),
+          preview_text: long('preview'),
+          cover_media: {}
+        },
+        community_note: { text: long('note'), facets: [] }
+      } as unknown as Partial<APIStatus>),
+      { statusUrl }
+    );
+    expect(validateComponentEmbed(payload!)).toEqual([]);
+    expect(allText(payload)).toContain('translated');
   });
 
   test('uses the platform name for the button', () => {
