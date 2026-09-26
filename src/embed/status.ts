@@ -260,6 +260,13 @@ export const handleStatus = async (
       console.log(api);
       return returnError(c, Strings.ERROR_API_FAIL);
   }
+  if (
+    provider === DataProvider.Bluesky &&
+    mediaNumber &&
+    !status.media?.photos?.[mediaNumber - 1]
+  ) {
+    return c.text('Photo not found', 404);
+  }
   /* Should sensitive statuses be allowed Instant View? */
   let useIV = false;
 
