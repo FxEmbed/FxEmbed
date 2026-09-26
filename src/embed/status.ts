@@ -33,6 +33,7 @@ import { formatRuntime } from '../helpers/runtime';
 import {
   buildStatusComponentEmbed,
   renderComponentEmbedScript,
+  supportsComponentEmbed,
   validateComponentEmbed
 } from './components';
 
@@ -142,6 +143,7 @@ export const handleStatus = async (
     useActivity = true;
   }
 
+  const activityEmbedSelected = useActivity;
   let useComponentEmbed = false;
 
   if (
@@ -261,6 +263,11 @@ export const handleStatus = async (
   }
   /* Should sensitive statuses be allowed Instant View? */
   let useIV = false;
+
+  if (useComponentEmbed && !supportsComponentEmbed(status as APIStatus)) {
+    useComponentEmbed = false;
+    useActivity = activityEmbedSelected;
+  }
 
   if (
     (status.media?.all?.length ?? 0) <= 0 &&

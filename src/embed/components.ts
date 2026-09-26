@@ -250,14 +250,15 @@ export interface ComponentEmbedOptions {
   transcodeGifs?: boolean;
 }
 
+export const supportsComponentEmbed = (status: APIStatus): boolean =>
+  !status.media?.broadcast &&
+  !((status.media?.all?.length ?? 0) === 0 && status.media?.external?.url);
+
 export const buildStatusComponentEmbed = (
   status: APIStatus,
   options: ComponentEmbedOptions
 ): ComponentEmbedPayload | null => {
-  if (
-    status.media?.broadcast ||
-    ((status.media?.all?.length ?? 0) === 0 && status.media?.external?.url)
-  ) {
+  if (!supportsComponentEmbed(status)) {
     return null;
   }
 

@@ -14,6 +14,45 @@ vi.mock('../src/experiments', async importOriginal => {
   };
 });
 
+const BROADCAST_STATUS_ID = '2020202020';
+
+vi.mock('@fxembed/atmosphere/providers/twitter/conversation', async importOriginal => {
+  const actual =
+    await importOriginal<typeof import('@fxembed/atmosphere/providers/twitter/conversation')>();
+  return {
+    ...actual,
+    constructTwitterThread: async (
+      id: string,
+      ...rest: Parameters<typeof actual.constructTwitterThread> extends [unknown, ...infer R]
+        ? R
+        : never
+    ) => {
+      if (id !== BROADCAST_STATUS_ID) {
+        return actual.constructTwitterThread(id, ...rest);
+      }
+      const thread = await actual.constructTwitterThread('20', ...rest);
+      const stream = {
+        type: 'video',
+        url: 'https://stream-test.fxembed.com/download.mp4?url=x',
+        thumbnail_url: 'https://pbs.twimg.com/amplify_video_thumb/1/img/x.jpg',
+        format: 'video/mp4',
+        width: 1280,
+        height: 720,
+        duration: 0,
+        formats: []
+      };
+      const status = thread.status as { media: Record<string, unknown> };
+      status.media = {
+        ...status.media,
+        broadcast: { url: 'https://x.com/i/broadcasts/1', stream: { url: 'https://a.b/c' } },
+        videos: [stream],
+        all: [stream]
+      };
+      return thread;
+    }
+  };
+});
+
 const request = (url: string, headers: Record<string, string> = botHeaders) =>
   app.request(new Request(url, { headers }), undefined, harness);
 
@@ -57,4 +96,12 @@ test('Other crawlers do not get a component embed', async () => {
     'User-Agent': 'TelegramBot (like TwitterBot)'
   });
   expect(payloadOf(await result.text())).toBeNull();
+});
+
+test('Broadcasts keep the activity embed instead of a component embed', async () => {
+  const result = await request(`https://fxtwitter.com/jack/status/${BROADCAST_STATUS_ID}`);
+  expect(result.status).toEqual(200);
+  const html = await result.text();
+  expect(payloadOf(html)).toBeNull();
+  expect(html).toMatch(/application\/activity\+json/);
 });
