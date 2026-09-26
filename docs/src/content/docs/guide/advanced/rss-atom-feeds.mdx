@@ -46,12 +46,12 @@ Paths use `/profile/` before the handle, matching other FxBluesky profile URLs.
 
 All parameters are optional.
 
-| Parameter                       | Applies to         | Description                                                                                                                                                                  |
-| ------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `count`                         | Timeline and media | Number of items to fetch, **1–100** (default **90**).                                                                                                                        |
-| `with_replies` or `withReplies` | Timeline only      | Include reply posts.                                                                                                                                                         |
-| `safe`                          | Timeline and media | Hides posts (and quoted bodies) marked sensitive.                                                                                                                            |
-| `lang` or `language`            | Timeline and media | Requests for automatic translation of content when available. Currently it's a bit iffy whether it works or not, so don't be surprised if things aren't translated just yet. |
+| Parameter                       | Applies to                 | Description                                                                                                                                                                  |
+| ------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `count`                         | Timeline and media         | Number of items to fetch, **1–100** (default **90**).                                                                                                                        |
+| `with_replies` or `withReplies` | Timeline and Bluesky media | Include reply posts. Bluesky media feeds exclude replies by default.                                                                                                         |
+| `safe`                          | Timeline and media         | Hides posts (and quoted bodies) marked sensitive.                                                                                                                            |
+| `lang` or `language`            | Timeline and media         | Requests for automatic translation of content when available. Currently it's a bit iffy whether it works or not, so don't be surprised if things aren't translated just yet. |
 
 Example (X):
 
