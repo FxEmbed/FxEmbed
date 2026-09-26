@@ -71,7 +71,8 @@
       "language_uk": "Ukrainian",
       "language_vi": "Vietnamese",
       "language_zh-CN": "Chinese",
-      "language_zh-TW": "Chinese"
+      "language_zh-TW": "Chinese",
+      "viewOnPlatform": "View on {platform}"
     }
   }
 }
