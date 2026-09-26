@@ -32,6 +32,26 @@ import { InputFlags } from '../types/types';
 import { formatRuntime } from '../helpers/runtime';
 
 /**
+ * Telegram's link preview plays videos inside an embed container. Instagram
+ * files fail there, so Telegram user agents get the video file directly.
+ * Image posts, other networks, and other clients stay on the embed pipeline.
+ * Explicit API, text-only, gallery, and instant-view requests are unchanged.
+ */
+const useDirectMediaForTelegramInstagramVideo = (
+  isTelegram: boolean,
+  provider: DataProvider,
+  flags: InputFlags,
+  hasVideo: boolean
+): boolean =>
+  isTelegram &&
+  provider === DataProvider.Instagram &&
+  hasVideo &&
+  !flags.api &&
+  !flags.textOnly &&
+  !flags.gallery &&
+  !flags.forceInstantView;
+
+/**
  * Check if the tweet text is essentially just an article URL with no meaningful additional content.
  * Returns true if we should use the article as the main preview.
  */
@@ -349,6 +369,24 @@ export const handleStatus = async (
       }
       console.log('redirectUrl', redirectUrl);
       return c.redirect(redirectUrl, 302);
+    }
+  }
+
+  /* Temporary: Instagram videos + Telegram skip the embed container. */
+  if (
+    useDirectMediaForTelegramInstagramVideo(
+      isTelegram,
+      provider,
+      flags,
+      (status.media?.videos?.length ?? 0) > 0
+    )
+  ) {
+    const videos = status.media?.videos ?? [];
+    const indexed = mediaNumber ? status.media?.all?.[mediaNumber - 1] : undefined;
+    const selected = indexed?.type === 'video' ? indexed : videos[0];
+    if (selected?.url) {
+      console.log('Telegram Instagram video direct media', selected.url);
+      return c.redirect(selected.url, 302);
     }
   }
 
