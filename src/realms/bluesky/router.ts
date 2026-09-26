@@ -30,6 +30,10 @@ bluesky.get(
   '/profile/:handle/post/:id/photo/:mediaNumber{[1-9][0-9]*}/:language',
   blueskyStatusRequest
 );
+bluesky.get(
+  '/:prefix/profile/:handle/post/:id/photo/:mediaNumber{[1-9][0-9]*}/:language',
+  blueskyStatusRequest
+);
 bluesky.get('/:prefix/profile/:handle/post/:id/:language', blueskyStatusRequest);
 bluesky.get('/profile/:handle/post/:id/:language', blueskyStatusRequest);
 bluesky.get('/profile/:handle/feed.xml', profileFeedRssBluesky);

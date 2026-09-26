@@ -28,6 +28,18 @@ test.each([
   expect(html).toContain(`<meta property="og:image" content="${expected}"`);
 });
 
+test('Bluesky prefixed localized photo URL embeds the selected image', async () => {
+  mockMultiImageThread();
+  const response = await app.request(
+    'https://fxbsky.app/bsky/profile/pics.test/post/rkeypics/photo/2/en',
+    { headers: { 'User-Agent': 'Twitterbot' } }
+  );
+  expect(response.status).toBe(200);
+  const html = await response.text();
+  expect(html).toContain('<meta property="og:image" content="https://cdn.bsky.app/full2"');
+  expect(html).not.toContain('<meta property="og:image" content="https://cdn.bsky.app/full1"');
+});
+
 test('Bluesky /photo/N rejects an unavailable image', async () => {
   mockMultiImageThread();
   const response = await app.request(
