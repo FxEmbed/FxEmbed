@@ -1,5 +1,5 @@
 import type { TwitterBuildHost } from '@fxembed/atmosphere/providers/twitter/build-host';
-import { isParamTruthy } from '@fxembed/atmosphere/helpers';
+import { isParamTruthy, isWebpGifUserAgent } from '@fxembed/atmosphere/helpers';
 import type { Context } from 'hono';
 import i18next from 'i18next';
 import { experimentCheck, Experiment } from '../../experiments';
@@ -29,7 +29,7 @@ export function twitterBuildHostFromContext(c: Context): TwitterBuildHost {
     useWebpInsteadOfGifForKitchensink: () => {
       return (
         experimentCheck(Experiment.KITCHENSINK_GIF) &&
-        (c.req.header('user-agent')?.includes('Discordbot') ?? false) &&
+        isWebpGifUserAgent(c.req.header('user-agent')) &&
         !isParamTruthy(new URL(c.req.url).searchParams.get('gif') ?? undefined)
       );
     },
