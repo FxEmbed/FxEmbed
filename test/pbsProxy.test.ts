@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { proxyTwitterPostPhotoUrl } from '../src/helpers/pbsProxy';
+import {
+  formatTelegramTwitterPostPhotoUrl,
+  proxyTwitterPostPhotoUrl
+} from '../src/helpers/pbsProxy';
 
 describe('proxyTwitterPostPhotoUrl', () => {
   const mediaUrl = 'https://pbs.twimg.com/media/abc.jpg?name=orig';
@@ -22,5 +25,26 @@ describe('proxyTwitterPostPhotoUrl', () => {
 
   it('no-ops when disabled', () => {
     expect(proxyTwitterPostPhotoUrl(mediaUrl, false)).toBe(mediaUrl);
+  });
+});
+
+describe('formatTelegramTwitterPostPhotoUrl', () => {
+  const mediaUrl = 'https://pbs.twimg.com/media/abc.jpg?name=orig&format=jpg';
+  const profileUrl = 'https://pbs.twimg.com/profile_images/1/normal.jpg';
+
+  it('requests a Telegram-friendly size for X post photos', () => {
+    expect(formatTelegramTwitterPostPhotoUrl(mediaUrl, true)).toBe(
+      'https://pbs.twimg.com/media/abc.jpg?name=large&format=jpg'
+    );
+  });
+
+  it('leaves profile images and other hosts unchanged', () => {
+    expect(formatTelegramTwitterPostPhotoUrl(profileUrl, true)).toBe(profileUrl);
+    const blueskyUrl = 'https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:abc@jpeg';
+    expect(formatTelegramTwitterPostPhotoUrl(blueskyUrl, true)).toBe(blueskyUrl);
+  });
+
+  it('leaves non-Telegram requests unchanged', () => {
+    expect(formatTelegramTwitterPostPhotoUrl(mediaUrl, false)).toBe(mediaUrl);
   });
 });
