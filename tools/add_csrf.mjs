@@ -9,7 +9,9 @@ import { fileURLToPath } from 'node:url';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
-const credPath = join(repoRoot, 'credentials.json');
+const completePath = join(repoRoot, 'credentials.complete.json');
+const fallbackPath = join(repoRoot, 'credentials.json');
+const credPath = fs.existsSync(completePath) ? completePath : fallbackPath;
 
 async function getCsrfToken(account) {
   const response = await fetch(
@@ -55,23 +57,23 @@ async function main() {
     process.exit(1);
   }
 
-  const updated = [];
+  let added = 0;
   for (const account of data.twitter.accounts) {
-    const fetched = await getCsrfToken(account);
-    const csrfToken = fetched ?? account.csrfToken;
+    if (account.csrfToken) continue;
+    const csrfToken = await getCsrfToken(account);
     if (!csrfToken) {
       throw new Error(
         `Could not obtain ct0/csrf for @${account.username} (no Set-Cookie ct0 and no existing csrfToken)`
       );
     }
-    updated.push({ ...account, csrfToken });
+    account.csrfToken = csrfToken;
+    added++;
     await sleep(50);
     console.log(`Activated @${account.username} (csrf length ${csrfToken.length})`);
   }
 
-  const next = { ...data, twitter: { accounts: updated } };
-  fs.writeFileSync(credPath, JSON.stringify(next, null, 2) + '\n', 'utf8');
-  console.log(`Updated ${credPath}`);
+  fs.writeFileSync(credPath, JSON.stringify(data, null, 2) + '\n', 'utf8');
+  console.log(`Updated ${credPath} (${added} csrf tokens added)`);
 }
 
 main().catch(err => {
