@@ -14,6 +14,7 @@ import { sendDiscordAlert } from './discord.js';
 import type { ProxyEnv } from '../../../types/proxy-credentials.js';
 
 const redactUsername = false;
+const maxAttempts = 9;
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   if (value !== null && typeof value === 'object') {
@@ -194,7 +195,7 @@ export async function proxyTwitterRequest(request: Request, env: ProxyEnv): Prom
     if (errors) {
       console.log(`Account is not working, trying another one...`);
       attempts++;
-      if (attempts > 4) {
+      if (attempts > maxAttempts) {
         console.log('Maximum failed attempts reached');
         return jsonError('Maximum failed attempts reached', 502);
       }
