@@ -238,9 +238,10 @@ const applyEmbedsToStatus = async (apiStatus: APIStatus, status: BlueskyPost): P
     ];
   }
 
-  if (media?.external || status.record?.embed?.external) {
-    const external = media?.external ?? status.record?.embed?.external;
+  if (primary?.external || media?.external || status.record?.embed?.external) {
+    const external = primary?.external ?? media?.external ?? status.record?.embed?.external;
     const uri = external?.uri ?? '';
+    const thumbnail = typeof external?.thumb === 'string' ? external.thumb : undefined;
     if (uri.startsWith('https://media.tenor.com')) {
       apiStatus.media.photos = [
         {
@@ -251,11 +252,11 @@ const applyEmbedsToStatus = async (apiStatus: APIStatus, status: BlueskyPost): P
           height: 0
         }
       ];
-    } else if (uri) {
+    } else if (thumbnail) {
       apiStatus.media.photos = [
         {
           type: 'photo',
-          url: uri,
+          url: thumbnail,
           altText: external?.description ?? '',
           width: 0,
           height: 0
