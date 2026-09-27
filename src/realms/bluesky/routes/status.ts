@@ -9,7 +9,7 @@ import { isHorizonEmbedParam } from '../../twitter/router';
 
 export const blueskyStatusRequest = async (c: Context) => {
   console.log('bluesky status request!!!');
-  const { handle, id, language } = c.req.param();
+  const { handle, id, mediaNumber, language } = c.req.param();
   const actualId = id.match(/\w+/g)?.[0] ?? '';
 
   const userAgent = c.req.header('User-Agent') || '';
@@ -73,7 +73,7 @@ export const blueskyStatusRequest = async (c: Context) => {
       c,
       actualId,
       handle,
-      undefined, //mediaNumber ? parseInt(mediaNumber) : undefined,
+      mediaNumber ? parseInt(mediaNumber, 10) : undefined,
       userAgent,
       flags,
       language,
