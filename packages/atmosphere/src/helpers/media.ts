@@ -118,6 +118,7 @@ export const processMedia = (
         type: 'gif',
         id: media.id_str,
         url: media.media_url_https,
+        thumbnail_url: media.media_url_https,
         width: media.original_info?.width,
         height: media.original_info?.height,
         transcode_url:

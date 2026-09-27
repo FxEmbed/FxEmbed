@@ -8,7 +8,7 @@ import {
 import { botHeaders } from './helpers/data';
 import harness from './helpers/harness';
 import { decodeSnowcode } from '../src/helpers/snowcode';
-import { shouldTranscodeGif } from '../src/helpers/giftranscode';
+import { twitterBuildHostFromContext } from '../src/providers/twitter/build-host-adapter';
 
 test('Status response robot', async () => {
   const result = await app.request(
@@ -81,26 +81,39 @@ test('Fluxerbot gets WebP GIF transcoding', () => {
         ]
       }
     } as unknown as Parameters<typeof processMedia>[1];
-    const contextFor = (userAgent: string) =>
-      ({
+    // Build the host through the production adapter, so the test covers the
+    // user-agent and API-host gates rather than stubbing them.
+    const hostFor = (userAgent: string) =>
+      twitterBuildHostFromContext({
         req: {
           header: () => userAgent,
-          url: 'https://api.fxtwitter.com/user/status/1'
-        }
-      }) as unknown as Parameters<typeof shouldTranscodeGif>[0];
-    const host = {
-      request: { url: 'https://api.fxtwitter.com/user/status/1', userAgent: 'Fluxerbot/1.0' },
-      shouldTranscodeGif: () => shouldTranscodeGif(contextFor('Fluxerbot/1.0')),
-      useWebpInsteadOfGifForKitchensink: () => true
-    } as unknown as Parameters<typeof processMedia>[0];
-    const result = processMedia(host, media);
+          url: 'https://api.fxtwitter.com/user/status/1',
+          raw: {}
+        },
+        env: {}
+      } as unknown as Parameters<typeof twitterBuildHostFromContext>[0]);
+
     expect(isWebpGifUserAgent('Discordbot/2.0')).toBe(true);
     expect(isWebpGifUserAgent('Fluxerbot/1.0')).toBe(true);
     expect(isWebpGifUserAgent('TelegramBot')).toBe(false);
-    expect(shouldTranscodeGif(contextFor('Discordbot/2.0'))).toBe(false);
-    expect(result && 'transcode_url' in result ? result.transcode_url : undefined).toBe(
+
+    const fluxer = processMedia(hostFor('Fluxerbot/1.0'), media);
+    expect(fluxer?.type).toBe('gif');
+    expect(fluxer && 'transcode_url' in fluxer ? fluxer.transcode_url : undefined).toBe(
       'https://gif.example/gif.webp'
     );
+    // Fluxer's unfurler only uses `transcode_url` for a `gif` item that also
+    // carries `thumbnail_url` or `duration`; otherwise it embeds `url` as an image.
+    expect(fluxer && 'thumbnail_url' in fluxer ? fluxer.thumbnail_url : undefined).toBe(
+      'https://pbs.twimg.com/media/gif.jpg'
+    );
+
+    // Discord on the API host keeps the untranscoded video response.
+    const discord = processMedia(hostFor('Discordbot/2.0'), media);
+    expect(discord && 'transcode_url' in discord ? discord.transcode_url : undefined).toBe(
+      undefined
+    );
+    expect(discord?.url).toBe('https://video.twimg.com/gif.mp4');
   } finally {
     setTwitterProviderEnv({
       videoBase: previousEnv.videoBase,
