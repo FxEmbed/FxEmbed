@@ -57,6 +57,8 @@ test('Telegram Instant View remains enabled for multi-photo mosaic posts', async
 
   expect(isInstantViewHtml(html)).toBe(true);
   expect(html.match(/<img /g)?.length).toBeGreaterThanOrEqual(3);
+  expect(html.match(/name=large/g)?.length).toBeGreaterThanOrEqual(3);
+  expect(html).not.toContain('name=orig');
 });
 
 test('i. prefix still forces Instant View for a single video', async () => {

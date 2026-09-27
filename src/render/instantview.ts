@@ -10,7 +10,11 @@ import type { APIStatusTombstone, APITwitterStatus } from '../realms/api/schemas
 import { isTombstone } from '../helpers/tombstone';
 import { getVideoTranscodeDomain, getVideoTranscodeDomainBluesky } from '../helpers/transcode';
 import { experimentCheck, Experiment } from '../experiments';
-import { proxyTwitterPostPhotoUrl, shouldProxyTelegramPbsPhotos } from '../helpers/pbsProxy';
+import {
+  formatTelegramTwitterPostPhotoUrl,
+  proxyTwitterPostPhotoUrl,
+  shouldProxyTelegramPbsPhotos
+} from '../helpers/pbsProxy';
 
 /**
  * Check if the tweet text is essentially just an article URL with no meaningful additional content.
@@ -69,7 +73,7 @@ const populateUserLinks = (text: string, status: APIStatus): string => {
   return text;
 };
 
-const generateStatusMedia = (status: APIStatus, proxyPbs: boolean): string => {
+const generateStatusMedia = (status: APIStatus, proxyPbs: boolean, isTelegram: boolean): string => {
   let media = '';
   if (status.media?.all?.length) {
     status.media.all.forEach(mediaItem => {
@@ -86,6 +90,9 @@ const generateStatusMedia = (status: APIStatus, proxyPbs: boolean): string => {
         case 'photo':
           // eslint-disable-next-line no-case-declarations
           const { altText } = mediaItem as APIPhoto;
+          if (status.provider === DataProvider.Twitter) {
+            url = formatTelegramTwitterPostPhotoUrl(url, isTelegram);
+          }
           url = proxyTwitterPostPhotoUrl(url, proxyPbs);
           media += `<img src="{url}" {altText}/>`.format({
             altText: altText ? `alt="${altText}"` : '',
@@ -332,7 +339,8 @@ const generateStatus = (
   language: string,
   isQuote = false,
   authorActionType: AuthorActionType | null,
-  proxyPbs: boolean
+  proxyPbs: boolean,
+  isTelegram: boolean
 ): string => {
   if (isTombstone(status)) {
     const inner = `<i>${sanitizeText(status.message)}</i>`;
@@ -383,7 +391,7 @@ const generateStatus = (
   <!-- Embed article (if applicable) -->
   ${articleHtml || notApplicableComment}
   <!-- Embed media -->
-  ${generateStatusMedia(status, proxyPbs)} 
+  ${generateStatusMedia(status, proxyPbs, isTelegram)}
   <!-- Translated text (if applicable) -->
   ${translatedText ? translatedText : notApplicableComment}
   <!-- Inline author (if applicable) -->
@@ -399,7 +407,7 @@ const generateStatus = (
     !isQuote && status.quote
       ? isTombstone(status.quote)
         ? `<blockquote><i>${sanitizeText(status.quote.message)}</i></blockquote>`
-        : generateStatus(status.quote, author, language, true, null, proxyPbs)
+        : generateStatus(status.quote, author, language, true, null, proxyPbs, isTelegram)
       : notApplicableComment
   }`.format({
     quoteHeader: isQuote
@@ -524,7 +532,8 @@ export const renderInstantView = (properties: RenderProperties): ResponseInstruc
           properties?.targetLanguage ?? 'en',
           false,
           authorAction,
-          proxyPbs
+          proxyPbs,
+          isTelegram
         );
       })
       .join('')}
