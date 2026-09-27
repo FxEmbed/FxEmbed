@@ -372,3 +372,22 @@ test('Status activity quote and video', async () => {
     website: null
   });
 });
+
+test('Status activity accented hashtag links whole hashtag', async () => {
+  // snowcode for {"i":"991611"} (fixture with full_text "Morning brew #café")
+  const result = await app.request(
+    new Request('https://fxtwitter.com/api/v1/statuses/660866676661615358535366', {
+      method: 'GET',
+      headers: botHeaders
+    }),
+    undefined,
+    harness
+  );
+  expect(result.status).toEqual(200);
+  const response = (await result.json()) as ActivityStatus;
+  expect(response).toBeTruthy();
+  // the entire hashtag including the accented character must be linkified,
+  // not truncated to "#caf"
+  expect(response.content).toMatch(/<a href="https:\/\/x\.com\/hashtag\/caf%C3%A9">#café<\/a>/);
+  expect(response.content).not.toMatch(/#caf<\/a>é/);
+});

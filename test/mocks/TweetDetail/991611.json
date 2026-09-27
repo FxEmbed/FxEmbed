@@ -1,0 +1,180 @@
+{
+  "data": {
+    "threaded_conversation_with_injections_v2": {
+      "instructions": [
+        {
+          "type": "TimelineAddEntries",
+          "entries": [
+            {
+              "entryId": "tweet-20",
+              "sortIndex": "9223372036854775787",
+              "content": {
+                "entryType": "TimelineTimelineItem",
+                "__typename": "TimelineTimelineItem",
+                "itemContent": {
+                  "itemType": "TimelineTweet",
+                  "__typename": "TimelineTweet",
+                  "tweet_results": {
+                    "result": {
+                      "__typename": "Tweet",
+                      "rest_id": "991611",
+                      "has_birdwatch_notes": true,
+                      "core": {
+                        "user_results": {
+                          "result": {
+                            "__typename": "User",
+                            "id": "VXNlcjoxMg==",
+                            "rest_id": "12",
+                            "affiliates_highlighted_label": {
+                              "label": {
+                                "url": {
+                                  "url": "https://twitter.com/Square",
+                                  "urlType": "DeepLink"
+                                },
+                                "badge": {
+                                  "url": "https://pbs.twimg.com/profile_images/1285655593592791040/HtwPZgej_bigger.jpg"
+                                },
+                                "description": "Square",
+                                "userLabelType": "BusinessLabel",
+                                "userLabelDisplayType": "Badge"
+                              }
+                            },
+                            "has_graduated_access": true,
+                            "parody_commentary_fan_label": "None",
+                            "is_blue_verified": true,
+                            "profile_image_shape": "Circle",
+                            "legacy": {
+                              "following": false,
+                              "can_dm": true,
+                              "can_media_tag": false,
+                              "created_at": "Tue Mar 21 20:50:14 +0000 2006",
+                              "default_profile": false,
+                              "default_profile_image": false,
+                              "description": "no state is the best state",
+                              "entities": {
+                                "description": {
+                                  "urls": []
+                                },
+                                "url": {
+                                  "urls": [
+                                    {
+                                      "display_url": "primal.net/jack",
+                                      "expanded_url": "http://primal.net/jack",
+                                      "url": "https://t.co/ZEpOg6rn5L",
+                                      "indices": [
+                                        0,
+                                        23
+                                      ]
+                                    }
+                                  ]
+                                }
+                              },
+                              "fast_followers_count": 0,
+                              "favourites_count": 34700,
+                              "followers_count": 6507741,
+                              "friends_count": 3,
+                              "has_custom_timelines": true,
+                              "is_translator": false,
+                              "listed_count": 32801,
+                              "location": "",
+                              "media_count": 2927,
+                              "name": "jack",
+                              "normal_followers_count": 6507741,
+                              "pinned_tweet_ids_str": [
+                                "1833951636005552366"
+                              ],
+                              "possibly_sensitive": false,
+                              "profile_banner_url": "https://pbs.twimg.com/profile_banners/12/1742427520",
+                              "profile_image_url_https": "https://pbs.twimg.com/profile_images/1661201415899951105/azNjKOSH_normal.jpg",
+                              "profile_interstitial_type": "",
+                              "screen_name": "jack",
+                              "statuses_count": 29379,
+                              "translator_type": "regular",
+                              "url": "https://t.co/ZEpOg6rn5L",
+                              "verified": false,
+                              "want_retweets": false,
+                              "withheld_in_countries": []
+                            },
+                            "tipjar_settings": {
+                              "is_enabled": true
+                            }
+                          }
+                        }
+                      },
+                      "unmention_data": {},
+                      "edit_control": {
+                        "edit_tweet_ids": [
+                          "20"
+                        ],
+                        "editable_until_msecs": "1142976014000",
+                        "is_edit_eligible": true,
+                        "edits_remaining": "5"
+                      },
+                      "is_translatable": false,
+                      "views": {
+                        "state": "Enabled"
+                      },
+                      "source": "<a href=\"http://twitter.com\" rel=\"nofollow\">Twitter Web Client</a>",
+                      "grok_analysis_button": true,
+                      "legacy": {
+                        "bookmark_count": 10651,
+                        "bookmarked": false,
+                        "created_at": "Tue Mar 21 20:50:14 +0000 2006",
+                        "conversation_id_str": "20",
+                        "display_text_range": [
+                          0,
+                          24
+                        ],
+                        "entities": {
+                          "hashtags": [],
+                          "symbols": [],
+                          "timestamps": [],
+                          "urls": [],
+                          "user_mentions": []
+                        },
+                        "favorite_count": 263921,
+                        "favorited": false,
+                        "full_text": "Morning brew #café",
+                        "is_quote_status": false,
+                        "lang": "en",
+                        "quote_count": 2886,
+                        "reply_count": 15818,
+                        "retweet_count": 123880,
+                        "retweeted": false,
+                        "user_id_str": "12",
+                        "id_str": "991611"
+                      },
+                      "quick_promote_eligibility": {
+                        "eligibility": "IneligibleUserUnauthorized"
+                      }
+                    }
+                  },
+                  "tweetDisplayType": "Tweet",
+                  "hasModeratedReplies": false
+                }
+              }
+            },
+            {
+              "entryId": "cursor-bottom-9059131042791049575",
+              "sortIndex": "9223372036854775686",
+              "content": {
+                "entryType": "TimelineTimelineItem",
+                "__typename": "TimelineTimelineItem",
+                "itemContent": {
+                  "itemType": "TimelineTimelineCursor",
+                  "__typename": "TimelineTimelineCursor",
+                  "value": "ZAAAAPBDHBmm-MPcmZ25lek0hsPQ2ZnclOk0gMCrpYnryvwl2sC0jbTvlek0gICpmdCDtq4TgMCj1f-Vj9gjuIGxnY2RmOk04oKxhZPtmek0tMLemcrtmz8A4L3Zya7d4y0lAhIVBAAA",
+                  "cursorType": "Bottom"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "TimelineTerminateTimeline",
+          "direction": "Top"
+        }
+      ]
+    }
+  }
+}

@@ -249,13 +249,13 @@ const linkifyHashtags = (text: string, status: APIStatus) => {
       baseUrl = `${Constants.INSTAGRAM_ROOT}/explore/tags`;
       break;
   }
-  const matches = text.match(/(?<!https?:\/\/[\w.\-_%$@&?!:;/'()*]+)#([\w.]+)(?=\W|$)/g);
+  const matches = text.match(/(?<!https?:\/\/[\w.\-_%$@&?!:;/'()*]+)#([\p{L}\p{N}_.]+)(?=\W|$)/gu);
   console.log('matches', matches);
   // deduplicate hashtags
   [...new Set(matches ?? [])]?.forEach(hashtag => {
     text = text.replace(
       new RegExp(`(?<!https?:\\/\\/[\\w.:/]+)${hashtag}(?=\\W|$)`, 'g'),
-      `<a href="${baseUrl}/${hashtag.slice(1)}">${hashtag}</a>`
+      `<a href="${baseUrl}/${encodeURIComponent(hashtag.slice(1))}">${hashtag}</a>`
     );
   });
   console.log('text', text);
