@@ -7,6 +7,18 @@ export const getPbsProxyDomain = (): string | null =>
 export const shouldProxyTelegramPbsPhotos = (isTelegram: boolean): boolean =>
   isTelegram && experimentCheck(Experiment.TELEGRAM_PBS_PROXY, !!getPbsProxyDomain());
 
+export const formatTelegramTwitterPostPhotoUrl = (url: string, isTelegram: boolean): string => {
+  if (!isTelegram || !url) return url;
+  try {
+    const u = new URL(url);
+    if (u.hostname !== 'pbs.twimg.com' || !u.pathname.includes('/media/')) return url;
+    u.searchParams.set('name', 'large');
+    return u.toString();
+  } catch {
+    return url;
+  }
+};
+
 export const proxyTwitterPostPhotoUrl = (url: string, enabled: boolean): string => {
   const domain = getPbsProxyDomain();
   if (!enabled || !domain || !url) return url;
