@@ -5,7 +5,7 @@ import icu from 'i18next-icu';
 import { Constants } from '../constants';
 import { handleQuote } from '../helpers/quote';
 import { isTombstone, withLocalizedTombstoneMessage } from '../helpers/tombstone';
-import { formatImageUrl, sanitizeText, truncateWithEllipsis } from '../helpers/utils';
+import { formatImageUrl, formatReplyingToAuthorLabel, sanitizeText, truncateWithEllipsis } from '../helpers/utils';
 import { proxyTwitterPostPhotoUrl, shouldProxyTelegramPbsPhotos } from '../helpers/pbsProxy';
 import { Strings } from '../strings';
 import { getSocialProof } from '../helpers/socialproof';
@@ -694,7 +694,7 @@ export const handleStatus = async (
   }
 
   if (!isDiscord && status.replying_to) {
-    newText = `↩ ${status.replying_to.display_name ?? ''} (@${status.replying_to.screen_name})<br>${newText}`;
+    newText = `↩ ${formatReplyingToAuthorLabel(status.replying_to)}<br>${newText}`;
   }
 
   const avatar = status.author.avatar_url;

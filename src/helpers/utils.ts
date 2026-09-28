@@ -15,6 +15,14 @@ export const unescapeText = (text: string) => {
     .replace(/&amp;/g, '&');
 };
 
+export const formatReplyingToAuthorLabel = (replyingTo: {
+  display_name?: string;
+  screen_name: string;
+}): string => {
+  const displayName = replyingTo.display_name?.trim();
+  return displayName ? `${displayName} (@${replyingTo.screen_name})` : `@${replyingTo.screen_name}`;
+};
+
 export const truncateWithEllipsis = (str: string, maxLength: number): string => {
   const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
   const segments = segmenter.segment(str);
