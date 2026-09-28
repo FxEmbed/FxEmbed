@@ -114,17 +114,20 @@ export const processMedia = (
       }
       const transcodeHost = getGIFTranscodeDomain(media.id_str, env.gifTranscodeDomainList);
       const transcodeBase = transcodeHost ? `https://${transcodeHost}` : null;
+      const transcodeUrl =
+        bestFormat?.url && transcodeBase
+          ? bestFormat.url.replace(env.videoBase, transcodeBase).replace('.mp4', extension)
+          : undefined;
       return {
         type: 'gif',
         id: media.id_str,
         url: media.media_url_https,
-        thumbnail_url: media.media_url_https,
+        // Unfurlers such as Fluxer treat a gif with a thumbnail as video and play
+        // transcode_url; without a transcode, keep it an image of the poster.
+        ...(transcodeUrl ? { thumbnail_url: media.media_url_https } : {}),
         width: media.original_info?.width,
         height: media.original_info?.height,
-        transcode_url:
-          bestFormat?.url && transcodeBase
-            ? bestFormat.url.replace(env.videoBase, transcodeBase).replace('.mp4', extension)
-            : undefined,
+        transcode_url: transcodeUrl,
         altText: media.ext_alt_text
       };
     }

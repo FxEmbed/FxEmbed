@@ -122,6 +122,48 @@ test('Fluxerbot gets WebP GIF transcoding', () => {
   }
 });
 
+test('Fluxerbot keeps an image GIF when no transcode is available', () => {
+  const previousEnv = getTwitterProviderEnv();
+  setTwitterProviderEnv({
+    videoBase: 'https://video.twimg.com',
+    gifTranscodeDomainList: []
+  });
+  try {
+    const media = {
+      type: 'animated_gif',
+      id_str: '123',
+      media_url_https: 'https://pbs.twimg.com/media/gif.jpg',
+      video_info: {
+        variants: [
+          { url: 'https://video.twimg.com/gif.mp4', bitrate: 1, content_type: 'video/mp4' }
+        ]
+      }
+    } as unknown as Parameters<typeof processMedia>[1];
+    // Build the host through the production adapter, so the test covers the
+    // user-agent and API-host gates rather than stubbing them.
+    const hostFor = (userAgent: string) =>
+      twitterBuildHostFromContext({
+        req: {
+          header: () => userAgent,
+          url: 'https://api.fxtwitter.com/user/status/1',
+          raw: {}
+        },
+        env: {}
+      } as unknown as Parameters<typeof twitterBuildHostFromContext>[0]);
+
+    const fluxer = processMedia(hostFor('Fluxerbot/1.0'), media);
+    expect(fluxer?.type).toBe('gif');
+    expect(fluxer && 'transcode_url' in fluxer ? fluxer.transcode_url : undefined).toBeUndefined();
+    // Without a transcode, a thumbnail would make Fluxer play the poster JPEG as video.
+    expect(fluxer && 'thumbnail_url' in fluxer ? fluxer.thumbnail_url : undefined).toBeUndefined();
+  } finally {
+    setTwitterProviderEnv({
+      videoBase: previousEnv.videoBase,
+      gifTranscodeDomainList: previousEnv.gifTranscodeDomainList
+    });
+  }
+});
+
 test('Status response robot (Discord spoiler keeps translation language in activity snowcode)', async () => {
   const result = await app.request(
     new Request('https://fxtwitter.com/jack/status/20/zh-tw||', {
