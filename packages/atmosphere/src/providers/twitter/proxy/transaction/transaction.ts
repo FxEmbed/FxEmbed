@@ -148,29 +148,65 @@ export class ClientTransaction {
 
   private async getIndices(): Promise<[number, number[]]> {
     const html = this.homePage.html() || '';
-    const indexMatch = ON_DEMAND_FILE_REGEX.exec(html);
-    if (!indexMatch?.[1]) {
-      throw new Error("Couldn't get on-demand file index");
+    const ondemand = await this.indicesFromOndemand(html);
+    if (ondemand) return ondemand;
+    const xweb = await this.indicesFromXWebSign(html);
+    if (xweb) return xweb;
+    throw new Error("Couldn't get on-demand file index");
+  }
+
+  private parseKeyByteIndices(source: string): [number, number[]] | null {
+    const indices: number[] = [];
+    let match: RegExpExecArray | null;
+    INDICES_REGEX.lastIndex = 0;
+    while ((match = INDICES_REGEX.exec(source)) !== null) {
+      indices.push(parseInt(match[1], 10));
     }
+    if (indices.length < 2) return null;
+    console.log(`Indices: ${indices}`);
+    return [indices[0], indices.slice(1)];
+  }
+
+  private async indicesFromOndemand(html: string): Promise<[number, number[]] | null> {
+    const indexMatch = ON_DEMAND_FILE_REGEX.exec(html);
+    if (!indexMatch?.[1]) return null;
     const hashMatch = ON_DEMAND_HASH_PATTERN(indexMatch[1]).exec(html);
     if (!hashMatch?.[1]) {
       throw new Error("Couldn't get on-demand file hash");
     }
-    const hash = hashMatch[1];
-    const url = `https://abs.twimg.com/responsive-web/client-web/ondemand.s.${hash}a.js`;
-    const resp = await cachedFetch(url);
-    const text = await resp.text();
-    const indices: number[] = [];
-    let match: RegExpExecArray | null;
-    INDICES_REGEX.lastIndex = 0;
-    while ((match = INDICES_REGEX.exec(text)) !== null) {
-      indices.push(parseInt(match[1], 10));
+    const url = `https://abs.twimg.com/responsive-web/client-web/ondemand.s.${hashMatch[1]}a.js`;
+    const text = await (await cachedFetch(url)).text();
+    const indices = this.parseKeyByteIndices(text);
+    if (!indices) throw new Error("Couldn't get KEY_BYTE indices");
+    return indices;
+  }
+
+  /**
+   * Logged-out x.com no longer inlines ondemand.s. The same key-byte indices
+   * live in the x-web sign chunk (sign.o-*.js), reached from the entry module
+   * via the sentry-filter chunk.
+   */
+  private async indicesFromXWebSign(html: string): Promise<[number, number[]] | null> {
+    const entryMatch = html.match(
+      /https:\/\/abs\.twimg\.com\/x-web\/x-web\/entry-client[^"'\\\s]+/
+    );
+    if (!entryMatch) return null;
+    const entryUrl = entryMatch[0];
+    const entryJs = await (await cachedFetch(entryUrl)).text();
+    const assetBase = entryUrl.slice(0, entryUrl.lastIndexOf('/') + 1);
+
+    let signName = entryJs.match(/sign\.o-[A-Za-z0-9_-]+\.js/)?.[0];
+    if (!signName) {
+      const sentry = entryJs.match(/assets\/sentry-filter-[A-Za-z0-9_-]+\.js/);
+      if (!sentry) return null;
+      const sentryJs = await (await cachedFetch(assetBase + sentry[0])).text();
+      signName = sentryJs.match(/sign\.o-[A-Za-z0-9_-]+\.js/)?.[0];
     }
-    if (indices.length < 2) {
-      throw new Error("Couldn't get KEY_BYTE indices");
-    }
-    console.log(`Indices: ${indices}`);
-    return [indices[0], indices.slice(1)];
+    if (!signName) return null;
+
+    const signUrl = `${assetBase}assets/${signName.replace(/^\.\//, '')}`;
+    const signJs = await (await cachedFetch(signUrl)).text();
+    return this.parseKeyByteIndices(signJs);
   }
 
   private getKey(): string {
