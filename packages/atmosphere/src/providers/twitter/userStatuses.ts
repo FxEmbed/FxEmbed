@@ -211,6 +211,15 @@ export const profileStatusesAPI = async (
   };
 };
 
+/**
+ * The media tab timeline mixes replies in with the author's own posts; `in_reply_to_status_id_str`
+ * is the same marker the processor uses to populate `replying_to`.
+ */
+const isReplyStatus = (status: GraphQLTwitterStatus): boolean =>
+  Boolean(
+    status.legacy?.in_reply_to_status_id_str || status.tweet?.legacy?.in_reply_to_status_id_str
+  );
+
 /** Max timeline pages to merge for feeds (100 posts × ~20/slice → cap rounds). */
 const PROFILE_STATUSES_FEED_MAX_PAGES = 10;
 
@@ -220,7 +229,8 @@ const PROFILE_STATUSES_FEED_TARGET_CAP = 100;
 async function paginateAndMerge(
   fetchPage: (cursor: string | null) => Promise<APISearchResults>,
   target: number,
-  maxPages = PROFILE_STATUSES_FEED_MAX_PAGES
+  maxPages = PROFILE_STATUSES_FEED_MAX_PAGES,
+  options: { stopOnEmptyPage?: boolean } = {}
 ): Promise<APISearchResults> {
   const merged: APITwitterStatus[] = [];
   const seenIds = new Set<string>();
@@ -250,7 +260,7 @@ async function paginateAndMerge(
     anySuccessfulPage = true;
     lastCursors = page.cursor;
 
-    if (page.results.length === 0) {
+    if (options.stopOnEmptyPage !== false && page.results.length === 0) {
       break;
     }
 
@@ -389,12 +399,18 @@ export const profileArticlesAPI = async (
   };
 };
 
+/**
+ * `withReplies` is opt-out here (rather than defaulted to `false`) so the v2 JSON API keeps
+ * returning replies from the media tab; only the paginated feed wrapper asks for them to be
+ * dropped by default.
+ */
 export const profileMediaAPI = async (
   handleOrId: ProfileHandleOrId,
   count: number,
   cursor: string | null,
   host: TwitterBuildHost,
-  language?: string
+  language?: string,
+  withReplies?: boolean
 ): Promise<APISearchResults> => {
   const userId =
     handleOrId.type === 'userId'
@@ -433,9 +449,12 @@ export const profileMediaAPI = async (
   const topCursor = cursors.find(cur => cur.cursorType === 'Top')?.value ?? null;
   const bottomCursor = cursors.find(cur => cur.cursorType === 'Bottom')?.value ?? null;
 
+  const includeReplies = withReplies !== false;
+  const included = includeReplies ? statuses : statuses.filter(status => !isReplyStatus(status));
+
   const builtStatuses = (
     await Promise.all(
-      statuses.map(status =>
+      included.map(status =>
         buildAPITwitterStatus(host, status, language, null, false, false).catch(err => {
           console.error('Error building status', err);
           return null;
@@ -463,12 +482,24 @@ export const profileMediaAPIPaginated = async (
   handleOrId: ProfileHandleOrId,
   maxTotal: number,
   host: TwitterBuildHost,
+  withReplies = false,
   language?: string
 ): Promise<APISearchResults> => {
   const target = Math.min(PROFILE_STATUSES_FEED_TARGET_CAP, Math.max(1, maxTotal));
   return paginateAndMerge(
-    cursor => profileMediaAPI(handleOrId, PROFILE_STATUSES_FEED_PER_PAGE, cursor, host, language),
-    target
+    cursor =>
+      profileMediaAPI(
+        handleOrId,
+        PROFILE_STATUSES_FEED_PER_PAGE,
+        cursor,
+        host,
+        language,
+        withReplies
+      ),
+    target,
+    PROFILE_STATUSES_FEED_MAX_PAGES,
+    // Reply filtering happens per page, so an all-reply page yields nothing and must not end the walk.
+    { stopOnEmptyPage: withReplies }
   );
 };
 
