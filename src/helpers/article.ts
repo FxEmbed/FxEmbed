@@ -1,5 +1,6 @@
 import { Constants } from '../constants';
 import { sanitizeText, truncateWithEllipsis, wrapForeignLinks } from './utils';
+import { escapeMarkdown, escapeMarkdownUrl, markdownBlockquote } from './markdown';
 
 const DISCORD_ARTICLE_MAX_LENGTH = 10000;
 
@@ -34,6 +35,7 @@ interface InlineLink {
   toIndex: number;
   href: string;
   text: string;
+  kind: 'mention' | 'url' | 'hashtag' | 'cashtag';
 }
 
 /** Draft.js-style entity payloads in article block `data` (mentions, urls, hashtags, cashtags). */
@@ -59,7 +61,8 @@ const collectInlineLinks = (block: TwitterArticleContentBlock, apiHost?: string)
         fromIndex: mention.fromIndex,
         toIndex: mention.toIndex,
         href: `${Constants.TWITTER_ROOT}/${mention.text}`,
-        text: `@${mention.text}`
+        text: `@${mention.text}`,
+        kind: 'mention'
       });
     }
   }
@@ -72,7 +75,8 @@ const collectInlineLinks = (block: TwitterArticleContentBlock, apiHost?: string)
         fromIndex: url.fromIndex,
         toIndex: url.toIndex,
         href,
-        text: url.text
+        text: url.text,
+        kind: 'url'
       });
     }
   }
@@ -84,7 +88,8 @@ const collectInlineLinks = (block: TwitterArticleContentBlock, apiHost?: string)
         fromIndex: hashtag.fromIndex,
         toIndex: hashtag.toIndex,
         href: `${Constants.TWITTER_ROOT}/hashtag/${hashtag.text}`,
-        text: `#${hashtag.text}`
+        text: `#${hashtag.text}`,
+        kind: 'hashtag'
       });
     }
   }
@@ -96,7 +101,8 @@ const collectInlineLinks = (block: TwitterArticleContentBlock, apiHost?: string)
         fromIndex: cashtag.fromIndex,
         toIndex: cashtag.toIndex,
         href: `${Constants.TWITTER_ROOT}/search?q=%24${cashtag.text}`,
-        text: `$${cashtag.text}`
+        text: `$${cashtag.text}`,
+        kind: 'cashtag'
       });
     }
   }
@@ -105,31 +111,23 @@ const collectInlineLinks = (block: TwitterArticleContentBlock, apiHost?: string)
   return links.sort((a, b) => b.fromIndex - a.fromIndex);
 };
 
+interface InlineSegment {
+  text: string;
+  originalStart: number;
+  originalEnd: number;
+  styles: Set<string>;
+  link: InlineLink | null;
+}
+
 /**
- * Applies inline styles and links to text, handling overlapping ranges
+ * Splits text into runs that share the same inline styles and link, handling overlapping ranges
  */
-const applyInlineStylesAndLinks = (
+const buildInlineSegments = (
   text: string,
   styleRanges: StyleRange[],
   links: InlineLink[]
-): string => {
-  // Build a map of style tags
-  const styleTagMap: Record<string, { open: string; close: string }> = {
-    Bold: { open: '<b>', close: '</b>' },
-    Italic: { open: '<i>', close: '</i>' },
-    Strikethrough: { open: '<s>', close: '</s>' }
-  };
-
-  // Build segments by tracking style/link changes at each character position
-  interface Segment {
-    text: string;
-    originalStart: number;
-    originalEnd: number;
-    styles: Set<string>;
-    link: InlineLink | null;
-  }
-
-  const segments: Segment[] = [];
+): InlineSegment[] => {
+  const segments: InlineSegment[] = [];
   const currentStyles = new Set<string>();
   let currentLink: InlineLink | null = null;
   let segmentStart = 0;
@@ -206,6 +204,26 @@ const applyInlineStylesAndLinks = (
       link: currentLink
     });
   }
+
+  return segments;
+};
+
+/**
+ * Applies inline styles and links to text, handling overlapping ranges
+ */
+const applyInlineStylesAndLinks = (
+  text: string,
+  styleRanges: StyleRange[],
+  links: InlineLink[]
+): string => {
+  // Build a map of style tags
+  const styleTagMap: Record<string, { open: string; close: string }> = {
+    Bold: { open: '<b>', close: '</b>' },
+    Italic: { open: '<i>', close: '</i>' },
+    Strikethrough: { open: '<s>', close: '</s>' }
+  };
+
+  const segments = buildInlineSegments(text, styleRanges, links);
 
   // Handle case with no events
   if (segments.length === 0 && text.length > 0) {
@@ -560,6 +578,258 @@ export const renderArticleToHtml = (
     collectedMedia,
     wasTruncated
   };
+};
+
+const MARKDOWN_STYLE_ORDER = ['Bold', 'Italic', 'Strikethrough'];
+const MARKDOWN_STYLE_MARKERS: Record<string, string> = {
+  Bold: '**',
+  Italic: '*',
+  Strikethrough: '~~'
+};
+
+/**
+ * Markdown counterpart of applyInlineStylesAndLinks. Styles are kept on a stack so overlapping
+ * ranges nest correctly, and whitespace is moved outside of style markers since Discord
+ * won't render e.g. `**bold **`.
+ */
+const applyInlineMarkdown = (
+  text: string,
+  styleRanges: StyleRange[],
+  links: InlineLink[]
+): string => {
+  const segments = buildInlineSegments(text, styleRanges, links);
+  const openStyles: string[] = [];
+  let inLink: InlineLink | null = null;
+  let result = '';
+
+  /* Inserts a closing marker before any trailing whitespace */
+  const close = (marker: string) => {
+    const trailing = result.match(/\s*$/)?.[0] ?? '';
+    result = result.slice(0, result.length - trailing.length) + marker + trailing;
+  };
+
+  const closeStyle = () => {
+    close(MARKDOWN_STYLE_MARKERS[openStyles.pop() as string]);
+  };
+
+  const closeLink = () => {
+    while (openStyles.length > 0) {
+      closeStyle();
+    }
+    if (inLink !== null) {
+      close(`](${escapeMarkdownUrl(inLink.href)})`);
+      inLink = null;
+    }
+  };
+
+  for (const segment of segments) {
+    if (segment.text.trim() === '') {
+      result += segment.text;
+      continue;
+    }
+    if (segment.link !== inLink) {
+      closeLink();
+    }
+    const firstInactive = openStyles.findIndex(style => !segment.styles.has(style));
+    if (firstInactive !== -1) {
+      while (openStyles.length > firstInactive) {
+        closeStyle();
+      }
+    }
+    const leading = segment.text.match(/^\s*/)?.[0] ?? '';
+    result += leading;
+    if (segment.link !== null && inLink === null) {
+      result += '[';
+      inLink = segment.link;
+    }
+    for (const style of MARKDOWN_STYLE_ORDER) {
+      if (segment.styles.has(style) && !openStyles.includes(style)) {
+        result += MARKDOWN_STYLE_MARKERS[style];
+        openStyles.push(style);
+      }
+    }
+    result += escapeMarkdown(segment.text.slice(leading.length));
+  }
+  closeLink();
+
+  return result;
+};
+
+/** Inline links for markdown; without `linkEntities` only real URLs are kept as links */
+const markdownLinks = (block: TwitterArticleContentBlock, linkEntities: boolean): InlineLink[] =>
+  collectInlineLinks(block).filter(link => linkEntities || link.kind === 'url');
+
+/** Cuts a text block down to `length` characters, dropping styles and links past the cut */
+const truncateBlock = (
+  block: TwitterArticleContentBlock,
+  length: number,
+  linkEntities: boolean
+): { text: string; styleRanges: StyleRange[]; links: InlineLink[] } => {
+  const text = truncateWithEllipsis(block.text, length);
+  const cut = Math.min(length, block.text.length);
+  return {
+    text,
+    styleRanges: block.inlineStyleRanges
+      .filter(range => range.offset < cut)
+      .map(range => ({ ...range, length: Math.min(range.length, cut - range.offset) })),
+    links: markdownLinks(block, linkEntities).filter(link => link.toIndex <= cut)
+  };
+};
+
+type MarkdownBlock =
+  | { kind: 'text'; block: TwitterArticleContentBlock; prefix: (index: number) => string }
+  | { kind: 'raw'; markdown: string };
+
+const formatMarkdownBlock = (
+  item: MarkdownBlock,
+  listIndex: number,
+  linkEntities: boolean,
+  length?: number
+): string => {
+  if (item.kind === 'raw') {
+    return item.markdown;
+  }
+  const { block } = item;
+  const { text, styleRanges, links } =
+    length === undefined
+      ? {
+          text: block.text,
+          styleRanges: block.inlineStyleRanges,
+          links: markdownLinks(block, linkEntities)
+        }
+      : truncateBlock(block, length, linkEntities);
+  let markdown = applyInlineMarkdown(text, styleRanges, links);
+  if (block.type === 'header-one' || block.type === 'header-two') {
+    markdown = markdown.replace(/\n+/g, ' ');
+  } else if (block.type === 'blockquote') {
+    return markdownBlockquote(markdown);
+  }
+  return item.prefix(listIndex) + markdown;
+};
+
+/**
+ * Renders Twitter Article content to Discord markdown (for component embeds).
+ * Media blocks are collected rather than rendered, like the Discord HTML renderer.
+ * If the article doesn't fit, mention/hashtag/cashtag links are dropped to make room for text.
+ */
+export const renderArticleToMarkdown = (
+  content: TwitterArticleContentState,
+  options: { maxLength: number; mediaEntities: TwitterApiMedia[]; linkEntities?: boolean }
+): { markdown: string; collectedMedia: TwitterApiMedia[]; wasTruncated: boolean } => {
+  const linkEntities = options.linkEntities ?? true;
+  const collectedMedia: TwitterApiMedia[] = [];
+  const items: MarkdownBlock[] = [];
+
+  for (const block of content.blocks) {
+    let codeBlock: string | null = null;
+    let blockText = block.text;
+    const entityRanges = [...block.entityRanges].sort((a, b) => b.offset - a.offset);
+
+    for (const entityRange of entityRanges) {
+      const entityEntry = content.entityMap.find(e => e.key === String(entityRange.key));
+      const type = entityEntry?.value.type;
+      if (type !== 'MEDIA' && type !== 'MARKDOWN' && type !== 'TWEET') {
+        continue;
+      }
+      if (type === 'MEDIA') {
+        const mediaItem = entityEntry?.value.data.mediaItems[0];
+        const media = options.mediaEntities.find(m => m.media_id === mediaItem?.mediaId);
+        if (media) {
+          collectedMedia.push(media);
+        }
+      } else if (type === 'MARKDOWN') {
+        const markdown = (entityEntry?.value.data as { markdown?: string }).markdown || '';
+        /* Code fences pass through as-is; anything else is quoted as literal text */
+        codeBlock = markdown.startsWith('```')
+          ? markdown
+          : markdownBlockquote(escapeMarkdown(markdown));
+      }
+      /* Embedded posts are skipped, there isn't enough room to display them */
+      blockText =
+        blockText.substring(0, entityRange.offset) +
+        blockText.substring(entityRange.offset + entityRange.length);
+    }
+
+    if (codeBlock !== null) {
+      items.push({ kind: 'raw', markdown: codeBlock });
+      continue;
+    }
+    if (block.type === 'atomic' || blockText.trim() === '') {
+      continue;
+    }
+
+    const textBlock = { ...block, text: blockText };
+    switch (block.type) {
+      case 'header-one':
+        items.push({ kind: 'text', block: textBlock, prefix: () => '## ' });
+        break;
+      case 'header-two':
+        items.push({ kind: 'text', block: textBlock, prefix: () => '### ' });
+        break;
+      case 'unordered-list-item':
+        items.push({ kind: 'text', block: textBlock, prefix: () => '- ' });
+        break;
+      case 'ordered-list-item':
+        items.push({ kind: 'text', block: textBlock, prefix: index => `${index}. ` });
+        break;
+      default:
+        items.push({ kind: 'text', block: textBlock, prefix: () => '' });
+        break;
+    }
+  }
+
+  const isListItem = (item: MarkdownBlock | undefined) =>
+    item?.kind === 'text' &&
+    (item.block.type === 'ordered-list-item' || item.block.type === 'unordered-list-item');
+
+  let markdown = '';
+  let listIndex = 0;
+  let wasTruncated = false;
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const previous = items[i - 1];
+    listIndex =
+      isListItem(item) && isListItem(previous) && item.kind === 'text' && previous.kind === 'text'
+        ? previous.block.type === item.block.type
+          ? listIndex + 1
+          : 1
+        : 1;
+    /* Consecutive list items stay on adjacent lines, everything else gets a blank line between */
+    const separator =
+      markdown === '' ? '' : isListItem(item) && isListItem(previous) ? '\n' : '\n\n';
+    const rendered = formatMarkdownBlock(item, listIndex, linkEntities);
+    const remaining = options.maxLength - markdown.length - separator.length;
+
+    if (rendered.length <= remaining) {
+      markdown += separator + rendered;
+      continue;
+    }
+
+    wasTruncated = true;
+    let partial = '…';
+    /* Only bother partially rendering a block if a meaningful amount of it fits */
+    if (item.kind === 'text' && remaining > 200) {
+      let sourceLength = Math.min(item.block.text.length, remaining);
+      for (let attempt = 0; attempt < 8 && sourceLength > 0; attempt++) {
+        const rendered = formatMarkdownBlock(item, listIndex, linkEntities, sourceLength);
+        if (rendered.length <= remaining) {
+          partial = rendered;
+          break;
+        }
+        sourceLength -= Math.max(rendered.length - remaining, 16);
+      }
+    }
+    if (partial.length <= remaining) {
+      markdown += separator + partial;
+    }
+    break;
+  }
+
+  if (wasTruncated && linkEntities) {
+    return renderArticleToMarkdown(content, { ...options, linkEntities: false });
+  }
+  return { markdown, collectedMedia, wasTruncated };
 };
 
 export { DISCORD_ARTICLE_MAX_LENGTH };
