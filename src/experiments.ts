@@ -79,7 +79,7 @@ const Experiments: { [key in Experiment]: ExperimentConfig } = {
     name: 'Discord component embed',
     description: 'Use Discord component embeds',
     percentage: 0
-  },
+  }
 };
 
 export const experimentCheck = (experiment: Experiment, condition = true) => {
