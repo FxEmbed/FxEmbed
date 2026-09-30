@@ -492,7 +492,7 @@ export const buildComponentEmbed = ({
     components.push(textDisplay(quote));
     /* Like the regular embed, a quote's media is shown when the post itself has none */
     if (includeMedia && !mediaGallery && !isTombstone(status.quote)) {
-      const quoteGallery = gallery(statusMediaItems(context, status.quote, flags));
+      const quoteGallery = gallery(statusMediaItems(context, status.quote, flags, mediaNumber));
       if (quoteGallery) {
         components.push(quoteGallery);
       }
