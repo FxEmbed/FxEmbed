@@ -16,18 +16,17 @@ export async function runWithTransports<P extends AtmosphereSocialProvider, T>(
   let lastErr: unknown;
   for (let i = 0; i < chain.length; i++) {
     const t = chain[i]!;
+    let r: AttemptResult<T>;
     try {
-      const r = await op(t, i);
-      if (r.ok) {
-        return r.value;
-      }
-      if (!r.retriable) {
-        throw r.err;
-      }
-      lastErr = r.err;
+      r = await op(t, i);
     } catch (e) {
       lastErr = e;
+      continue;
     }
+
+    if (r.ok) return r.value;
+    lastErr = r.err;
+    if (!r.retriable) throw r.err;
   }
   throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
 }
