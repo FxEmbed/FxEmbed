@@ -1,5 +1,8 @@
-import { fetchSameOriginHttps } from '../../helpers/same-origin-https-fetch.js';
-import { withTimeout } from '../../helpers/with-timeout.js';
+import {
+  cookieHeaderFor,
+  privateApiRequest,
+  type PrivateApiResult
+} from '../../helpers/private-api-request.js';
 import { getInstagramProviderEnv } from '../instagram-runtime.js';
 import {
   hasInstagramAccountProxy,
@@ -34,15 +37,6 @@ export const hasThreadsAccountProxy = hasInstagramAccountProxy;
  * surfaces, and only the client fingerprint differs (see {@link threadsProxyHeaders}).
  */
 export const resolveThreadsAccounts = resolveInstagramAccounts;
-
-function cookieHeaderFor(account: InstagramCredentials): string {
-  const parts = [`sessionid=${account.sessionId}`];
-  if (account.userId) parts.push(`ds_user_id=${account.userId}`);
-  if (account.csrfToken) parts.push(`csrftoken=${account.csrfToken}`);
-  if (account.mid) parts.push(`mid=${account.mid}`);
-  if (account.deviceId) parts.push(`ig_did=${account.deviceId}`);
-  return parts.join('; ');
-}
 
 /**
  * Headers for one proxied Threads request. Same session cookies as the Instagram proxy, but with
@@ -85,17 +79,7 @@ export function threadsProxyHeaders(
   return headers;
 }
 
-/** HTTP statuses where another account is worth trying: auth/checkpoint/rate limit. */
-const ROTATE_STATUSES = new Set([401, 403, 429]);
-
-export type ThreadsPrivateApiResult = {
-  ok: boolean;
-  /** 0 when no account was available at all (proxy not configured). */
-  status: number;
-  json: unknown | null;
-  /** Set when a request actually went out, for logging. */
-  accountUsed?: string;
-};
+export type ThreadsPrivateApiResult = PrivateApiResult;
 
 /**
  * Calls an `i.instagram.com/api/v1/…` endpoint as the Threads app, rotating accounts on
@@ -140,93 +124,14 @@ export async function threadsPrivateApiRequest(
     );
   }
 
-  let last: ThreadsPrivateApiResult = { ok: false, status: 500, json: null };
-  for (const account of accounts) {
-    const headers = threadsProxyHeaders(account, {
-      referer: options.referer,
-      acceptHint: options.acceptHint
-    });
-    if (options.method === 'POST') {
-      headers['Content-Type'] = 'application/x-www-form-urlencoded';
-    }
-    let res: Response;
-    let text: string;
-    let parsed: unknown;
-    let parseFailed: boolean;
-    try {
-      // Fetch can resolve on headers; keep body read + JSON.parse inside the timeout so a
-      // stalled body aborts and rotates instead of hanging the request.
-      const timed = await withTimeout(async signal => {
-        const response = await fetchSameOriginHttps(url.toString(), {
-          method: options.method ?? 'GET',
-          headers,
-          body: options.method === 'POST' ? (options.body ?? '') : undefined,
-          signal
-        });
-        if (!response.ok) {
-          return { response, text: '', parsed: null, parseFailed: false };
-        }
-        const body = await response.text();
-        try {
-          return { response, text: body, parsed: JSON.parse(body) as unknown, parseFailed: false };
-        } catch {
-          return { response, text: body, parsed: null, parseFailed: true };
-        }
-      });
-      res = timed.response;
-      text = timed.text;
-      parsed = timed.parsed;
-      parseFailed = timed.parseFailed;
-    } catch (err) {
-      console.error('[threads] private API request threw', {
-        path: resolvedPath,
-        account: account.username,
-        message: err instanceof Error ? err.message : String(err)
-      });
-      last = { ok: false, status: 500, json: null, accountUsed: account.username };
-      continue;
-    }
-
-    if (!res.ok) {
-      console.error('[threads] private API request failed', {
-        path: resolvedPath,
-        account: account.username,
-        status: res.status
-      });
-      last = { ok: false, status: res.status, json: null, accountUsed: account.username };
-      if (ROTATE_STATUSES.has(res.status)) continue;
-      return last;
-    }
-
-    const trimmed = text.trim();
-    // A logged-out or checkpointed session gets an HTML login page rather than JSON.
-    if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
-      console.error('[threads] private API returned non-JSON (session likely invalid)', {
-        path: resolvedPath,
-        account: account.username
-      });
-      last = { ok: false, status: res.status, json: null, accountUsed: account.username };
-      continue;
-    }
-    if (parseFailed) {
-      last = { ok: false, status: res.status, json: null, accountUsed: account.username };
-      continue;
-    }
-    // The private API answers 200 with `{ status: 'fail' }` for soft failures (spam block,
-    // feedback_required). Rotate rather than surfacing an empty page as success.
-    if (
-      parsed &&
-      typeof parsed === 'object' &&
-      (parsed as { status?: unknown }).status === 'fail'
-    ) {
-      console.error('[threads] private API returned status=fail', {
-        path: resolvedPath,
-        account: account.username
-      });
-      last = { ok: false, status: 502, json: parsed, accountUsed: account.username };
-      continue;
-    }
-    return { ok: true, status: res.status, json: parsed, accountUsed: account.username };
-  }
-  return last;
+  return privateApiRequest({
+    accounts,
+    url: url.toString(),
+    headersFor: account =>
+      threadsProxyHeaders(account, { referer: options.referer, acceptHint: options.acceptHint }),
+    method: options.method,
+    body: options.body,
+    logTag: 'threads',
+    logPath: resolvedPath
+  });
 }
