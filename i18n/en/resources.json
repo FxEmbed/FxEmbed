@@ -65,5 +65,6 @@
   "language_zh-CN": "Chinese",
   "language_zh-TW": "Chinese",
   "threadIndicator": "🧵 Thread • {brandingName}",
-  "articleIndicator": "📰 Article • {brandingName}"
+  "articleIndicator": "📰 Article • {brandingName}",
+  "viewOnPlatform": "View on {platform}"
 }

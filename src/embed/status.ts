@@ -5,7 +5,12 @@ import icu from 'i18next-icu';
 import { Constants } from '../constants';
 import { handleQuote } from '../helpers/quote';
 import { isTombstone, withLocalizedTombstoneMessage } from '../helpers/tombstone';
-import { formatImageUrl, formatReplyingToAuthorLabel, sanitizeText, truncateWithEllipsis } from '../helpers/utils';
+import {
+  formatImageUrl,
+  formatReplyingToAuthorLabel,
+  sanitizeText,
+  truncateWithEllipsis
+} from '../helpers/utils';
 import { proxyTwitterPostPhotoUrl, shouldProxyTelegramPbsPhotos } from '../helpers/pbsProxy';
 import { Strings } from '../strings';
 import { getSocialProof } from '../helpers/socialproof';
@@ -30,6 +35,12 @@ import { constructTikTokVideo } from '@fxembed/atmosphere/providers/tiktok/conve
 import { constructInstagramPost } from '@fxembed/atmosphere/providers/instagram/post';
 import { InputFlags } from '../types/types';
 import { formatRuntime } from '../helpers/runtime';
+import {
+  buildComponentEmbed,
+  getShouldUseComponentEmbed,
+  keepsClassicPlayerEmbed,
+  renderComponentEmbed
+} from './components';
 
 /**
  * Telegram's link preview plays videos inside an embed container. Instagram
@@ -136,12 +147,6 @@ export const handleStatus = async (
   }
 
   let thread: SocialThread;
-  let useLanguage = language;
-  // Only request translation for activity embed, otherwise we'll be doing it twice
-  if (!flags.noActivity && isDiscord) {
-    useLanguage = undefined;
-  }
-
   let useActivity = false;
 
   if (
@@ -157,6 +162,18 @@ export const handleStatus = async (
     useActivity = true;
   }
 
+  /* Component embeds replace the activity embed. When every post gets one, we know that before
+     fetching; otherwise it depends on the post, so fetch with the translation in case it's needed. */
+  const shouldUseComponentEmbed = getShouldUseComponentEmbed(userAgent || '', flags);
+  if (shouldUseComponentEmbed) {
+    useActivity = false;
+  }
+  /* The activity embed requests the translation itself, so only fetch it here when it's needed */
+  const fetchLanguage =
+    !shouldUseComponentEmbed && (useActivity || (!flags.noActivity && isDiscord))
+      ? undefined
+      : language;
+
   let blueskyActivityPdsOut: { pdsHostHint?: string } | undefined;
 
   if (provider === DataProvider.Twitter) {
@@ -164,7 +181,7 @@ export const handleStatus = async (
       statusId,
       fetchWithThreads,
       twitterBuildHostFromContext(c),
-      useActivity ? undefined : useLanguage,
+      fetchLanguage,
       flags?.api ?? false
     );
   } else if (provider === DataProvider.Bluesky) {
@@ -174,7 +191,7 @@ export const handleStatus = async (
       authorHandle ?? '',
       fetchWithThreads,
       blueskyBuildHostFromContext(c),
-      useActivity ? undefined : useLanguage,
+      fetchLanguage,
       undefined,
       blueskyActivityPdsOut
     )) as SocialThread;
@@ -335,9 +352,9 @@ export const handleStatus = async (
 
     const selectedMedia = all[(mediaNumber || 1) - 1];
     if (selectedMedia) {
-      redirectUrl = selectedMedia.url;
+      redirectUrl = selectedMedia.url ?? null;
     } else if (all.length > 0) {
-      redirectUrl = all[0].url;
+      redirectUrl = all[0].url ?? null;
     }
 
     if (redirectUrl) {
@@ -431,6 +448,30 @@ export const handleStatus = async (
     : `${Constants.BLUESKY_ROOT}/profile/${status.author.screen_name}/post/${status.id}`;
   const instagramPublicStatusUrl =
     status.url || `${Constants.INSTAGRAM_ROOT}/p/${encodeURIComponent(status.id)}/`;
+
+  let componentEmbed: string | null = null;
+  if (shouldUseComponentEmbed && !keepsClassicPlayerEmbed(status as APIStatus)) {
+    const publicStatusUrls: Partial<Record<DataProvider, string>> = {
+      [DataProvider.Twitter]: twitterPublicStatusUrl,
+      [DataProvider.Bluesky]: bskyPublicStatusUrl,
+      [DataProvider.Instagram]: instagramPublicStatusUrl
+    };
+    try {
+      componentEmbed = renderComponentEmbed(
+        buildComponentEmbed({
+          context: c,
+          status: status as APIStatus,
+          publicUrl: publicStatusUrls[status.provider] ?? status.url,
+          flags,
+          mediaNumber
+        })
+      );
+      /* The component embed takes the place of the activity embed */
+      useActivity = false;
+    } catch (e) {
+      console.log('Error building component embed', e, (e as Error)?.stack);
+    }
+  }
 
   if (status.provider === DataProvider.Twitter) {
     headers.push(
@@ -941,6 +982,10 @@ export const handleStatus = async (
         }
       )
     );
+  }
+
+  if (componentEmbed) {
+    headers.push(componentEmbed);
   }
 
   /* When dealing with a Tweet of unknown lang, fall back to en */

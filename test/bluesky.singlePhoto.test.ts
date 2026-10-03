@@ -2,6 +2,17 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { app } from '../src/worker';
 import threadMultiImage from './fixtures/bluesky/thread-multi-image.json';
 
+/* The activity embed test below needs component embeds (which replace it) turned off */
+vi.mock('../src/experiments', async importOriginal => {
+  const actual = await importOriginal<typeof import('../src/experiments')>();
+  return {
+    ...actual,
+    experimentCheck: (experiment: import('../src/experiments').Experiment, condition = true) =>
+      experiment !== actual.Experiment.COMPONENT_EMBED &&
+      actual.experimentCheck(experiment, condition)
+  };
+});
+
 afterEach(() => vi.restoreAllMocks());
 
 function mockMultiImageThread() {
