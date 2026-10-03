@@ -166,6 +166,45 @@ test('API search returns 400 for upstream blocklisted query error', async () => 
   expect(body.message).toContain('blocked by X content controls');
 });
 
+test('API search returns 400 for an unknown upstream cursor', async () => {
+  const cursor = "{'top': None, 'bottom': None}";
+  const result = await app.request(
+    new Request(
+      `https://api.fxtwitter.com/2/search?q=unknown_cursor_error&cursor=${encodeURIComponent(cursor)}`,
+      {
+        method: 'GET',
+        headers: botHeaders
+      }
+    ),
+    undefined,
+    harness
+  );
+  expect(result.status).toEqual(400);
+  const body = (await result.json()) as { code?: number; message?: string; success?: boolean };
+  expect(body.code).toEqual(400);
+  expect(body.message).toEqual(`Unknown request cursor ${cursor}`);
+  expect(body.success).toBeUndefined();
+});
+
+test('API people search returns 400 for an unknown upstream cursor', async () => {
+  const cursor = "{'top': None, 'bottom': None}";
+  const result = await app.request(
+    new Request(
+      `https://api.fxtwitter.com/2/search/users?q=unknown_cursor_error&cursor=${encodeURIComponent(cursor)}`,
+      {
+        method: 'GET',
+        headers: botHeaders
+      }
+    ),
+    undefined,
+    harness
+  );
+  expect(result.status).toEqual(400);
+  const body = (await result.json()) as { code?: number; message?: string };
+  expect(body.code).toEqual(400);
+  expect(body.message).toEqual(`Unknown request cursor ${cursor}`);
+});
+
 test('API search returns 400 for upstream query too long error', async () => {
   const result = await app.request(
     new Request('https://api.fxtwitter.com/2/search?q=query_too_long_error', {

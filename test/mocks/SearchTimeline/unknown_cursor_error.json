@@ -1,0 +1,19 @@
+{
+  "errors": [
+    {
+      "code": 214,
+      "extensions": {
+        "code": 214,
+        "kind": "Validation",
+        "name": "BadRequestError",
+        "source": "Client"
+      },
+      "kind": "Validation",
+      "locations": [{ "column": 7, "line": 4 }],
+      "message": "BadRequest: Unknown request cursor {'top': None, 'bottom': None}",
+      "name": "BadRequestError",
+      "path": ["search_by_raw_query", "search_timeline", "timeline"],
+      "source": "Client"
+    }
+  ]
+}
