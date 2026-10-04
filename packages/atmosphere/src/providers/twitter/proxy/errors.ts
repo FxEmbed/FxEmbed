@@ -210,6 +210,11 @@ const ERROR_RULES: ErrorRule[] = [
     match: ({ json }) => parseSearchTimelineClientError(json) === 'query_too_long',
     disposition: 'ignore',
     log: 'SearchTimeline query exceeds max length (expected client error)'
+  },
+  {
+    match: ({ json }) => parseSearchTimelineClientError(json) === 'unknown_cursor',
+    disposition: 'ignore',
+    log: 'SearchTimeline unknown request cursor (expected client error)'
   }
 ];
 

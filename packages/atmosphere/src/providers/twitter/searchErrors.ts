@@ -3,9 +3,17 @@ import type { ApiQueryError } from '../../types/api-schemas.js';
 /** X SearchTimeline rejects `rawQuery` longer than this; match that cap on FxTwitter `/2/search`. */
 export const TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH = 512;
 
-export type SearchTimelineClientErrorKind = 'empty_query' | 'blocklisted' | 'query_too_long';
+export type SearchTimelineClientErrorKind =
+  'empty_query' | 'blocklisted' | 'query_too_long' | 'unknown_cursor';
 
 const QUERY_TOO_LONG_RE = /Raw query length \d+ exceeds max allowed \d+/i;
+/** X echoes the rejected cursor after this phrase, e.g. `{'top': None, 'bottom': None}`. */
+const UNKNOWN_CURSOR_RE = /Unknown request cursor\b\s*(.*)$/i;
+
+export function formatUnknownCursorMessage(cursor: string): string {
+  const trimmed = cursor.trim();
+  return trimmed.length > 0 ? `Unknown request cursor ${trimmed}` : 'Unknown request cursor';
+}
 
 export function formatSearchQueryTooLongMessage(length: number): string {
   return `Raw query length ${length} exceeds max allowed ${TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH}`;
@@ -68,6 +76,9 @@ export function parseSearchTimelineClientError(
   if (QUERY_TOO_LONG_RE.test(message)) {
     return 'query_too_long';
   }
+  if (unknownCursorValue(message) !== null) {
+    return 'unknown_cursor';
+  }
   return null;
 }
 
@@ -76,7 +87,8 @@ export function isSearchTimelineClientErrorResponse(json: unknown): boolean {
 }
 
 export function searchTimelineClientErrorToApiQueryError(
-  kind: SearchTimelineClientErrorKind
+  kind: SearchTimelineClientErrorKind,
+  source?: unknown
 ): ApiQueryError {
   switch (kind) {
     case 'empty_query':
@@ -94,5 +106,28 @@ export function searchTimelineClientErrorToApiQueryError(
         code: 400,
         message: `Raw query length exceeds max allowed ${TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH}`
       };
+    case 'unknown_cursor':
+      return {
+        code: 400,
+        message: formatUnknownCursorMessage(
+          (source !== undefined ? unknownCursorFromSearchTimelineError(source) : null) ?? ''
+        )
+      };
   }
+}
+
+function unknownCursorValue(message: string): string | null {
+  const match = UNKNOWN_CURSOR_RE.exec(message);
+  if (!match) return null;
+  return match[1] ?? '';
+}
+
+/** Cursor text from a SearchTimeline unknown-cursor error, or null when the payload is a different error. */
+export function unknownCursorFromSearchTimelineError(json: unknown): string | null {
+  const entry = firstGraphqlErrorEntry(json);
+  if (!entry) return null;
+  const message = entry['message'];
+  if (typeof message !== 'string') return null;
+  if (!isSearchTimelineErrorPath(entry['path'])) return null;
+  return unknownCursorValue(message);
 }
