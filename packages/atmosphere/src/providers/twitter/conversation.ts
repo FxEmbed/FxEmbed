@@ -1360,7 +1360,15 @@ export const constructTwitterConversation = async (
     language
   );
 
-  const fromChain = bucket.chainTweets.find(s => (s.rest_id ?? s.legacy?.id_str) === id) ?? null;
+  let fromChain = bucket.chainTweets.find(s => (s.rest_id ?? s.legacy?.id_str) === id) ?? null;
+
+  /* Reply pages (a cursor is set) only carry the next replies, not the focal tweet */
+  if (fromChain === null && cursor) {
+    const focal = getResultFromResponse(await fetchSingleStatus(id, host, false, language));
+    if (isGraphQLTwitterStatus(focal)) {
+      fromChain = focal;
+    }
+  }
   const fromOrderedTomb =
     fromChain === null
       ? (bucket.chainOrdered.find((p): p is APIStatusTombstone => isTombstone(p) && p.id === id) ??

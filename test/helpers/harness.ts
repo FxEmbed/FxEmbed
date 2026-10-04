@@ -47,9 +47,11 @@ export default {
         case 'TweetDetail':
         case 'ConversationTimeline': {
           const focalTweetId = variables.focalTweetId ?? variables.focal_tweet_id;
+          // Reply pages (a cursor is set) load `<id>.cursor.json`, if there is one
+          const suffix = variables.cursor ? '.cursor' : '';
           // load mock based on tweet id
           try {
-            const mock = await import(`../mocks/TweetDetail/${focalTweetId}.json`);
+            const mock = await import(`../mocks/TweetDetail/${focalTweetId}${suffix}.json`);
             console.log('Mock data:', mock);
             return new Response(JSON.stringify(mock));
           } catch (error) {
