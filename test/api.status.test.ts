@@ -159,6 +159,25 @@ test('API v2 /2/conversation returns the next replies for a cursor', async () =>
   expect(body.cursor?.bottom).toEqual('next-page-cursor');
 });
 
+test('API v2 /2/conversation keeps a cursor page when the focal lookup fails', async () => {
+  // 991500 is suspended, so only the reply page is available
+  const result = await app.request(
+    new Request('https://api.fxtwitter.com/2/conversation/991500?cursor=next-page', {
+      method: 'GET',
+      headers: botHeaders
+    }),
+    undefined,
+    harness
+  );
+  expect(result.status).toEqual(200);
+  const body = (await result.json()) as SocialConversation;
+  expect(body.code).toEqual(200);
+  expect(body.status).toBeNull();
+  expect(body.thread).toEqual([]);
+  expect(body.replies?.map(status => status.id)).toEqual(['21']);
+  expect(body.cursor?.bottom).toEqual('next-page-cursor');
+});
+
 test('API v2 /2/conversation includes quote count on focal status', async () => {
   const result = await app.request(
     new Request('https://api.fxtwitter.com/2/conversation/20', {
