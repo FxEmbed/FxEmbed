@@ -298,3 +298,18 @@ test('statusesToFeedItems accepts APIBlueskyStatus and emits RSS item link', () 
     '<guid isPermaLink="true">https://bsky.app/profile/handle.test/post/rkeybsky</guid>'
   );
 });
+
+test('XML serialization removes forbidden characters without damaging emoji or whitespace', () => {
+  expect(escapeXml('a\x00\x08\x1b\ufffe\uffff\ud800b\t\n\r😀')).toBe('ab\t\n\r😀');
+});
+
+test('RSS and Atom remain well formed with control characters in post and channel text', () => {
+  const items = statusesToFeedItems([baseStatus({ text: 'Hello\x00world 😀' })], {});
+  const meta = { ...mockMeta, channelTitle: 'Title\x1b', authorName: 'Author\uffff' };
+  for (const xml of [toRss20Xml(meta, items), toAtomFeedXml(meta, items)]) {
+    expect(xml).not.toContain('\x00');
+    expect(xml).not.toContain('\x1b');
+    expect(xml).not.toContain('\uffff');
+    expect(xml).toContain('Helloworld 😀');
+  }
+});

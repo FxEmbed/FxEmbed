@@ -39,9 +39,14 @@ export type SyndicationFeedItem = {
   enclosure?: SyndicationEnclosure;
 };
 
+/** XML 1.0 excludes controls, lone surrogates, and U+FFFE/U+FFFF, even in CDATA. */
+const xmlText = (text: string): string =>
+  // eslint-disable-next-line no-control-regex
+  text.replace(/[^\u0009\u000a\u000d\u0020-\ud7ff\ue000-\ufffd\u{10000}-\u{10ffff}]/gu, '');
+
 /** Escape text for XML text nodes and attribute values. */
 export const escapeXml = (text: string): string =>
-  text
+  xmlText(text)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -50,7 +55,7 @@ export const escapeXml = (text: string): string =>
 
 /** CDATA cannot contain the literal `]]>`, split if present. */
 const cdataWrap = (inner: string): string =>
-  `<![CDATA[${inner.replace(/\]\]>/g, ']]]]><![CDATA[>')}]]>`;
+  `<![CDATA[${xmlText(inner).replace(/\]\]>/g, ']]]]><![CDATA[>')}]]>`;
 
 const toRfc822 = (d: Date): string => d.toUTCString();
 
