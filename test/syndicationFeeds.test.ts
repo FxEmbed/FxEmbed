@@ -313,3 +313,11 @@ test('RSS and Atom remain well formed with control characters in post and channe
     expect(xml).toContain('Helloworld 😀');
   }
 });
+
+test('RSS and Atom filter forbidden characters directly in CDATA content', () => {
+  const items = statusesToFeedItems([baseStatus()], {});
+  items[0].htmlContent = '<p>Hello\x00\x08\x1b\ufffe\uffff\ud800world 😀</p>';
+  for (const xml of [toRss20Xml(mockMeta, items), toAtomFeedXml(mockMeta, items)]) {
+    expect(xml).toContain('<![CDATA[<p>Helloworld 😀</p>]]>');
+  }
+});
