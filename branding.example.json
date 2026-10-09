@@ -2,6 +2,7 @@
   "zones": [
     {
       "name": "FxTwitter",
+      "emojiId": "1554261513970385007",
       "default": true,
       "domains": ["fxtwitter.com", "twittpr.com"],
       "provider": "twitter",
@@ -20,6 +21,7 @@
     },
     {
       "name": "FixupX",
+      "emojiId": "1554261675522134076",
       "domains": ["fixupx.com", "xfixup.com"],
       "provider": "twitter",
       "favicon": "https://abs.twimg.com/favicons/twitter.3.ico",
@@ -37,6 +39,7 @@
     },
     {
       "name": "FxBluesky",
+      "emojiId": "1554261635248685158",
       "domains": ["fxbsky.app"],
       "provider": "bluesky",
       "redirect": "https://bsky.app/profile/fxbsky.app",
@@ -53,6 +56,7 @@
     },
     {
       "name": "FixTok",
+      "emojiId": "1554261721231659038",
       "domains": ["fixtok.wuff.gay", "dxtiktok.com", "wuff.gay", "cocktiktok.com"],
       "provider": "tiktok",
       "redirect": "https://tiktok.com",
@@ -69,6 +73,7 @@
     },
     {
       "name": "FxInstagram",
+      "emojiId": "1554261586959663205",
       "domains": ["67instagram.com"],
       "provider": "instagram",
       "redirect": "https://www.instagram.com",

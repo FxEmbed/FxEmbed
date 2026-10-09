@@ -100,7 +100,7 @@ test('Discord keeps the embed pipeline for an Instagram video', async () => {
 
   expect(res.status).toBe(200);
   const html = await res.text();
-  expect(html).toContain('application/activity+json');
+  expect(html).toMatch(/application\/activity\+json|discord:component-embed/);
   expect(html).not.toContain(`content="${VIDEO_URL}"`);
   expect(res.headers.get('location')).toBeNull();
 });

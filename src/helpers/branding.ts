@@ -7,7 +7,7 @@ type ActivityIcon = {
   [key: string]: string;
 };
 
-type Branding = {
+export type Branding = {
   name: string;
   domains: string[];
   provider: string;
@@ -15,6 +15,8 @@ type Branding = {
   redirect: string;
   default?: boolean;
   color?: string;
+  /** Discord custom emoji ID shown with the branding name in component embeds */
+  emojiId?: string;
   activityIcons?: ActivityIcon | ActivityIcon[];
 };
 
