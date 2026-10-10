@@ -23,7 +23,7 @@ export const handleQuote = (
   str += formatQuotedFrom(s.quotedFrom, quote.author?.name || '', quote.author?.screen_name || '');
 
   str += ` \n\n`;
-  str += quote.text;
+  str += quote.translation?.text ?? quote.text;
 
   return str;
 };
