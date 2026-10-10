@@ -6,6 +6,19 @@ import { cloudflareTest } from '@cloudflare/vitest-pool-workers';
 import { WORKER_TEST_PROCESS_ENV } from './test/helpers/env';
 import { workerConfigPlugin } from './test/helpers/worker-config';
 
+/**
+ * Live OrcaRouter check.
+ *
+ * Separate from the default config because the default one deliberately blanks
+ * `ORCAROUTER_*` so the ordinary suite stays hermetic and offline. Here the real
+ * credential is passed through from the environment, and only the live spec runs:
+ *
+ *   ORCAROUTER_API_KEY=sk-orca-… ORCAROUTER_MODEL=… \
+ *     npx vitest run --config vitest.orcarouter-live.config.mts
+ *
+ * Without a credential the specs inside skip themselves, so an accidental run is a no-op
+ * rather than a failure.
+ */
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function readCompatDateFromWrangler(configPath: string): string | null {
@@ -38,33 +51,30 @@ const compatibilityDate =
 
 export default defineConfig({
   plugins: [
-    // A fresh checkout has no gitignored `branding.json` / `wrangler.toml` / `.env` (only their
-    // `.example` counterparts are tracked), so serve the example content for the missing ones.
+    // Same clean-checkout shim as vitest.config.mts: the live spec imports the worker, which
+    // needs the gitignored `branding.json` that only the build materializes.
     workerConfigPlugin(__dirname),
     cloudflareTest({
       remoteBindings: false,
-      // Use Miniflare options only (not `wrangler.configPath`): loading the full Wrangler project
-      // changes isolate setup and can surface empty `process.env` for app code, breaking realm routing
-      // (e.g. api.fxbsky.app must match BLUESKY_API_HOST_LIST, not the embed bluesky realm).
       miniflare: {
         compatibilityDate
       }
     })
   ],
-  // Vite SSR can replace `process.env` with `{}` unless this is set; pool Workers tests then see
-  // empty env and mis-route hosts (e.g. API hits the embed realm → 302). See workers-sdk#8718.
   ssr: {
     keepProcessEnv: true
   },
   test: {
-    // The live spec needs a real credential and the network, so it is excluded here and
-    // run through vitest.orcarouter-live.config.mts instead.
-    include: ['test/*.ts'],
-    exclude: ['test/orcarouter.live.test.ts', '**/node_modules/**', '**/dist/**'],
+    include: ['test/orcarouter.live.test.ts'],
     globals: true,
-    env: { ...WORKER_TEST_PROCESS_ENV },
-    coverage: {
-      include: ['src/**/*.{ts,js}']
+    env: {
+      ...WORKER_TEST_PROCESS_ENV,
+      // The only difference from the default config: a real credential reaches the spec.
+      ORCAROUTER_API_KEY: process.env.ORCAROUTER_API_KEY ?? '',
+      ORCAROUTER_MODEL: process.env.ORCAROUTER_MODEL ?? '',
+      ORCA_BASE_URL: process.env.ORCA_BASE_URL ?? '',
+      ORCA_AUTH_BASE_URL: process.env.ORCA_AUTH_BASE_URL ?? '',
+      ORCA_API_BASE_URL: process.env.ORCA_API_BASE_URL ?? ''
     }
   }
 });
