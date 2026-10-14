@@ -1,5 +1,6 @@
 export * from './unescape-text.js';
 export * from './with-timeout.js';
+export * from './private-api-request.js';
 export * from './same-origin-https-fetch.js';
 export * from './unicode-string.js';
 export * from './twitter-text-indices.js';
