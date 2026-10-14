@@ -17,6 +17,14 @@ export const WORKER_TEST_PROCESS_ENV = {
   MOSAIC_DOMAIN_LIST: 'mosaic.fxtwitter.com',
   POLYGLOT_DOMAIN_LIST: 'polyglot.fxembed.com',
   POLYGLOT_ACCESS_TOKEN: 'example-token',
+  // Kept empty so the suite stays hermetic and offline. The live check has its own config
+  // (vitest.orcarouter-live.config.mts) that passes a real credential through.
+  ORCAROUTER_API_KEY: '',
+  ORCAROUTER_OAUTH_KEY: '',
+  ORCAROUTER_MODEL: '',
+  ORCA_BASE_URL: '',
+  ORCA_AUTH_BASE_URL: '',
+  ORCA_API_BASE_URL: '',
   MOSAIC_BSKY_DOMAIN_LIST: 'mosaic.fxbsky.app',
   API_HOST_LIST: 'api.fxtwitter.com',
   BLUESKY_API_HOST_LIST: 'api.fxbsky.app',
