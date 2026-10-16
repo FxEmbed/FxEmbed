@@ -1,8 +1,19 @@
-import { test, expect } from 'vitest';
+import { test, expect, vi } from 'vitest';
 import { app } from '../src/worker';
 import { botHeaders } from './helpers/data';
 import harness from './helpers/harness';
 import { decodeSnowcode } from '../src/helpers/snowcode';
+
+/* These tests cover the activity embed, which component embeds replace (see componentEmbed.test.ts) */
+vi.mock('../src/experiments', async importOriginal => {
+  const actual = await importOriginal<typeof import('../src/experiments')>();
+  return {
+    ...actual,
+    experimentCheck: (experiment: import('../src/experiments').Experiment, condition = true) =>
+      experiment !== actual.Experiment.COMPONENT_EMBED &&
+      actual.experimentCheck(experiment, condition)
+  };
+});
 
 test('Status response robot', async () => {
   const result = await app.request(
