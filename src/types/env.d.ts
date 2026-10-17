@@ -15,6 +15,12 @@ declare namespace NodeJS {
     MOSAIC_BSKY_DOMAIN_LIST?: string;
     POLYGLOT_DOMAIN_LIST?: string;
     POLYGLOT_ACCESS_TOKEN?: string;
+    /** OpenAI-compatible chat completions base URL for LLM translation, e.g. `https://api.openai.com/v1`. */
+    LLM_TRANSLATION_BASE_URL?: string;
+    LLM_TRANSLATION_API_KEY?: string;
+    LLM_TRANSLATION_MODEL?: string;
+    /** JSON object merged into the LLM translation request body. */
+    LLM_TRANSLATION_EXTRA_BODY?: string;
     API_HOST_LIST?: string;
     BLUESKY_API_HOST_LIST?: string;
     ATMOSPHERE_API_HOST_LIST?: string;
