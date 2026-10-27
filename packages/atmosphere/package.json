@@ -110,12 +110,12 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^24.19.0",
+    "@types/node": "^24.19.2",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   },
   "dependencies": {
     "@hono/zod-openapi": "^1.6.3",
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   }
 }
