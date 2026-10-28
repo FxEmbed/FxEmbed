@@ -20,7 +20,7 @@ export const instagramPostRequest = async (c: Context) => {
 
   const userAgent = c.req.header('User-Agent') || '';
   const url = new URL(c.req.url);
-  const pathKind = url.pathname.includes('/reel/') ? 'reel' : 'p';
+  const pathKind = url.pathname.includes('/reel') ? 'reel' : 'p';
   const flags: InputFlags = {};
 
   /* User Agent matching for embed generators, bots, crawlers, and other automated

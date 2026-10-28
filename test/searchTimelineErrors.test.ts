@@ -5,7 +5,8 @@ import {
   parseSearchTimelineClientError,
   searchQueryTooLongError,
   searchTimelineClientErrorToApiQueryError,
-  TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH
+  TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH,
+  unknownCursorFromSearchTimelineError
 } from '@fxembed/atmosphere/providers/twitter/searchErrors';
 
 const emptyQueryError = {
@@ -41,6 +42,28 @@ const queryTooLongError = {
   data: {}
 };
 
+const unknownCursor = "{'top': None, 'bottom': None}";
+
+const unknownCursorError = {
+  errors: [
+    {
+      code: 214,
+      extensions: {
+        code: 214,
+        kind: 'Validation',
+        name: 'BadRequestError',
+        source: 'Client'
+      },
+      kind: 'Validation',
+      locations: [{ column: 7, line: 4 }],
+      message: `BadRequest: Unknown request cursor ${unknownCursor}`,
+      name: 'BadRequestError',
+      path: ['search_by_raw_query', 'search_timeline', 'timeline'],
+      source: 'Client'
+    }
+  ]
+};
+
 test('parseSearchTimelineClientError detects empty query', () => {
   expect(parseSearchTimelineClientError(emptyQueryError)).toBe('empty_query');
   expect(isSearchTimelineClientErrorResponse(emptyQueryError)).toBe(true);
@@ -53,6 +76,12 @@ test('parseSearchTimelineClientError detects blocklisted query', () => {
 test('parseSearchTimelineClientError detects query too long', () => {
   expect(parseSearchTimelineClientError(queryTooLongError)).toBe('query_too_long');
   expect(isSearchTimelineClientErrorResponse(queryTooLongError)).toBe(true);
+});
+
+test('parseSearchTimelineClientError detects unknown request cursor', () => {
+  expect(parseSearchTimelineClientError(unknownCursorError)).toBe('unknown_cursor');
+  expect(isSearchTimelineClientErrorResponse(unknownCursorError)).toBe(true);
+  expect(unknownCursorFromSearchTimelineError(unknownCursorError)).toBe(unknownCursor);
 });
 
 test('parseSearchTimelineClientError ignores unrelated GraphQL errors', () => {
@@ -82,6 +111,11 @@ test('parseSearchTimelineClientError accepts known messages without path', () =>
       errors: [{ message: 'BadRequest: Raw query length 2268 exceeds max allowed 512' }]
     })
   ).toBe('query_too_long');
+  expect(
+    parseSearchTimelineClientError({
+      errors: [{ message: `BadRequest: Unknown request cursor ${unknownCursor}` }]
+    })
+  ).toBe('unknown_cursor');
 });
 
 test('searchTimelineClientErrorToApiQueryError maps to API 400 messages', () => {
@@ -96,6 +130,14 @@ test('searchTimelineClientErrorToApiQueryError maps to API 400 messages', () => 
   expect(searchTimelineClientErrorToApiQueryError('query_too_long')).toEqual({
     code: 400,
     message: `Raw query length exceeds max allowed ${TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH}`
+  });
+  expect(searchTimelineClientErrorToApiQueryError('unknown_cursor', unknownCursorError)).toEqual({
+    code: 400,
+    message: `Unknown request cursor ${unknownCursor}`
+  });
+  expect(searchTimelineClientErrorToApiQueryError('unknown_cursor')).toEqual({
+    code: 400,
+    message: 'Unknown request cursor'
   });
 });
 

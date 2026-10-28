@@ -477,7 +477,7 @@ export const searchAPI = async (
 
   const clientError = parseSearchTimelineClientError(response);
   if (clientError) {
-    return searchTimelineClientErrorToApiQueryError(clientError);
+    return searchTimelineClientErrorToApiQueryError(clientError, response);
   }
 
   if (!response?.data?.search_by_raw_query?.search_timeline?.timeline?.instructions) {
@@ -556,7 +556,7 @@ export const searchUsersAPI = async (
 
   const clientError = parseSearchTimelineClientError(response);
   if (clientError) {
-    return searchTimelineClientErrorToApiQueryError(clientError);
+    return searchTimelineClientErrorToApiQueryError(clientError, response);
   }
 
   const instructions = response?.data?.search_by_raw_query?.search_timeline?.timeline?.instructions;
