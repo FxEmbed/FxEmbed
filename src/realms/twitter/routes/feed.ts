@@ -51,16 +51,6 @@ function parseFeedQuery(c: Context): {
   };
 }
 
-function parseMediaFeedQuery(c: Context): { count: number; safe: boolean; language?: string } {
-  const q = c.req.query();
-  const language = feedRequestLanguage(c);
-  return {
-    count: clampCount(q.count),
-    safe: isParamTruthy(q.safe),
-    ...(language ? { language } : {})
-  };
-}
-
 function feedAuthorName(handle: string, results: APITwitterStatus[]): string {
   const screen = handle.replace(/^@/, '');
   const fromPost = results.find(s => s.author?.name?.trim())?.author?.name?.trim();
@@ -161,12 +151,13 @@ async function serveFeed(
       q.language
     );
   } else {
-    const q = parseMediaFeedQuery(c);
+    const q = parseFeedQuery(c);
     omitSensitive = q.safe;
     apiResult = await profileMediaAPIPaginated(
       parsed,
       q.count,
       twitterBuildHostFromContext(c),
+      q.withReplies,
       q.language
     );
   }
