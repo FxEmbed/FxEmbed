@@ -22,6 +22,19 @@ const deadlineExceededWithUserPayload = {
   ]
 };
 
+const unknownCursorError = {
+  errors: [
+    {
+      code: 214,
+      kind: 'Validation',
+      message: "BadRequest: Unknown request cursor {'top': None, 'bottom': None}",
+      name: 'BadRequestError',
+      path: ['search_by_raw_query', 'search_timeline', 'timeline'],
+      source: 'Client'
+    }
+  ]
+};
+
 const deadlineExceededWithoutPayload = {
   errors: [
     {
@@ -41,6 +54,12 @@ test('classifyAPIErrors ignores DeadlineExceeded when user payload is present', 
       200
     )
   ).toEqual({ action: 'ignore' });
+});
+
+test('classifyAPIErrors does not retry an unknown SearchTimeline cursor', () => {
+  expect(classifyAPIErrors(unknownCursorError, JSON.stringify(unknownCursorError), 200)).toEqual({
+    action: 'ignore'
+  });
 });
 
 test('classifyAPIErrors retries DeadlineExceeded when response has no payload', () => {
