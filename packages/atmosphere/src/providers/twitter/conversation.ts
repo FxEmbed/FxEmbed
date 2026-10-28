@@ -1337,6 +1337,45 @@ export const constructTwitterThread = async (
   return socialThread;
 };
 
+/* The replies (from conversationthread-* modules) and bottom cursor of a TweetDetail page */
+const buildConversationReplies = async (
+  bucket: GraphQLConversationBucket,
+  host: TwitterBuildHost,
+  language?: string
+): Promise<Pick<SocialConversation, 'replies' | 'cursor'>> => {
+  const replies: APITwitterStatus[] = [];
+  await Promise.all(
+    bucket.replyStatuses.map(async s => {
+      const tweetId = s.rest_id ?? s.legacy?.id_str ?? '';
+      let builtStatus = (await buildAPITwitterStatus(
+        host,
+        s,
+        language,
+        null,
+        false,
+        false
+      )) as APITwitterStatus;
+      if (builtStatus) {
+        builtStatus = await enrichArticleWithFullContent(
+          host,
+          builtStatus,
+          tweetId,
+          language,
+          false,
+          false
+        );
+        replies.push(builtStatus);
+      }
+    })
+  );
+
+  /* Expose the bottom cursor for reply pagination */
+  const bottomCursor = bucket.cursors.find(
+    c => c.cursorType === 'Bottom' || c.cursorType === 'ShowMore'
+  );
+  return { replies, cursor: bottomCursor ? { bottom: bottomCursor.value } : null };
+};
+
 /* Fetch and construct a conversation view: full ancestor chain + replies from others */
 export const constructTwitterConversation = async (
   id: string,
@@ -1360,7 +1399,15 @@ export const constructTwitterConversation = async (
     language
   );
 
-  const fromChain = bucket.chainTweets.find(s => (s.rest_id ?? s.legacy?.id_str) === id) ?? null;
+  let fromChain = bucket.chainTweets.find(s => (s.rest_id ?? s.legacy?.id_str) === id) ?? null;
+
+  /* Reply pages (a cursor is set) only carry the next replies, not the focal tweet */
+  if (fromChain === null && cursor) {
+    const focal = getResultFromResponse(await fetchSingleStatus(id, host, false, language));
+    if (isGraphQLTwitterStatus(focal)) {
+      fromChain = focal;
+    }
+  }
   const fromOrderedTomb =
     fromChain === null
       ? (bucket.chainOrdered.find((p): p is APIStatusTombstone => isTombstone(p) && p.id === id) ??
@@ -1378,6 +1425,17 @@ export const constructTwitterConversation = async (
       author: null,
       cursor: null,
       code: 404
+    };
+  }
+
+  if (fromChain === null && cursor) {
+    /* The focal lookup failed, but this reply page is still valid: return it without the focal */
+    return {
+      status: null,
+      thread: [],
+      author: null,
+      ...(await buildConversationReplies(bucket, host, language)),
+      code: 200
     };
   }
 
@@ -1463,39 +1521,9 @@ export const constructTwitterConversation = async (
     }
   }
 
-  /* Build the replies (from conversationthread-* modules) */
-  await Promise.all(
-    bucket.replyStatuses.map(async s => {
-      const tweetId = s.rest_id ?? s.legacy?.id_str ?? '';
-      let builtStatus = (await buildAPITwitterStatus(
-        host,
-        s,
-        language,
-        null,
-        false,
-        false
-      )) as APITwitterStatus;
-      if (builtStatus) {
-        builtStatus = await enrichArticleWithFullContent(
-          host,
-          builtStatus,
-          tweetId,
-          language,
-          false,
-          false
-        );
-        socialConversation.replies?.push(builtStatus);
-      }
-    })
-  );
-
-  /* Expose the bottom cursor for reply pagination */
-  const bottomCursor = bucket.cursors.find(
-    c => c.cursorType === 'Bottom' || c.cursorType === 'ShowMore'
-  );
-  if (bottomCursor) {
-    socialConversation.cursor = { bottom: bottomCursor.value };
-  }
+  const page = await buildConversationReplies(bucket, host, language);
+  socialConversation.replies = page.replies;
+  socialConversation.cursor = page.cursor;
 
   return socialConversation;
 };

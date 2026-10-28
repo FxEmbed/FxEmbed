@@ -46,6 +46,8 @@ instagram.get('/p/:id', instagramPostRequest);
 instagram.get('/p/:id/', instagramPostRequest);
 instagram.get('/reel/:id', instagramPostRequest);
 instagram.get('/reel/:id/', instagramPostRequest);
+instagram.get('/reels/:id', instagramPostRequest);
+instagram.get('/reels/:id/', instagramPostRequest);
 
 instagram.get('/version', c => versionRoute(c));
 

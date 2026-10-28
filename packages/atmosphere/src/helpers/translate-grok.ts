@@ -34,5 +34,10 @@ export const translateStatusGrok = async (
     }
   });
   console.log('Grok translation response:', response);
+  const text = (response as GrokTranslation | null)?.result?.text;
+  if (typeof text !== 'string' || text.trim().length === 0) {
+    console.warn('Grok returned no usable translation; allowing translation fallback');
+    return null;
+  }
   return response as GrokTranslation | null;
 };
