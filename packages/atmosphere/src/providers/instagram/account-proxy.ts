@@ -1,5 +1,8 @@
-import { fetchSameOriginHttps } from '../../helpers/same-origin-https-fetch.js';
-import { withTimeout } from '../../helpers/with-timeout.js';
+import {
+  cookieHeaderFor,
+  privateApiRequest,
+  type PrivateApiResult
+} from '../../helpers/private-api-request.js';
 import { getInstagramProviderEnv, getInstagramProxyRuntime } from '../instagram-runtime.js';
 import type { InstagramCredentials } from '../../types/proxy-credentials.js';
 import {
@@ -55,15 +58,6 @@ export async function resolveInstagramAccounts(
   return rt.getShuffledInstagramAccounts().filter(a => Boolean(a?.sessionId));
 }
 
-function cookieHeaderFor(account: InstagramCredentials): string {
-  const parts = [`sessionid=${account.sessionId}`];
-  if (account.userId) parts.push(`ds_user_id=${account.userId}`);
-  if (account.csrfToken) parts.push(`csrftoken=${account.csrfToken}`);
-  if (account.mid) parts.push(`mid=${account.mid}`);
-  if (account.deviceId) parts.push(`ig_did=${account.deviceId}`);
-  return parts.join('; ');
-}
-
 /**
  * Headers for one proxied request. `android` accounts get the app fingerprint read out of the
  * decompiled APK; `web` accounts get the desktop-browser fingerprint that matches a `sessionid`
@@ -102,17 +96,7 @@ export function instagramProxyHeaders(
   return headers;
 }
 
-/** HTTP statuses where another account is worth trying: auth/checkpoint/rate limit. */
-const ROTATE_STATUSES = new Set([401, 403, 429]);
-
-export type InstagramPrivateApiResult = {
-  ok: boolean;
-  /** 0 when no account was available at all (proxy not configured). */
-  status: number;
-  json: unknown | null;
-  /** Set when a request actually went out, for logging. */
-  accountUsed?: string;
-};
+export type InstagramPrivateApiResult = PrivateApiResult;
 
 /**
  * Calls an `i.instagram.com/api/v1/…` endpoint through a proxy account, rotating accounts on
@@ -143,90 +127,13 @@ export async function instagramPrivateApiRequest(
     url.searchParams.set(key, String(value));
   }
 
-  let last: InstagramPrivateApiResult = { ok: false, status: 500, json: null };
-  for (const account of accounts) {
-    const headers = instagramProxyHeaders(account, { referer: options.referer });
-    if (options.method === 'POST') {
-      headers['Content-Type'] = 'application/x-www-form-urlencoded';
-    }
-    let res: Response;
-    let text: string;
-    let parsed: unknown;
-    let parseFailed: boolean;
-    try {
-      // Fetch can resolve on headers; keep body read + JSON.parse inside the timeout so a
-      // stalled body aborts and rotates instead of hanging the request.
-      const timed = await withTimeout(async signal => {
-        const response = await fetchSameOriginHttps(url.toString(), {
-          method: options.method ?? 'GET',
-          headers,
-          body: options.method === 'POST' ? (options.body ?? '') : undefined,
-          signal
-        });
-        if (!response.ok) {
-          return { response, text: '', parsed: null, parseFailed: false };
-        }
-        const body = await response.text();
-        try {
-          return { response, text: body, parsed: JSON.parse(body) as unknown, parseFailed: false };
-        } catch {
-          return { response, text: body, parsed: null, parseFailed: true };
-        }
-      });
-      res = timed.response;
-      text = timed.text;
-      parsed = timed.parsed;
-      parseFailed = timed.parseFailed;
-    } catch (err) {
-      console.error('[instagram] private API request threw', {
-        path,
-        account: account.username,
-        message: err instanceof Error ? err.message : String(err)
-      });
-      last = { ok: false, status: 500, json: null, accountUsed: account.username };
-      continue;
-    }
-
-    if (!res.ok) {
-      console.error('[instagram] private API request failed', {
-        path,
-        account: account.username,
-        status: res.status
-      });
-      last = { ok: false, status: res.status, json: null, accountUsed: account.username };
-      if (ROTATE_STATUSES.has(res.status)) continue;
-      return last;
-    }
-
-    const trimmed = text.trim();
-    // A logged-out or checkpointed session gets an HTML login page rather than JSON.
-    if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
-      console.error('[instagram] private API returned non-JSON (session likely invalid)', {
-        path,
-        account: account.username
-      });
-      last = { ok: false, status: res.status, json: null, accountUsed: account.username };
-      continue;
-    }
-    if (parseFailed) {
-      last = { ok: false, status: res.status, json: null, accountUsed: account.username };
-      continue;
-    }
-    // The private API answers 200 with `{ status: 'fail' }` for soft failures (checkpoint,
-    // spam block, feedback_required). Rotate rather than surfacing an empty page as success.
-    if (
-      parsed &&
-      typeof parsed === 'object' &&
-      (parsed as { status?: unknown }).status === 'fail'
-    ) {
-      console.error('[instagram] private API returned status=fail', {
-        path,
-        account: account.username
-      });
-      last = { ok: false, status: 502, json: parsed, accountUsed: account.username };
-      continue;
-    }
-    return { ok: true, status: res.status, json: parsed, accountUsed: account.username };
-  }
-  return last;
+  return privateApiRequest({
+    accounts,
+    url: url.toString(),
+    headersFor: account => instagramProxyHeaders(account, { referer: options.referer }),
+    method: options.method,
+    body: options.body,
+    logTag: 'instagram',
+    logPath: path
+  });
 }
