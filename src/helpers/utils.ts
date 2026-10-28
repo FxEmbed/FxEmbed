@@ -30,7 +30,7 @@ export const truncateWithEllipsis = (str: string, maxLength: number): string => 
   let length = 0;
 
   for (const segment of segments) {
-    if (length + segment.segment.length > maxLength) {
+    if (length + segment.segment.length > maxLength - 1) {
       break;
     }
     truncated += segment.segment;
