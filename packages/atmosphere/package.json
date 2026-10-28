@@ -110,7 +110,7 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^24.19.2",
+    "@types/node": "^26.6.5",
     "typescript": "^6.0.3",
     "vitest": "^4.1.12"
   },
