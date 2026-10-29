@@ -42,7 +42,7 @@
     "@sentry/esbuild-plugin": "^11.8.0",
     "@typescript-eslint/eslint-plugin": "^8.72.0",
     "@typescript-eslint/parser": "^8.72.0",
-    "dotenv": "^18.0.8",
+    "dotenv": "^18.0.9",
     "eslint": "^10.13.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-config-typescript": "^3.0.0",
