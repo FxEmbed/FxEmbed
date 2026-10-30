@@ -47,6 +47,12 @@ These comma-separated lists define which domains route to which realm:
 | `VIDEO_TRANSCODE_BSKY_DOMAIN_LIST` | Bluesky video transcoding endpoint(s)       |
 | `POLYGLOT_DOMAIN_LIST`             | Translation service endpoint(s)             |
 | `POLYGLOT_ACCESS_TOKEN`            | Translation service access token            |
+| `ORCAROUTER_API_KEY`               | OrcaRouter API key (`sk-orca-…`), pasted    |
+| `ORCAROUTER_OAUTH_KEY`             | OrcaRouter key from `npm run orcarouter:login` |
+| `ORCAROUTER_MODEL`                 | OrcaRouter model id for translation         |
+| `ORCA_BASE_URL`                    | Shared OrcaRouter origin (self-hosted)      |
+| `ORCA_AUTH_BASE_URL`               | Auth origin override (wins over the above)  |
+| `ORCA_API_BASE_URL`                | Inference origin override (wins over the above) |
 | `TWITTER_ROOT`                     | Base Twitter/X URL for redirects            |
 
 ### Sentry (Error Reporting)
@@ -95,6 +101,83 @@ wrangler secret put EXCEPTION_DISCORD_WEBHOOK
 
 - **`CREDENTIAL_KEY`**: Encryption key for credential storage
 - **`EXCEPTION_DISCORD_WEBHOOK`**: Discord webhook URL for exception notifications
+
+## OrcaRouter
+
+[OrcaRouter](https://www.orcarouter.ai) is an OpenAI-compatible AI gateway that routes
+many providers behind one endpoint. FxEmbed can use it for post translation, as an
+alternative to the Cloudflare Workers AI binding and the Polyglot service.
+
+There are two independent ways to authenticate. Both end up producing the same kind of
+ordinary OrcaRouter API key, and both are configured in `.env`.
+
+### Option 1 — paste an existing API key
+
+Create a key in the [OrcaRouter console](https://www.orcarouter.ai/console), then:
+
+```bash
+npm run orcarouter:key -- sk-orca-…
+```
+
+This writes `ORCAROUTER_API_KEY` to `.env`. It does not start a login.
+
+### Option 2 — sign in with an OrcaRouter account (OAuth 2.0 + PKCE)
+
+```bash
+npm run orcarouter:login
+```
+
+This prints an authorization URL, opens nothing on its own, and waits for you to paste
+back the code shown on the consent screen (the out-of-band flow — see below). The key it
+issues is written to `.env` as `ORCAROUTER_OAUTH_KEY`.
+
+Useful commands:
+
+```bash
+npm run orcarouter:status          # show which credential is configured (masked)
+npm run orcarouter:logout          # clear the stored PKCE-issued key
+npm run orcarouter:models          # list the models the chat selector may offer
+```
+
+The key belongs to *you*, not to this project: it is billed to your OrcaRouter account and
+can be revoked at any time from
+<https://www.orcarouter.ai/console/authorized-apps>. Revoking it deletes every key issued
+to this app. FxEmbed reuses the stored key until that happens — it never re-authorizes on
+startup, because OrcaRouter caps PKCE-issued keys at 10 per user per 24 hours.
+
+### Choosing a model
+
+`ORCAROUTER_MODEL` selects the model used for translation. The list of valid values comes
+from OrcaRouter's live model catalog, filtered to text-capable chat models:
+
+```bash
+npm run orcarouter:models          # e.g. orcarouter/auto, openai/gpt-5.5, …
+```
+
+The model id is sent verbatim, vendor namespace included. If the configured model is no
+longer in the catalog, FxEmbed clears the selection and logs why rather than sending it.
+When the catalog endpoint is unreachable, a small verified fallback list is used and
+labelled as degraded.
+
+### Self-hosted origins
+
+Authentication and inference use different public origins by default:
+
+| Purpose     | Default                          |
+| ----------- | -------------------------------- |
+| Auth        | `https://www.orcarouter.ai`      |
+| Inference   | `https://api.orcarouter.ai/v1`   |
+
+A self-hosted OrcaRouter deployment can set `ORCA_BASE_URL` to a single shared origin, or
+`ORCA_AUTH_BASE_URL` / `ORCA_API_BASE_URL` to override them individually (explicit
+overrides win). Non-loopback origins must use HTTPS.
+
+### Why the out-of-band flow
+
+FxEmbed is self-hosted software whose address differs on every deployment, and a
+Cloudflare Worker has no long-lived process to host a loopback listener, so the connect
+flow uses a displayed code rather than a redirect. `S256` is mandatory for that flow and
+is always sent.
 
 ## Branding
 
