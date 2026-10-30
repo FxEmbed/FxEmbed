@@ -49,6 +49,26 @@ These comma-separated lists define which domains route to which realm:
 | `POLYGLOT_ACCESS_TOKEN`            | Translation service access token            |
 | `TWITTER_ROOT`                     | Base Twitter/X URL for redirects            |
 
+### LLM Translation
+
+When Polyglot is not configured (or fails), translation falls back to an LLM. On Cloudflare this uses the Workers AI `AI` binding. You can instead point it at any OpenAI-compatible chat completions endpoint, which also enables translation for self-hosted deployments without Workers AI, such as the Docker image. When set, the endpoint is tried before the Workers AI binding.
+
+| Variable                     | Description                                                          |
+| ---------------------------- | -------------------------------------------------------------------- |
+| `LLM_TRANSLATION_BASE_URL`   | Base URL ending in the API version, e.g. `https://api.openai.com/v1` |
+| `LLM_TRANSLATION_API_KEY`    | Sent as `Authorization: Bearer <key>` (optional for local servers)   |
+| `LLM_TRANSLATION_MODEL`      | Model name passed to the endpoint                                    |
+| `LLM_TRANSLATION_EXTRA_BODY` | Optional JSON object merged into the request body                    |
+
+Both `LLM_TRANSLATION_BASE_URL` and `LLM_TRANSLATION_MODEL` must be set to enable it. For example, a local [llama.cpp](https://github.com/ggml-org/llama.cpp) server:
+
+```bash
+LLM_TRANSLATION_BASE_URL = "http://localhost:8080/v1"
+LLM_TRANSLATION_MODEL = "local"
+```
+
+Reasoning models are slow to translate while thinking is on. Most providers accept a request field to turn it off, which `LLM_TRANSLATION_EXTRA_BODY` can send, e.g. `{"chat_template_kwargs":{"enable_thinking":false}}` for llama.cpp and vLLM. Any `<think>…</think>` block left in the response is removed.
+
 ### Sentry (Error Reporting)
 
 | Variable            | Description                                      |
