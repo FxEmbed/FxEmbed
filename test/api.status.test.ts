@@ -159,6 +159,39 @@ test('API v2 /2/conversation returns the next replies for a cursor', async () =>
   expect(body.cursor?.bottom).toEqual('next-page-cursor');
 });
 
+test('API v2 /2/conversation ends pagination when a cursor page has no replies', async () => {
+  // X still returns a bottom cursor after the last replies; clients must not loop on it
+  const result = await app.request(
+    new Request('https://api.fxtwitter.com/2/conversation/20?cursor=end-page', {
+      method: 'GET',
+      headers: botHeaders
+    }),
+    undefined,
+    harness
+  );
+  expect(result.status).toEqual(200);
+  const body = (await result.json()) as SocialConversation;
+  expect(body.code).toEqual(200);
+  expect(body.replies).toEqual([]);
+  expect(body.cursor).toBeNull();
+});
+
+test('API v2 /2/conversation ends pagination when X returns the cursor it was given', async () => {
+  const result = await app.request(
+    new Request('https://api.fxtwitter.com/2/conversation/20?cursor=next-page-cursor', {
+      method: 'GET',
+      headers: botHeaders
+    }),
+    undefined,
+    harness
+  );
+  expect(result.status).toEqual(200);
+  const body = (await result.json()) as SocialConversation;
+  expect(body.code).toEqual(200);
+  expect(body.replies?.map(status => status.id)).toEqual(['21']);
+  expect(body.cursor).toBeNull();
+});
+
 test('API v2 /2/conversation keeps a cursor page when the focal lookup fails', async () => {
   // 991500 is suspended, so only the reply page is available
   const result = await app.request(
