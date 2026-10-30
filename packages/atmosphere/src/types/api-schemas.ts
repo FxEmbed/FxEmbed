@@ -685,6 +685,8 @@ export const SearchCursorSchema = z.object({
 export const APISearchResultsSchema = z
   .object({
     code: z.number(),
+    /** Set on error envelopes, e.g. code 503 when X could not answer. */
+    message: z.string().optional(),
     results: z.array(APITwitterStatusSchema),
     cursor: SearchCursorSchema
   })
@@ -767,6 +769,7 @@ export const TimelineEntryTwitterSchema = z
 export const APIGroupedSearchResultsSchema = z
   .object({
     code: z.number(),
+    message: z.string().optional(),
     results: z.array(TimelineEntryTwitterSchema),
     cursor: SearchCursorSchema
   })

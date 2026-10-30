@@ -31,6 +31,8 @@ import { isTombstone } from '../../helpers/tombstone.js';
 import {
   convertToApiUser,
   getTwitterUserRestIdByScreenName,
+  lookupTwitterUserRestId,
+  UPSTREAM_UNAVAILABLE_MESSAGE,
   type ProfileHandleOrId
 } from './profile.js';
 import {
@@ -57,12 +59,18 @@ export const profileStatusesAPI = async (
   language?: string,
   groupThreads = false
 ): Promise<APISearchResults | APIGroupedSearchResults> => {
-  const userId =
+  const lookup =
     handleOrId.type === 'userId'
-      ? handleOrId.value
-      : await getTwitterUserRestIdByScreenName(host, handleOrId.value);
+      ? { userId: handleOrId.value, upstreamFailed: false }
+      : await lookupTwitterUserRestId(host, handleOrId.value);
+  const userId = lookup.userId;
   if (!userId) {
-    return { code: 404, results: [], cursor: { top: null, bottom: null } };
+    return {
+      code: lookup.upstreamFailed ? 503 : 404,
+      ...(lookup.upstreamFailed ? { message: UPSTREAM_UNAVAILABLE_MESSAGE } : {}),
+      results: [],
+      cursor: { top: null, bottom: null }
+    };
   }
 
   const results = await graphQLOrchestrator(host, [
@@ -110,7 +118,12 @@ export const profileStatusesAPI = async (
 
   if (!results.tweets?.success) {
     console.error('Profile statuses timeline request failed', results.tweets?.error);
-    return { code: 500, results: [], cursor: { top: null, bottom: null } };
+    return {
+      code: 503,
+      message: UPSTREAM_UNAVAILABLE_MESSAGE,
+      results: [],
+      cursor: { top: null, bottom: null }
+    };
   }
 
   const instructions = getProfileStatusesTimelineInstructions(results.tweets.data);
