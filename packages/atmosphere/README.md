@@ -10,7 +10,7 @@ Twitter uses `setTwitterProviderEnv` from `./providers/twitter-runtime` (API roo
 
 ## Transports
 
-See the FxEmbed docs: **Deployment → Atmosphere transports** (`/deployment/atmosphere-transports/`).
+See the [Atmosphere transports guide](https://docs.fxembed.com/deployment/atmosphere-transports/) for transport kinds and fallback behavior.
 
 ## Authenticated Bluesky (Horizon / native clients)
 

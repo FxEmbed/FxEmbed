@@ -13,11 +13,12 @@ Copy `.env.example` to `.env` and configure:
 
 These comma-separated lists define which domains route to which realm:
 
-| Variable                      | Description             | Example                                |
-| ----------------------------- | ----------------------- | -------------------------------------- |
-| `STANDARD_DOMAIN_LIST`        | X/Twitter embed domains | `fxtwitter.com,fixupx.com,twittpr.com` |
-| `STANDARD_BSKY_DOMAIN_LIST`   | Bluesky embed domains   | `fxbsky.app`                           |
-| `STANDARD_TIKTOK_DOMAIN_LIST` | TikTok embed domains    | `fixtok.example.com`                   |
+| Variable                         | Description             | Example                                |
+| -------------------------------- | ----------------------- | -------------------------------------- |
+| `STANDARD_DOMAIN_LIST`           | X/Twitter embed domains | `fxtwitter.com,fixupx.com,twittpr.com` |
+| `STANDARD_BSKY_DOMAIN_LIST`      | Bluesky embed domains   | `fxbsky.app`                           |
+| `STANDARD_TIKTOK_DOMAIN_LIST`    | TikTok embed domains    | `fixtok.example.com`                   |
+| `STANDARD_INSTAGRAM_DOMAIN_LIST` | Instagram embed domains | `67instagram.com`                      |
 
 ### Subdomain Feature Domains
 
@@ -32,22 +33,27 @@ These comma-separated lists define which domains route to which realm:
 
 ### API Domains
 
-| Variable                | Description           | Example             |
-| ----------------------- | --------------------- | ------------------- |
-| `API_HOST_LIST`         | FxTwitter API host(s) | `api.fxtwitter.com` |
-| `BLUESKY_API_HOST_LIST` | FxBluesky API host(s) | `api.fxbsky.app`    |
+| Variable                   | Description                    | Example                                            |
+| -------------------------- | ------------------------------ | -------------------------------------------------- |
+| `API_HOST_LIST`            | FxTwitter API host(s)          | `api.fxtwitter.com`                                |
+| `BLUESKY_API_HOST_LIST`    | FxBluesky API host(s)          | `api.fxbsky.app`                                   |
+| `ATMOSPHERE_API_HOST_LIST` | FxEmbed Atmosphere API host(s) | `api.atmosphere.tools,api-canary.atmosphere.tools` |
 
 ### Service Domains
 
-| Variable                           | Description                                 |
-| ---------------------------------- | ------------------------------------------- |
-| `MOSAIC_DOMAIN_LIST`               | Mosaic image generation service endpoint(s) |
-| `GIF_TRANSCODE_DOMAIN_LIST`        | GIF transcoding service endpoint(s)         |
-| `VIDEO_TRANSCODE_DOMAIN_LIST`      | Video transcoding service endpoint(s)       |
-| `VIDEO_TRANSCODE_BSKY_DOMAIN_LIST` | Bluesky video transcoding endpoint(s)       |
-| `POLYGLOT_DOMAIN_LIST`             | Translation service endpoint(s)             |
-| `POLYGLOT_ACCESS_TOKEN`            | Translation service access token            |
-| `TWITTER_ROOT`                     | Base Twitter/X URL for redirects            |
+| Variable                           | Description                                         |
+| ---------------------------------- | --------------------------------------------------- |
+| `MOSAIC_DOMAIN_LIST`               | Mosaic image generation service endpoint(s)         |
+| `MOSAIC_BSKY_DOMAIN_LIST`          | Bluesky Mosaic image generation service endpoint(s) |
+| `GIF_TRANSCODE_DOMAIN_LIST`        | GIF transcoding service endpoint(s)                 |
+| `VIDEO_TRANSCODE_DOMAIN_LIST`      | Video transcoding service endpoint(s)               |
+| `VIDEO_TRANSCODE_BSKY_DOMAIN_LIST` | Bluesky video transcoding endpoint(s)               |
+| `PBS_PROXY_DOMAIN_LIST`            | PBS media proxy endpoint(s)                         |
+| `POLYGLOT_DOMAIN_LIST`             | Translation service endpoint(s)                     |
+| `POLYGLOT_ACCESS_TOKEN`            | Translation service access token                    |
+| `TWITTER_ROOT`                     | Base Twitter/X URL for redirects                    |
+| `INSTAGRAM_ROOT`                   | Instagram web URL used for requests                 |
+| `INSTAGRAM_API_ROOT`               | Instagram API URL used by the account proxy         |
 
 ### Sentry (Error Reporting)
 

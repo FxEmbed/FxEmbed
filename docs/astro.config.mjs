@@ -68,6 +68,7 @@ export default defineConfig({
           label: 'Deployment',
           items: [
             { label: 'Self-Hosting', slug: 'deployment' },
+            { label: 'Atmosphere Transports', slug: 'deployment/atmosphere-transports' },
             { label: 'Mosaic', slug: 'deployment/mosaic' },
             { label: 'Configuration', slug: 'deployment/configuration' },
             { label: 'Credentials', slug: 'deployment/credentials' }
