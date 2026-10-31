@@ -25,13 +25,43 @@ export interface GraphQLOrchestratorRequest {
   headers?: Record<string, string>;
 }
 
+/** One endpoint method tried for a request, and what X answered if the validator rejected it. */
+export interface GraphQLAttempt {
+  method: string;
+  /** The parsed response the validator rejected. Unset when no response arrived (network or proxy failure). */
+  rejectedResponse?: unknown;
+}
+
 export interface GraphQLOrchestratorResult {
   [key: string]: {
     success: boolean;
     data: unknown | null;
     error?: Error;
+    /** Set on failed `methods` requests, so callers can tell "X said no" from "no usable answer". */
+    attempts?: GraphQLAttempt[];
   };
 }
+
+type MethodsResult = {
+  success: boolean;
+  data: unknown | null;
+  error?: Error;
+  attempts: GraphQLAttempt[];
+};
+
+/**
+ * `twitterFetch` hands the real response to the validator and then discards it when the
+ * validator fails, so remember what the validator rejected.
+ */
+const recordRejection =
+  (method: GraphQLEndpointMethod, attempt: GraphQLAttempt) =>
+  (response: unknown): boolean => {
+    const valid = method.validator(response);
+    if (!valid) {
+      attempt.rejectedResponse = response;
+    }
+    return valid;
+  };
 
 /**
  * Execute a request with weighted endpoint methods (for rate limit leveling)
@@ -52,7 +82,8 @@ const executeWithMethods = async (
   methods: GraphQLEndpointMethod[],
   variables: Record<string, unknown>,
   requestHeaders?: Record<string, string>
-): Promise<{ success: boolean; data: unknown | null; error?: Error }> => {
+): Promise<MethodsResult> => {
+  const attempts: GraphQLAttempt[] = [];
   // Filter methods with weight > 0
   const usableMethods = methods.filter(method => method.weight > 0);
 
@@ -60,7 +91,8 @@ const executeWithMethods = async (
     return {
       success: false,
       data: null,
-      error: new Error('No usable methods available')
+      error: new Error('No usable methods available'),
+      attempts
     };
   }
 
@@ -92,19 +124,21 @@ const executeWithMethods = async (
 
   // Try selected method (if one was selected)
   if (selectedMethod) {
+    const attempt: GraphQLAttempt = { method: selectedMethod.name };
+    attempts.push(attempt);
     try {
       // Merge method-specific variables with request variables (method variables take precedence)
       const mergedVariables = { ...variables, ...selectedMethod.variables };
       const data = await graphqlRequest(host, {
         query: selectedMethod.query,
         variables: mergedVariables,
-        validator: selectedMethod.validator,
+        validator: recordRejection(selectedMethod, attempt),
         useElongator: selectedMethod.useElongator,
         headers: mergeRequestHeaders(requestHeaders, selectedMethod.headers)
       });
 
       if (selectedMethod.validator(data)) {
-        return { success: true, data, error: undefined };
+        return { success: true, data, error: undefined, attempts };
       }
     } catch (_error) {
       console.log(`Method ${selectedMethod.name} failed, trying fallbacks...`);
@@ -117,19 +151,21 @@ const executeWithMethods = async (
     .sort((a, b) => b.weight - a.weight); // Sort descending by weight
 
   for (const method of fallbackMethods) {
+    const attempt: GraphQLAttempt = { method: method.name };
+    attempts.push(attempt);
     try {
       // Merge method-specific variables with request variables (method variables take precedence)
       const mergedVariables = { ...variables, ...method.variables };
       const data = await graphqlRequest(host, {
         query: method.query,
         variables: mergedVariables,
-        validator: method.validator,
+        validator: recordRejection(method, attempt),
         useElongator: method.useElongator,
         headers: mergeRequestHeaders(requestHeaders, method.headers)
       });
 
       if (method.validator(data)) {
-        return { success: true, data, error: undefined };
+        return { success: true, data, error: undefined, attempts };
       }
     } catch (_error) {
       console.log(`Fallback method ${method.name} failed`);
@@ -139,7 +175,8 @@ const executeWithMethods = async (
   return {
     success: false,
     data: null,
-    error: new Error('All methods failed')
+    error: new Error('All methods failed'),
+    attempts
   };
 };
 
@@ -155,6 +192,7 @@ export const graphQLOrchestrator = async (
 ): Promise<GraphQLOrchestratorResult> => {
   // Fire all requests concurrently
   const promises = requests.map(async request => {
+    let attempts: GraphQLAttempt[] | undefined;
     try {
       let data: unknown;
       // Handle methods (for rate limit leveling)
@@ -165,6 +203,7 @@ export const graphQLOrchestrator = async (
           request.variables ?? {},
           request.headers
         );
+        attempts = result.attempts;
         if (!result.success) {
           throw result.error || new Error(`All methods failed for: ${request.key}`);
         }
@@ -198,7 +237,8 @@ export const graphQLOrchestrator = async (
         key: request.key,
         success: false,
         data: null,
-        error: error instanceof Error ? error : new Error(String(error))
+        error: error instanceof Error ? error : new Error(String(error)),
+        attempts
       };
     }
   });
