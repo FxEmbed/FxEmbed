@@ -80,6 +80,17 @@ export const APIVideoFormatSchema = z.object({
   width: z.number().optional()
 });
 
+export const APIMediaLinkSchema = z
+  .object({
+    url: z.httpUrl(),
+    title: z.string().optional(),
+    domain: z.string().optional()
+  })
+  .openapi('APIMediaLink', {
+    description:
+      "Destination attached to an individual X website-card photo or video, including prefilled X post URLs. Available in v1 and v2. The media item's url remains the image or video URL."
+  });
+
 export const APIMediaBaseSchema = z.object({
   id: z.string().optional(),
   format: z.string().optional(),
@@ -87,7 +98,8 @@ export const APIMediaBaseSchema = z.object({
   url: z.string(),
   transcode_url: z.string().optional().nullable(),
   width: z.number(),
-  height: z.number()
+  height: z.number(),
+  link: APIMediaLinkSchema.optional()
 });
 
 export const APIPhotoSchema = z.object({
@@ -98,7 +110,8 @@ export const APIPhotoSchema = z.object({
   width: z.number(),
   height: z.number(),
   transcode_url: z.string().optional().nullable(),
-  altText: z.string().optional()
+  altText: z.string().optional(),
+  link: APIMediaLinkSchema.optional()
 });
 
 /** Same shape as `APIUser.about_account` (X “About this account” metadata). */
@@ -183,7 +196,8 @@ export const APIVideoSchema = z.object({
   duration: z.number(),
   filesize: z.number().optional(),
   formats: z.array(APIVideoFormatSchema),
-  publisher: APIUserSchema.optional().nullable()
+  publisher: APIUserSchema.optional().nullable(),
+  link: APIMediaLinkSchema.optional()
 });
 
 export const APIExternalMediaSchema = z.object({
@@ -205,7 +219,8 @@ export const APIMosaicPhotoSchema = z.object({
   formats: z.object({
     webp: z.string(),
     jpeg: z.string()
-  })
+  }),
+  link: APIMediaLinkSchema.optional()
 });
 
 /** Link preview from Twitter GraphQL (`summary_large_image`, `summary`, etc.). Exposed as `card` on `APITwitterStatus`. */
@@ -254,8 +269,14 @@ export const APIBroadcastSchema = z.object({
 
 export const APIMediaContainerSchema = z.object({
   external: APIExternalMediaSchema.optional(),
-  photos: z.array(APIPhotoSchema).optional(),
-  videos: z.array(APIVideoSchema).optional(),
+  photos: z.array(APIPhotoSchema).optional().openapi({
+    description:
+      'Photos in source order for supported X website cards, with per-item destinations in link.'
+  }),
+  videos: z.array(APIVideoSchema).optional().openapi({
+    description:
+      'Videos in source order for supported X website cards, with per-item destinations in link.'
+  }),
   all: z
     .array(
       z.union([
@@ -268,11 +289,16 @@ export const APIMediaContainerSchema = z.object({
           type: z.string(),
           url: z.string(),
           width: z.number(),
-          height: z.number()
+          height: z.number(),
+          link: APIMediaLinkSchema.optional()
         })
       ])
     )
-    .optional(),
+    .optional()
+    .openapi({
+      description:
+        'Media in source order for supported X website carousel and collection cards, with per-item destinations in link.'
+    }),
   mosaic: APIMosaicPhotoSchema.optional(),
   broadcast: APIBroadcastSchema.optional()
 });
@@ -579,7 +605,10 @@ export const APITwitterStatusSchema: z.ZodType<APITwitterStatus> = z.lazy(() =>
       is_note_tweet: z.boolean(),
       community_note: APITwitterCommunityNoteSchema.nullable(),
       reposted_by: APIRepostedBySchema.nullable(),
-      card: APICardSchema.optional()
+      card: APICardSchema.optional().openapi({
+        description:
+          'Link preview or single-item website card. Multi-item website cards expose destinations on individual media items through link.'
+      })
     })
     .openapi('APITwitterStatus')
 );
@@ -1417,6 +1446,7 @@ export type APIPollChoice = z.infer<typeof APIPollChoiceSchema>;
 export type APIPoll = z.infer<typeof APIPollSchema>;
 export type APIVideoFormat = z.infer<typeof APIVideoFormatSchema>;
 export type APIMedia = z.infer<typeof APIMediaBaseSchema>;
+export type APIMediaLink = z.infer<typeof APIMediaLinkSchema>;
 export type APIPhoto = z.infer<typeof APIPhotoSchema>;
 export type APIVideo = z.infer<typeof APIVideoSchema>;
 export type APIExternalMedia = z.infer<typeof APIExternalMediaSchema>;
