@@ -174,6 +174,73 @@ test('merges native and card media without duplicating their shared attachment',
   expect(status.media.photos?.map(item => item.link?.url)).toEqual(cases[1].urls);
 });
 
+test.each([false, true])(
+  'preserves native image descriptions when card media overlaps (legacy: %s)',
+  async legacy => {
+    const tweet = tweetWithCard(carousel);
+    tweet.legacy.extended_entities = {
+      media: [
+        {
+          ...carousel.media_entities['3_1931954784086446080'],
+          ext_alt_text: 'Campaign illustration with characters wearing festival coats'
+        } as TweetMedia
+      ]
+    };
+    const status = (await buildAPITwitterStatus(
+      { t: key => key },
+      tweet,
+      undefined,
+      null,
+      legacy
+    )) as APITwitterStatus;
+
+    expect(status.media.photos?.map(item => item.id)).toEqual(cases[1].ids);
+    expect(status.media.photos?.[0].altText).toBe(
+      'Campaign illustration with characters wearing festival coats'
+    );
+    expect(status.media.photos?.map(item => item.link?.url)).toEqual(cases[1].urls);
+    expect(status.media.all).toEqual(status.media.photos);
+  }
+);
+
+test('preserves native video metadata while applying the card link and order', async () => {
+  const value = structuredClone(carousel);
+  const low = { bitrate: 1000, content_type: 'video/mp4', url: 'https://video.twimg.com/low.mp4' };
+  const high = {
+    bitrate: 2000,
+    content_type: 'video/mp4',
+    url: 'https://video.twimg.com/high.mp4'
+  };
+  const nativeVideo = {
+    ...value.media_entities['3_1931954784086446080'],
+    type: 'video',
+    original_info: { width: 1920, height: 1080 },
+    video_info: { aspect_ratio: [16, 9], duration_millis: 2500, variants: [low, high] }
+  };
+  Object.assign(value.media_entities['3_1931954784086446080'], {
+    type: 'video',
+    video_info: { aspect_ratio: [16, 9], duration_millis: 1000, variants: [low] }
+  });
+  const tweet = tweetWithCard(value);
+  tweet.legacy.extended_entities = { media: [nativeVideo as TweetMedia] };
+  const status = (await buildAPITwitterStatus(
+    { t: key => key },
+    tweet,
+    undefined,
+    null
+  )) as APITwitterStatus;
+
+  expect(status.media.all?.map(item => item.id)).toEqual(cases[1].ids);
+  expect(status.media.videos?.[0]).toMatchObject({
+    url: high.url,
+    width: 1920,
+    height: 1080,
+    duration: 2.5,
+    link: { url: cases[1].urls[0] }
+  });
+  expect(status.media.videos?.[0].formats).toHaveLength(2);
+});
+
 test('does not add link metadata to an ordinary native photo', async () => {
   const tweet = tweetWithCard(carousel);
   delete tweet.card;

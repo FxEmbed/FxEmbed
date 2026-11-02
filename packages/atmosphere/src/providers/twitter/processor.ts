@@ -860,13 +860,16 @@ export const buildAPITwitterStatus = async (
       apiStatus.poll = card.poll;
     }
     if (card.media) {
+      const nativeMediaById = new Map(mediaList.map(media => [media.id_str, media]));
       const cardMediaIds = new Set(card.media.map(item => item.media.id_str));
       if (apiStatus.media.all) {
         apiStatus.media.all = apiStatus.media.all.filter(
           item => !item.id || !cardMediaIds.has(item.id)
         );
       }
-      card.media.forEach(item => appendMedia(item.media, item.link));
+      card.media.forEach(item =>
+        appendMedia({ ...item.media, ...nativeMediaById.get(item.media.id_str) }, item.link)
+      );
     }
     if (card.website_card) {
       const wc = card.website_card;
