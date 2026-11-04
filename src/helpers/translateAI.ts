@@ -36,13 +36,13 @@ The target language is ${i18next.t(`language_${targetLang}`, { lng: 'en' })}.`
   }
 ];
 
-/* Reasoning models served without a reasoning parser (e.g. llama.cpp, vLLM) put their
-   chain of thought in the content, sometimes without the opening <think> tag. */
+/* Strip only an explicit leading reasoning block; a literal closing marker in
+   translated text is not evidence of reasoning. Unfinished blocks are unusable. */
 export const stripReasoning = (text: string): string => {
-  if (!text.includes('</think>')) {
-    return text;
-  }
-  return text.replace(/^[\s\S]*?<\/think>\s*/, '');
+  const leading = text.trimStart();
+  if (!leading.startsWith('<think>')) return text;
+  const end = leading.indexOf('</think>', '<think>'.length);
+  return end === -1 ? '' : leading.slice(end + '</think>'.length).trimStart();
 };
 
 const parseExtraBody = (raw: string): Record<string, unknown> | undefined => {
@@ -62,21 +62,28 @@ const parseExtraBody = (raw: string): Record<string, unknown> | undefined => {
   return undefined;
 };
 
-const getOpenAICompatibleTranslationConfig = (): OpenAICompatibleTranslationConfig | null => {
-  if (!Constants.LLM_TRANSLATION_BASE_URL || !Constants.LLM_TRANSLATION_MODEL) {
+const getOpenAICompatibleTranslationConfig = (
+  c?: Context
+): OpenAICompatibleTranslationConfig | null => {
+  const runtime = c?.env ?? {};
+  const baseUrl = runtime.LLM_TRANSLATION_BASE_URL ?? Constants.LLM_TRANSLATION_BASE_URL;
+  const model = runtime.LLM_TRANSLATION_MODEL ?? Constants.LLM_TRANSLATION_MODEL;
+  if (!baseUrl || !model) {
     return null;
   }
   return {
-    baseUrl: Constants.LLM_TRANSLATION_BASE_URL,
-    apiKey: Constants.LLM_TRANSLATION_API_KEY,
-    model: Constants.LLM_TRANSLATION_MODEL,
-    extraBody: parseExtraBody(Constants.LLM_TRANSLATION_EXTRA_BODY)
+    baseUrl,
+    apiKey: runtime.LLM_TRANSLATION_API_KEY ?? Constants.LLM_TRANSLATION_API_KEY,
+    model,
+    extraBody: parseExtraBody(
+      runtime.LLM_TRANSLATION_EXTRA_BODY ?? Constants.LLM_TRANSLATION_EXTRA_BODY
+    )
   };
 };
 
 /* Whether any LLM translation backend (Workers AI binding or OpenAI-compatible endpoint) is usable */
 export const isAITranslationAvailable = (c: Context): boolean =>
-  Boolean(c.env?.AI) || getOpenAICompatibleTranslationConfig() !== null;
+  Boolean(c.env?.AI) || getOpenAICompatibleTranslationConfig(c) !== null;
 
 /* Translates text using any OpenAI-compatible chat completions endpoint */
 export const translateTextOpenAICompatible = async (
@@ -93,48 +100,65 @@ export const translateTextOpenAICompatible = async (
     headers['Authorization'] = `Bearer ${config.apiKey}`;
   }
 
-  const response = await fetch(`${config.baseUrl.replace(/\/+$/, '')}/chat/completions`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      ...config.extraBody,
-      model: config.model,
-      messages: buildTranslationMessages(text, sourceLang, targetLang),
-      stream: false
-    })
-  });
-
-  if (!response.ok) {
-    console.error(
-      'OpenAI-compatible translation failed',
-      response.status,
-      await response.text().catch(() => '')
-    );
-    return null;
+  const endpoint = new URL(`${config.baseUrl.replace(/\/+$/, '')}/chat/completions`);
+  if (
+    !['http:', 'https:'].includes(endpoint.protocol) ||
+    (config.apiKey && endpoint.protocol !== 'https:')
+  ) {
+    throw new Error('Translation endpoints with an API key require HTTPS');
   }
+  const controller = new AbortController();
+  const deadline = setTimeout(() => controller.abort(), 10_000);
+  try {
+    const response = await fetch(endpoint.toString(), {
+      signal: controller.signal,
+      redirect: 'error',
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        ...config.extraBody,
+        model: config.model,
+        messages: buildTranslationMessages(text, sourceLang, targetLang),
+        stream: false
+      })
+    });
 
-  const data = (await response.json()) as {
-    choices?: { message?: { content?: string | null } }[];
-    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
-  };
-  const content = data.choices?.[0]?.message?.content;
-  if (typeof content !== 'string') {
-    console.error('OpenAI-compatible translation returned no content', data);
-    return null;
-  }
-  const translatedText = stripReasoning(content);
-  if (!translatedText.trim()) {
-    return null;
-  }
-
-  return {
-    translated_text: translatedText,
-    usage: {
-      prompt_tokens: data.usage?.prompt_tokens ?? 0,
-      completion_tokens: data.usage?.completion_tokens ?? 0,
-      total_tokens: data.usage?.total_tokens ?? 0
+    if (!response.ok) {
+      console.error(
+        'OpenAI-compatible translation failed',
+        response.status,
+        await response.text().catch(() => '')
+      );
+      return null;
     }
-  };
+
+    const data = (await response.json()) as {
+      choices?: { message?: { content?: string | null }; finish_reason?: string | null }[];
+      usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
+    };
+    const choice = data.choices?.[0];
+    if (choice?.finish_reason && choice.finish_reason !== 'stop') return null;
+    const content = choice?.message?.content;
+    if (typeof content !== 'string') {
+      console.error('OpenAI-compatible translation returned no content', data);
+      return null;
+    }
+    const translatedText = stripReasoning(content);
+    if (!translatedText.trim()) {
+      return null;
+    }
+
+    return {
+      translated_text: translatedText,
+      usage: {
+        prompt_tokens: data.usage?.prompt_tokens ?? 0,
+        completion_tokens: data.usage?.completion_tokens ?? 0,
+        total_tokens: data.usage?.total_tokens ?? 0
+      }
+    };
+  } finally {
+    clearTimeout(deadline);
+  }
 };
 
 const translateTextLLM = async (
@@ -165,7 +189,7 @@ export const translateStatusAI = async (
 ): Promise<CFAITranslation | null> => {
   const language = normalizeLanguage(_language);
 
-  const openAIConfig = getOpenAICompatibleTranslationConfig();
+  const openAIConfig = getOpenAICompatibleTranslationConfig(c);
   if (openAIConfig) {
     console.log('Using OpenAI-compatible LLM translation');
 
@@ -205,7 +229,6 @@ export const translateStatusAI = async (
   console.log('Using M2M100-1.2B translation');
 
   try {
-    console.log(c.env);
     const response: CFAITranslation = await c.env.AI.run('@cf/meta/m2m100-1.2b', {
       text: status.text,
       source_lang: status.lang,

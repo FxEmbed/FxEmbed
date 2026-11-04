@@ -60,14 +60,33 @@ When Polyglot is not configured (or fails), translation falls back to an LLM. On
 | `LLM_TRANSLATION_MODEL`      | Model name passed to the endpoint                                    |
 | `LLM_TRANSLATION_EXTRA_BODY` | Optional JSON object merged into the request body                    |
 
-Both `LLM_TRANSLATION_BASE_URL` and `LLM_TRANSLATION_MODEL` must be set to enable it. For example, a local [llama.cpp](https://github.com/ggml-org/llama.cpp) server:
+Both `LLM_TRANSLATION_BASE_URL` and `LLM_TRANSLATION_MODEL` must be set to enable it. For example, a [llama.cpp](https://github.com/ggml-org/llama.cpp) server running in the same network namespace as FxEmbed:
 
 ```bash
 LLM_TRANSLATION_BASE_URL = "http://localhost:8080/v1"
 LLM_TRANSLATION_MODEL = "local"
 ```
 
-Reasoning models are slow to translate while thinking is on. Most providers accept a request field to turn it off, which `LLM_TRANSLATION_EXTRA_BODY` can send, e.g. `{"chat_template_kwargs":{"enable_thinking":false}}` for llama.cpp and vLLM. Any `<think>…</think>` block left in the response is removed.
+Reasoning models are slow to translate while thinking is on. Most providers accept a request field to turn it off, which `LLM_TRANSLATION_EXTRA_BODY` can send, e.g. `{"chat_template_kwargs":{"enable_thinking":false}}` for llama.cpp and vLLM. An explicit leading `<think>…</think>` block is removed. Unfinished blocks and responses marked as truncated are rejected so the existing fallback can run; unmarked text is preserved.
+
+The endpoint attempt has a 10-second deadline covering both the request and response body. Redirects are rejected. When an API key is configured, the endpoint must use HTTPS; keyless HTTP remains available for local servers.
+
+#### Docker runtime configuration
+
+The Docker image runs Wrangler locally. Set the four translation values in a private `translation.dev.vars` file and mount it read-only at `/app/.dev.vars`, next to `wrangler.toml`. These runtime bindings override the build-time defaults; setting only Docker process environment variables does not configure the Worker. Keep the file out of source control and readable only by its owner and the container user.
+
+For Docker Compose, add a local override:
+
+```yaml
+services:
+  fxembed:
+    volumes:
+      - ./translation.dev.vars:/app/.dev.vars:ro
+```
+
+Use `http://host.docker.internal:8080/v1` for a keyless llama.cpp server on the Docker Desktop host. Inside the container, `localhost` refers to FxEmbed itself. On Linux, configure a host-gateway mapping for `host.docker.internal`, or use a reachable service name on the same Docker network. Use HTTPS for endpoints that require a key.
+
+See [Wrangler local environment bindings](https://developers.cloudflare.com/workers/local-development/environment-variables/) for `.dev.vars` loading and precedence.
 
 ### Sentry (Error Reporting)
 
