@@ -215,3 +215,17 @@ describe('translation request safety', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 });
+
+describe('explicit reasoning block framing', () => {
+  it('removes an inline block without deleting surrounding translation', () => {
+    expect(stripReasoning('Hello<think>choose the noun</think> world.')).toBe('Hello world.');
+  });
+  it('removes repeated blocks while retaining the text between them', () => {
+    expect(stripReasoning('<think>first</think>\nHello<think>second</think> world.')).toBe(
+      'Hello world.'
+    );
+  });
+  it('rejects an unfinished inline block rather than exposing reasoning', () => {
+    expect(stripReasoning('Hello<think>unfinished')).toBe('');
+  });
+});

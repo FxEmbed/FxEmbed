@@ -36,13 +36,24 @@ The target language is ${i18next.t(`language_${targetLang}`, { lng: 'en' })}.`
   }
 ];
 
-/* Strip only an explicit leading reasoning block; a literal closing marker in
-   translated text is not evidence of reasoning. Unfinished blocks are unusable. */
+/* Remove explicitly framed reasoning blocks while preserving surrounding text.
+   A closing marker alone is not sufficient evidence of reasoning. */
 export const stripReasoning = (text: string): string => {
-  const leading = text.trimStart();
-  if (!leading.startsWith('<think>')) return text;
-  const end = leading.indexOf('</think>', '<think>'.length);
-  return end === -1 ? '' : leading.slice(end + '</think>'.length).trimStart();
+  let cursor = 0;
+  let result = '';
+  let trimLeading = false;
+  while (true) {
+    const start = text.indexOf('<think>', cursor);
+    if (start === -1) {
+      result += text.slice(cursor);
+      return trimLeading ? result.trimStart() : result;
+    }
+    const end = text.indexOf('</think>', start + '<think>'.length);
+    if (end === -1) return '';
+    if (cursor === 0 && !text.slice(0, start).trim()) trimLeading = true;
+    result += text.slice(cursor, start);
+    cursor = end + '</think>'.length;
+  }
 };
 
 const parseExtraBody = (raw: string): Record<string, unknown> | undefined => {

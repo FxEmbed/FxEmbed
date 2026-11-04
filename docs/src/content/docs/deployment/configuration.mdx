@@ -67,7 +67,7 @@ LLM_TRANSLATION_BASE_URL = "http://localhost:8080/v1"
 LLM_TRANSLATION_MODEL = "local"
 ```
 
-Reasoning models are slow to translate while thinking is on. Most providers accept a request field to turn it off, which `LLM_TRANSLATION_EXTRA_BODY` can send, e.g. `{"chat_template_kwargs":{"enable_thinking":false}}` for llama.cpp and vLLM. An explicit leading `<think>…</think>` block is removed. Unfinished blocks and responses marked as truncated are rejected so the existing fallback can run; unmarked text is preserved.
+Reasoning models are slow to translate while thinking is on. Most providers accept a request field to turn it off, which `LLM_TRANSLATION_EXTRA_BODY` can send, e.g. `{"chat_template_kwargs":{"enable_thinking":false}}` for llama.cpp and vLLM. Explicit `<think>…</think>` blocks are removed, including inline and repeated blocks, while preserving surrounding translation text. A closing marker without an opening marker is preserved because it may be literal post content; use a server-side reasoning parser or disable thinking for servers that omit the opening marker. Unfinished blocks and responses marked as truncated are rejected so the existing fallback can run; unmarked text is preserved.
 
 The endpoint attempt has a 10-second deadline covering both the request and response body. Redirects are rejected. When an API key is configured, the endpoint must use HTTPS; keyless HTTP remains available for local servers.
 
