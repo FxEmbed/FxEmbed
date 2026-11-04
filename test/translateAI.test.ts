@@ -145,7 +145,7 @@ describe('translation request safety', () => {
       baseUrl: 'http://localhost:8080/v1',
       apiKey: ''
     });
-    expect(fetchSpy.mock.calls[0][1]?.redirect).toBe('error');
+    expect(fetchSpy.mock.calls[0][1]?.redirect).toBe('manual');
     expect(fetchSpy.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
   });
 
@@ -227,5 +227,62 @@ describe('explicit reasoning block framing', () => {
   });
   it('rejects an unfinished inline block rather than exposing reasoning', () => {
     expect(stripReasoning('Hello<think>unfinished')).toBe('');
+  });
+});
+
+describe('literal source markup and redirects', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it.each([
+    'Use <think>carefully</think> here',
+    'Write <think> to start',
+    'Write </think> to close',
+    'İstanbul <think>carefully</think> here',
+    '<THINK>literal</THINK>'
+  ])('preserves literal source tags: %s', async text => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (_url, init) => {
+      const body = JSON.parse(init?.body as string);
+      const source = body.messages.find(
+        (message: { role: string }) => message.role === 'user'
+      ).content;
+      expect(source).not.toMatch(/<\/?think>/i);
+      return completion('<think>model reasoning</think>\n' + source);
+    });
+    expect((await translateTextOpenAICompatible(text, 'en', 'en', config))?.translated_text).toBe(
+      text
+    );
+  });
+
+  it('rejects a response that drops source placeholders', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(completion('Use carefully here'));
+    expect(
+      await translateTextOpenAICompatible('Use <think>carefully</think> here', 'en', 'en', config)
+    ).toBeNull();
+  });
+
+  it('rejects duplicated source placeholders', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (_url, init) => {
+      const body = JSON.parse(init?.body as string);
+      const source = body.messages.find(
+        (message: { role: string }) => message.role === 'user'
+      ).content;
+      return completion(source + source);
+    });
+    expect(
+      await translateTextOpenAICompatible('Write <think> to start', 'en', 'en', config)
+    ).toBeNull();
+  });
+
+  it('returns null for a redirect without following it', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response(null, { status: 302, headers: { Location: 'https://other.example/' } })
+      );
+    expect(await translateTextOpenAICompatible('Hola', 'es', 'en', config)).toBeNull();
+    expect(fetchSpy).toHaveBeenCalledOnce();
+    expect(fetchSpy.mock.calls[0][1]?.redirect).toBe('manual');
   });
 });
