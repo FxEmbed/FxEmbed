@@ -15,6 +15,18 @@ declare namespace NodeJS {
     MOSAIC_BSKY_DOMAIN_LIST?: string;
     POLYGLOT_DOMAIN_LIST?: string;
     POLYGLOT_ACCESS_TOKEN?: string;
+    /** OrcaRouter API key pasted by the user (`sk-orca-…`). */
+    ORCAROUTER_API_KEY?: string;
+    /** OrcaRouter key issued by `npm run orcarouter:login` (OAuth 2.0 + PKCE). */
+    ORCAROUTER_OAUTH_KEY?: string;
+    /** Text-chat model id used for translation, e.g. `orcarouter/auto`. */
+    ORCAROUTER_MODEL?: string;
+    /** Shared OrcaRouter origin for self-hosted deployments (auth + inference). */
+    ORCA_BASE_URL?: string;
+    /** Explicit auth origin override; wins over `ORCA_BASE_URL`. */
+    ORCA_AUTH_BASE_URL?: string;
+    /** Explicit inference origin override; wins over `ORCA_BASE_URL`. */
+    ORCA_API_BASE_URL?: string;
     API_HOST_LIST?: string;
     BLUESKY_API_HOST_LIST?: string;
     ATMOSPHERE_API_HOST_LIST?: string;

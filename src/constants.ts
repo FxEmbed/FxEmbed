@@ -14,6 +14,15 @@ export const Constants = {
   MOSAIC_BSKY_DOMAIN_LIST: (process.env.MOSAIC_BSKY_DOMAIN_LIST ?? '').split(','),
   POLYGLOT_DOMAIN_LIST: (process.env.POLYGLOT_DOMAIN_LIST ?? '').split(','),
   POLYGLOT_ACCESS_TOKEN: process.env.POLYGLOT_ACCESS_TOKEN ?? '',
+  /* OrcaRouter: one named provider with two credential entry points (see src/helpers/orcarouter/). */
+  ORCAROUTER_API_KEY: process.env.ORCAROUTER_API_KEY ?? '',
+  ORCAROUTER_OAUTH_KEY: process.env.ORCAROUTER_OAUTH_KEY ?? '',
+  ORCAROUTER_MODEL: process.env.ORCAROUTER_MODEL ?? '',
+  ORCA_BASE_URL: process.env.ORCA_BASE_URL ?? '',
+  ORCA_AUTH_BASE_URL: process.env.ORCA_AUTH_BASE_URL ?? '',
+  ORCA_API_BASE_URL: process.env.ORCA_API_BASE_URL ?? '',
+  /* How long a successful live OrcaRouter catalog stays fresh before re-discovery. */
+  ORCAROUTER_CATALOG_TTL_MS: 15 * 60 * 1000,
   API_HOST_LIST: (process.env.API_HOST_LIST ?? '').split(','),
   API_HOST_ROOT: `https://${(process.env.API_HOST_LIST ?? '').split(',')[0]}`,
   BLUESKY_API_HOST_LIST: (process.env.BLUESKY_API_HOST_LIST ?? '')
