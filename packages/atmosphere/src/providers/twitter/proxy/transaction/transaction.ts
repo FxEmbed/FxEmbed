@@ -110,6 +110,9 @@ export async function handleXMigration(fetchNewHomePage = false): Promise<Cheeri
 const ON_DEMAND_FILE_REGEX = /,(\d+):["']ondemand\.s["']/;
 const ON_DEMAND_HASH_PATTERN = (index: string) => new RegExp(`,${index}:"([0-9a-f]+)"`);
 const INDICES_REGEX = /\(\w\[(\d{1,2})\],\s*16\)/g;
+const STATIC_ASSET_IMPORT_REGEX = /(?:from|import)["']\.\/assets\/([A-Za-z0-9_-]+\.js)["']/g;
+const GENERATOR_IMPORT_REGEX =
+  /import\(`\.\/([A-Za-z0-9_-]+\.js)`\)\.then\(\w+=>\w+\.default\(\)\)/;
 
 export class ClientTransaction {
   private homePage: CheerioAPI;
@@ -182,9 +185,14 @@ export class ClientTransaction {
   }
 
   /**
-   * Logged-out x.com no longer inlines ondemand.s. The same key-byte indices
-   * live in the x-web sign chunk (sign.o-*.js), reached from the entry module
-   * via the sentry-filter chunk.
+   * Logged-out x.com no longer inlines ondemand.s. The key-byte indices live in a
+   * lazily imported chunk of the x-web bundle. Chunk file names are now opaque
+   * hashes (e.g. assets/BmFofgsP.js, no "sign.o-" prefix any more), so the chunk
+   * is located structurally: the entry statically imports a module that
+   * registers the `x-botox-client-transaction-id` middleware, and that module does
+   * `import(`./<chunk>.js`).then(e => e.default())` to load the generator.
+   * Older layouts (sign.o-*.js named directly in the entry / sentry-filter chunk)
+   * are still tried first.
    */
   private async indicesFromXWebSign(html: string): Promise<[number, number[]] | null> {
     const entryMatch = html.match(
@@ -194,19 +202,37 @@ export class ClientTransaction {
     const entryUrl = entryMatch[0];
     const entryJs = await (await cachedFetch(entryUrl)).text();
     const assetBase = entryUrl.slice(0, entryUrl.lastIndexOf('/') + 1);
+    const fetchText = async (name: string) =>
+      (await cachedFetch(`${assetBase}assets/${name.replace(/^(\.\/)?(assets\/)?/, '')}`)).text();
 
+    // Layout A (older): sign.o-*.js referenced from the entry or the sentry-filter chunk.
     let signName = entryJs.match(/sign\.o-[A-Za-z0-9_-]+\.js/)?.[0];
     if (!signName) {
       const sentry = entryJs.match(/assets\/sentry-filter-[A-Za-z0-9_-]+\.js/);
-      if (!sentry) return null;
-      const sentryJs = await (await cachedFetch(assetBase + sentry[0])).text();
-      signName = sentryJs.match(/sign\.o-[A-Za-z0-9_-]+\.js/)?.[0];
+      if (sentry) {
+        const sentryJs = await fetchText(sentry[0]);
+        signName = sentryJs.match(/sign\.o-[A-Za-z0-9_-]+\.js/)?.[0];
+      }
     }
-    if (!signName) return null;
+    if (signName) {
+      const parsed = this.parseKeyByteIndices(await fetchText(signName));
+      if (parsed) return parsed;
+    }
 
-    const signUrl = `${assetBase}assets/${signName.replace(/^\.\//, '')}`;
-    const signJs = await (await cachedFetch(signUrl)).text();
-    return this.parseKeyByteIndices(signJs);
+    // Layout B (current): hashed chunk names. Scan the modules the entry statically
+    // imports for the transaction middleware and follow its lazy generator import.
+    const candidates = [
+      ...new Set([...entryJs.matchAll(STATIC_ASSET_IMPORT_REGEX)].map(m => m[1]))
+    ];
+    const texts = await Promise.all(candidates.map(c => fetchText(c).catch(() => '')));
+    for (const text of texts) {
+      if (!text.includes('x-botox-client-transaction-id')) continue;
+      const chunk = text.match(GENERATOR_IMPORT_REGEX)?.[1];
+      if (!chunk) continue;
+      const parsed = this.parseKeyByteIndices(await fetchText(chunk));
+      if (parsed) return parsed;
+    }
+    return null;
   }
 
   private getKey(): string {
