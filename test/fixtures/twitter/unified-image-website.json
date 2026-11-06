@@ -1,0 +1,49 @@
+{
+  "type": "image_website",
+  "component_objects": {
+    "details_1": {
+      "type": "details",
+      "data": {
+        "title": { "content": "ご主人様、少々お時間頂戴しますね 動画はこちら", "is_rtl": false },
+        "subtitle": { "content": "youtube.com", "is_rtl": false },
+        "destination": "browser_1"
+      }
+    },
+    "media_1": {
+      "type": "media",
+      "data": { "id": "3_2092846373662269440", "destination": "browser_1" }
+    }
+  },
+  "destination_objects": {
+    "browser_1": {
+      "type": "browser",
+      "data": {
+        "url_data": {
+          "url": "https://youtube.com/shorts/ihCtO4twl7Y",
+          "vanity": "youtube.com"
+        }
+      }
+    }
+  },
+  "components": ["media_1", "details_1"],
+  "media_entities": {
+    "3_2092846373662269440": {
+      "id_str": "2092846373662269440",
+      "indices": [0, 0],
+      "media_url": "",
+      "media_url_https": "https://pbs.twimg.com/media/HQtIsD-aoAAXX1k.jpg",
+      "url": "",
+      "display_url": "",
+      "expanded_url": "",
+      "type": "photo",
+      "original_info": { "width": 1200, "height": 628 },
+      "sizes": {
+        "medium": { "w": 1200, "h": 628, "resize": "fit" },
+        "small": { "w": 680, "h": 356, "resize": "fit" },
+        "thumb": { "w": 150, "h": 150, "resize": "crop" },
+        "large": { "w": 1200, "h": 628, "resize": "fit" }
+      },
+      "media_key": "3_2092846373662269440"
+    }
+  }
+}

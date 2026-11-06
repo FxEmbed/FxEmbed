@@ -3,6 +3,39 @@ import { app } from '../src/worker';
 import { botHeaders } from './helpers/data';
 import harness from './helpers/harness';
 
+test('FxTwitter OpenAPI exposes optional links on photos and videos', async () => {
+  const result = await app.request(
+    'https://api.fxtwitter.com/2/openapi.json',
+    { headers: botHeaders },
+    harness
+  );
+  expect(result.status).toBe(200);
+  type Schema = {
+    properties?: Record<string, Schema>;
+    required?: string[];
+    $ref?: string;
+    [key: string]: unknown;
+  };
+  const doc = (await result.json()) as { components: { schemas: Record<string, Schema> } };
+  expect(doc.components.schemas.APIMediaLink.required).toEqual(['url']);
+  expect(doc.components.schemas.APIMediaLink.properties).toMatchObject({
+    url: { type: 'string', format: 'uri' },
+    title: { type: 'string' },
+    domain: { type: 'string' }
+  });
+  const mediaSchemas: Schema[] = [];
+  const visit = (value: unknown): void => {
+    if (!value || typeof value !== 'object') return;
+    const node = value as Schema;
+    if (node.properties?.link?.$ref === '#/components/schemas/APIMediaLink')
+      mediaSchemas.push(node);
+    Object.values(value).forEach(visit);
+  };
+  visit(doc.components.schemas.APITwitterStatus);
+  expect(mediaSchemas.length).toBeGreaterThanOrEqual(3);
+  mediaSchemas.forEach(schema => expect(schema.required).not.toContain('link'));
+});
+
 test('GET /2/openapi.json returns OpenAPI 3 document with v2 paths', async () => {
   const result = await app.request(
     new Request('https://api.fxtwitter.com/2/openapi.json', {

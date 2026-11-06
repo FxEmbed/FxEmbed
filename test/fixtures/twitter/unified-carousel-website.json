@@ -1,0 +1,99 @@
+{
+  "layout": {
+    "type": "swipeable",
+    "data": {
+      "slides": [
+        ["media_1", "details_1"],
+        ["media_2", "details_2"]
+      ]
+    }
+  },
+  "type": "image_multi_dest_carousel_website",
+  "component_objects": {
+    "details_2": {
+      "type": "details",
+      "data": {
+        "title": {
+          "content": "Touch! SUNTORY",
+          "is_rtl": false
+        },
+        "subtitle": {
+          "content": "suntory.co.jp",
+          "is_rtl": false
+        },
+        "destination": "browser_2"
+      }
+    },
+    "media_2": {
+      "type": "media",
+      "data": {
+        "id": "3_1931954792345014272",
+        "destination": "browser_2"
+      }
+    },
+    "details_1": {
+      "type": "details",
+      "data": {
+        "title": {
+          "content": "詳細はこちら！",
+          "is_rtl": false
+        },
+        "subtitle": {
+          "content": "amazonaws.com",
+          "is_rtl": false
+        },
+        "destination": "browser_1"
+      }
+    },
+    "media_1": {
+      "type": "media",
+      "data": {
+        "id": "3_1931954784086446080",
+        "destination": "browser_1"
+      }
+    }
+  },
+  "destination_objects": {
+    "browser_2": {
+      "type": "browser",
+      "data": {
+        "url_data": {
+          "url": "https://www.suntory.co.jp/softdrink/campaign/touch/",
+          "vanity": "suntory.co.jp"
+        }
+      }
+    },
+    "browser_1": {
+      "type": "browser",
+      "data": {
+        "url_data": {
+          "url": "https://touch-suntory-line-mini-app.s3.ap-northeast-1.amazonaws.com/closedCampaign.html?id=be967d99-bebc-4d46-b70c-647351aebcd6",
+          "vanity": "amazonaws.com"
+        }
+      }
+    }
+  },
+  "components": [],
+  "media_entities": {
+    "3_1931954784086446080": {
+      "id_str": "1931954784086446080",
+      "media_key": "3_1931954784086446080",
+      "type": "photo",
+      "media_url_https": "https://pbs.twimg.com/media/Gs-uo-OW0AAQ3lG.jpg",
+      "original_info": {
+        "width": 1080,
+        "height": 1080
+      }
+    },
+    "3_1931954792345014272": {
+      "id_str": "1931954792345014272",
+      "media_key": "3_1931954792345014272",
+      "type": "photo",
+      "media_url_https": "https://pbs.twimg.com/media/Gs-upc_WkAAgs6G.png",
+      "original_info": {
+        "width": 1024,
+        "height": 1024
+      }
+    }
+  }
+}
