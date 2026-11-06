@@ -1,0 +1,28 @@
+---
+title: Atmosphere Transports
+description: 'How @fxembed/atmosphere provider clients select request transports and fallbacks.'
+---
+
+The `@fxembed/atmosphere` package lets a provider client select an `AtmosphereTransport`. Client options can also include fallback transports. A non-retriable failure result stops the chain; retriable results and errors thrown by the provider operation advance to the next transport.
+
+## Transport kinds
+
+### Public
+
+`{ kind: 'public' }` makes unauthenticated requests to a provider's public HTTP or AppView API.
+
+### Anonymous proxy
+
+`{ kind: 'anonymous-proxy' }` uses proxy credentials supplied by the service operator. Bluesky supports a shuffled list of PDS accounts and an optional credential key; other providers can add provider-specific settings.
+
+### Proxy relay
+
+`{ kind: 'proxy-relay', baseUrl, userAgent }` forwards requests through another FxEmbed `/2` host. Set `apiKey` when the relay requires one.
+
+### Authenticated
+
+`{ kind: 'authenticated', auth }` uses an `AuthProvider` to supply request headers and optionally refresh credentials. Support depends on the provider operation: the FxEmbed public worker does not provide a general authenticated-transport implementation. Bluesky OAuth helpers can supply session-backed authentication for supported operations.
+
+## Client options
+
+Provider client options also accept a `fetch` implementation and `userAgent`, with optional cache, logger, and translation adapters. Keep credentials in the consuming service's server-side storage and supply them through the transport; do not put private credentials in browser code.
