@@ -108,6 +108,8 @@ export const Constants = {
     'access-control-allow-origin': '*',
     'content-type': 'application/json'
   },
+  /** Seconds suggested in `Retry-After` when X data could not be fetched (HTTP 503). */
+  API_RETRY_AFTER_SECONDS: 5,
   POLL_TWEET_CACHE: 'max-age=60',
   DEFAULT_COLOR: '#10A3FF',
   FRIENDLY_USER_AGENT: `Mozilla/5.0 FxEmbedBot/2.0 (like Twitterbot; +https://fxembed.com/crawler)`

@@ -48,6 +48,13 @@ const twitterSearchQueryString = (openapiMeta: {
     .openapi(openapiMeta);
 };
 
+const retryAfterHeaders = z.object({
+  'Retry-After': z.string().openapi({
+    description: 'Seconds to wait before retrying',
+    example: '5'
+  })
+});
+
 const aboutAccountQuery = z.object({
   about_account: z.string().optional().openapi({
     description: 'If truthy, include `about_account` on author when available',
@@ -301,6 +308,12 @@ export const profileV2Route = createRoute({
       description:
         'User not found, suspended (`reason`: `suspended`, `message`: User is suspended), or unavailable',
       content: { 'application/json': { schema: UserAPIResponseSchema } }
+    },
+    503: {
+      description:
+        'X could not be reached or did not answer, so the user is neither found nor missing. Retry after the `Retry-After` delay.',
+      headers: retryAfterHeaders,
+      content: { 'application/json': { schema: UserAPIResponseSchema } }
     }
   }
 });
@@ -396,6 +409,12 @@ export const profileStatusesV2Route = createRoute({
     },
     500: {
       description: 'Upstream or processing error',
+      content: { 'application/json': { schema: APISearchResultsSchema } }
+    },
+    503: {
+      description:
+        'X could not be reached or did not answer, so the user or timeline is neither found nor missing. Retry after the `Retry-After` delay.',
+      headers: retryAfterHeaders,
       content: { 'application/json': { schema: APISearchResultsSchema } }
     }
   }
