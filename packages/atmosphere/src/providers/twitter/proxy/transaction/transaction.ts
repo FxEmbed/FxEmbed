@@ -192,7 +192,10 @@ export class ClientTransaction {
    * registers the `x-botox-client-transaction-id` middleware, and that module does
    * `import(`./<chunk>.js`).then(e => e.default())` to load the generator.
    * Older layouts (sign.o-*.js named directly in the entry / sentry-filter chunk)
-   * are still tried first.
+   * are still tried first; on layouts like the current one that branch is dormant
+   * (the entry no longer references those chunks), and its fetch failures
+   * intentionally propagate, matching pre-fallback behavior, instead of masking a
+   * real layout change with an empty parse.
    */
   private async indicesFromXWebSign(html: string): Promise<[number, number[]] | null> {
     const entryMatch = html.match(
@@ -221,6 +224,7 @@ export class ClientTransaction {
 
     // Layout B (current): hashed chunk names. Scan the modules the entry statically
     // imports for the transaction middleware and follow its lazy generator import.
+    // Candidate fetches tolerate failures so one dead asset cannot abort the scan.
     const candidates = [
       ...new Set([...entryJs.matchAll(STATIC_ASSET_IMPORT_REGEX)].map(m => m[1]))
     ];
