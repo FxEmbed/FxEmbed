@@ -1,0 +1,27 @@
+{
+  "data": {
+    "threaded_conversation_with_injections_v2": {
+      "instructions": [
+        {
+          "type": "TimelineAddEntries",
+          "entries": [
+            {
+              "entryId": "cursor-bottom-22",
+              "sortIndex": "1",
+              "content": {
+                "entryType": "TimelineTimelineItem",
+                "__typename": "TimelineTimelineItem",
+                "itemContent": {
+                  "itemType": "TimelineTimelineCursor",
+                  "__typename": "TimelineTimelineCursor",
+                  "value": "end-page-cursor",
+                  "cursorType": "Bottom"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

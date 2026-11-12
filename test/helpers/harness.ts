@@ -47,8 +47,16 @@ export default {
         case 'TweetDetail':
         case 'ConversationTimeline': {
           const focalTweetId = variables.focalTweetId ?? variables.focal_tweet_id;
-          // Reply pages (a cursor is set) load `<id>.cursor.json` when there is one
+          // Reply pages (a cursor is set) load `<id>.cursor.<cursor>.json`, else `<id>.cursor.json`
           if (variables.cursor) {
+            try {
+              const mock = await import(
+                `../mocks/TweetDetail/${focalTweetId}.cursor.${variables.cursor}.json`
+              );
+              return new Response(JSON.stringify(mock));
+            } catch {
+              // No page for this exact cursor: try the generic reply page
+            }
             try {
               const mock = await import(`../mocks/TweetDetail/${focalTweetId}.cursor.json`);
               return new Response(JSON.stringify(mock));
