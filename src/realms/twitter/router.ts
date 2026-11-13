@@ -82,19 +82,19 @@ twitter.get(
   twitterStatusRequest
 );
 twitter.get(
-  '/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?|article}/:id/:mediaType{(photos?|videos?)}/:mediaNumber{[1-4]}',
+  '/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?|article}/:id/:mediaType{(photos?|videos?)}/:mediaNumber{[1-9][0-9]*}',
   twitterStatusRequest
 );
 twitter.get(
-  '/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?|article}/:id/:mediaType{(photos?|videos?)}/:mediaNumber{[1-4]}/:language',
+  '/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?|article}/:id/:mediaType{(photos?|videos?)}/:mediaNumber{[1-9][0-9]*}/:language',
   twitterStatusRequest
 );
 twitter.get(
-  '/:prefix{(dir|dl)}/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?|article}/:id/:mediaType{(photos?|videos?)}/:mediaNumber{[1-4]}',
+  '/:prefix{(dir|dl)}/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?|article}/:id/:mediaType{(photos?|videos?)}/:mediaNumber{[1-9][0-9]*}',
   twitterStatusRequest
 );
 twitter.get(
-  '/:prefix{(dir|dl)}/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?|article}/:id/:mediaType{(photos?|videos?)}/:mediaNumber{[1-4]}/:language',
+  '/:prefix{(dir|dl)}/:handle{[0-9a-zA-Z_]+}/:endpoint{status(es)?|article}/:id/:mediaType{(photos?|videos?)}/:mediaNumber{[1-9][0-9]*}/:language',
   twitterStatusRequest
 );
 twitter.get('/:handle/:endpoint{status(es)?|article}/:id/*', twitterStatusRequest);
