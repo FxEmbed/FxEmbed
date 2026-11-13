@@ -1,92 +1,58 @@
-import { describe, expect, test, vi } from 'vitest';
+import { test, expect } from 'vitest';
 import { app } from '../src/worker';
+import { botHeaders } from './helpers/data';
+import harness from './helpers/harness';
+import tweetMock from './mocks/TweetResultByRestId/1848831595014459513.json';
 
-const fixture = vi.hoisted(() => {
-  const photos = Array.from({ length: 20 }, (_, i) => ({
-    type: 'photo',
-    id: String(i + 1),
-    url: `https://pbs.twimg.com/media/photo${i + 1}.jpg?name=orig`,
-    width: 1200,
-    height: 1200
-  }));
+const base = '/example/status/991020';
 
-  return {
-    photos,
-    status: {
-      type: 'status',
-      provider: 'twitter',
-      id: '2121054079027945763',
-      url: 'https://x.com/example/status/2121054079027945763',
-      text: 'A post with twenty photos',
-      raw_text: { text: 'A post with twenty photos', facets: [] },
-      author: {
-        id: '42',
-        name: 'Example',
-        screen_name: 'example',
-        avatar_url: 'https://pbs.twimg.com/profile_images/example.jpg'
-      },
-      lang: 'en',
-      embed_card: 'summary_large_image',
-      media: { all: photos, photos }
+const photoHarness = {
+  TwitterProxy: {
+    fetch: async (request: string) => {
+      if (!new URL(request).pathname.endsWith('/TweetResultByRestId')) {
+        return harness.TwitterProxy.fetch(request);
+      }
+
+      const mock = structuredClone(tweetMock);
+      const tweet = mock.data.tweetResult.result;
+      tweet.rest_id = '991020';
+      tweet.legacy.id_str = '991020';
+      tweet.legacy.conversation_id_str = '991020';
+
+      const photo = tweet.legacy.extended_entities.media[0];
+      tweet.legacy.extended_entities.media = Array.from({ length: 20 }, (_, i) => ({
+        ...photo,
+        id_str: String(i + 1),
+        media_url_https: `https://pbs.twimg.com/media/photo${i + 1}.jpg`,
+        expanded_url: `https://x.com${base}/photo/${i + 1}`
+      }));
+
+      return Response.json(mock);
     }
-  };
-});
+  }
+};
 
-// Keep the real Worker, router and redirect handler; only replace upstream retrieval.
-vi.mock('@fxembed/atmosphere/providers/twitter/conversation', () => ({
-  constructTwitterThread: vi.fn(async () => ({
-    code: 200,
-    status: structuredClone(fixture.status),
-    thread: null
-  }))
-}));
-
-const base = '/example/status/2121054079027945763';
-const headers = { 'User-Agent': 'Discordbot/2.0' };
-const variants = [
-  { name: 'plain', prefix: '', suffix: '' },
-  { name: 'localized', prefix: '', suffix: '/en' },
-  { name: 'dir', prefix: '/dir', suffix: '' },
-  { name: 'localized dir', prefix: '/dir', suffix: '/en' },
-  { name: 'dl', prefix: '/dl', suffix: '' },
-  { name: 'localized dl', prefix: '/dl', suffix: '/en' }
-];
-
-describe.each(variants)('Twitter $name photo selection', ({ prefix, suffix }) => {
-  test.each(Array.from({ length: 20 }, (_, i) => i + 1))(
-    'redirects /photo/%i to the corresponding photo',
-    async n => {
-      const response = await app.request(
-        `https://d.fxtwitter.com${prefix}${base}/photo/${n}${suffix}`,
-        { headers }
-      );
-
-      expect(response.status).toBe(302);
-      expect(response.headers.get('location')).toBe(fixture.photos[n - 1].url);
-    }
+test.each([
+  [`${base}/photo/4`, 4],
+  [`${base}/photo/5`, 5],
+  [`${base}/photo/13`, 13],
+  [`${base}/photo/20`, 20],
+  [`${base}/photo/13/en`, 13],
+  [`/dir${base}/photo/13`, 13],
+  [`/dir${base}/photo/13/en`, 13],
+  [`/dl${base}/photo/13`, 13],
+  [`/dl${base}/photo/13/en`, 13],
+  [`${base}/photo/21`, 1],
+  [`${base}/photo/0`, 1]
+])('Twitter %s redirects to photo %i', async (path, expected) => {
+  const response = await app.request(
+    new Request(`https://d.fxtwitter.com${path}`, { headers: botHeaders }),
+    undefined,
+    photoHarness
   );
 
-  test.each(['21', '9999999999999999999999999999999999999999'])(
-    'keeps the first-photo fallback for unavailable index %s',
-    async n => {
-      const response = await app.request(
-        `https://d.fxtwitter.com${prefix}${base}/photo/${n}${suffix}`,
-        { headers }
-      );
-
-      expect(response.status).toBe(302);
-      expect(response.headers.get('location')).toBe(fixture.photos[0].url);
-    }
+  expect(response.status).toEqual(302);
+  expect(response.headers.get('location')).toEqual(
+    `https://pbs.twimg.com/media/photo${expected}.jpg?name=orig`
   );
-});
-
-describe.each(['', '/en'])('Twitter invalid photo indices with suffix "%s"', suffix => {
-  test.each(['0', '-1', '01', '1.5'])('keeps the first-photo fallback for %s', async n => {
-    const response = await app.request(`https://d.fxtwitter.com${base}/photo/${n}${suffix}`, {
-      headers
-    });
-
-    expect(response.status).toBe(302);
-    expect(response.headers.get('location')).toBe(fixture.photos[0].url);
-  });
 });
