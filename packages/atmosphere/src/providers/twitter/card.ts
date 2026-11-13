@@ -2,7 +2,13 @@ import { calculateTimeLeftString, type PollTimeStrings } from '../../helpers/pol
 import { twitterFetch } from './fetch.js';
 import { getTwitterProviderEnv } from '../twitter-runtime.js';
 import type { TwitterBuildHost } from './build-host.js';
-import type { APIBroadcast, APIExternalMedia, APIPoll } from '../../types/api-schemas.js';
+import { parseUnifiedCard, type UnifiedCardMedia } from './unified-card.js';
+import type {
+  APIBroadcast,
+  APIExternalMedia,
+  APIPoll,
+  APITwitterStatus
+} from '../../types/api-schemas.js';
 
 const enPollTimeStrings: PollTimeStrings = {
   singularDay: 'day',
@@ -68,7 +74,6 @@ function pickWebsiteCardImage(
   return undefined;
 }
 
-/* Renders card for polls, link previews, and non-Twitter video embeds (i.e. YouTube) */
 export const renderCard = async (
   host: TwitterBuildHost,
   card: GraphQLTwitterStatus['card']
@@ -76,15 +81,8 @@ export const renderCard = async (
   poll?: APIPoll;
   external_media?: APIExternalMedia;
   broadcast?: APIBroadcast;
-  media?: { videos: TweetMedia[]; photos: TweetMedia[] };
-  website_card?: {
-    url: string;
-    title?: string;
-    description?: string;
-    domain?: string;
-    card_name?: string;
-    image?: { url: string; width: number; height: number; alt?: string };
-  };
+  media?: UnifiedCardMedia[];
+  website_card?: APITwitterStatus['card'];
 }> => {
   if (!Array.isArray(card.legacy?.binding_values)) {
     return {};
@@ -97,8 +95,6 @@ export const renderCard = async (
       binding_values[value.key] = value.value as CardBindingValue;
     }
   });
-
-  // console.log('binding_values', JSON.stringify(binding_values));
 
   if (binding_values.broadcast_url?.string_value) {
     const broadcast: APIBroadcast = {
@@ -137,7 +133,6 @@ export const renderCard = async (
       },
       source: binding_values.broadcast_source?.string_value || 'Producer'
     };
-    // Fetch https://x.com/i/api/1.1/broadcasts/show.json?ids=media_id&include_events=false
     const { apiRoot } = getTwitterProviderEnv();
     const broadcastData = (await twitterFetch(host, {
       url: `${apiRoot}/1.1/live_video_stream/status/${broadcast.media_key}?client=web&use_syndication_guest_id=false&cookie_set_host=x.com`
@@ -192,12 +187,11 @@ export const renderCard = async (
   }
 
   if (binding_values.player_url?.string_value) {
-    /* Oh good, a non-Twitter video URL! This enables YouTube embeds and stuff to just work */
     return {
       external_media: {
         type: 'video',
         url: binding_values.player_url.string_value,
-        width: parseInt((binding_values.player_width?.string_value || '1280').replace('px', '')), // TODO: Replacing px might not be necessary, it's just there as a precaution
+        width: parseInt((binding_values.player_width?.string_value || '1280').replace('px', '')),
         height: parseInt((binding_values.player_height?.string_value || '720').replace('px', ''))
       }
     };
@@ -205,30 +199,9 @@ export const renderCard = async (
 
   if (binding_values.unified_card?.string_value) {
     try {
-      const card = JSON.parse(binding_values.unified_card.string_value);
-      const mediaEntities = card?.media_entities as Record<string, TweetMedia>;
-
-      if (mediaEntities) {
-        const media = {
-          videos: [] as TweetMedia[],
-          photos: [] as TweetMedia[]
-        };
-        Object.keys(mediaEntities).forEach(key => {
-          const mediaItem = mediaEntities[key];
-          switch (mediaItem.type) {
-            case 'photo':
-              media.photos.push(mediaItem);
-              break;
-            case 'animated_gif':
-            case 'video':
-              media.videos.push(mediaItem);
-              break;
-          }
-        });
-
-        console.log('media', media);
-
-        return { media: media };
+      const unified = parseUnifiedCard(JSON.parse(binding_values.unified_card.string_value));
+      if (unified && (unified.media.length > 0 || unified.website_card)) {
+        return unified;
       }
     } catch (e) {
       console.error('Failed to parse unified card JSON', e);
