@@ -182,12 +182,15 @@ export const profileAPIRequest: RouteHandler<typeof profileV2Route> = async c =>
       : await userAPI(parsed.value, host, false, shouldIncludeAboutAccount(c));
   const { httpStatus, payload } = normalizeApiJsonResponse(
     profileResponse,
-    [200, 400, 404] as const,
+    [200, 400, 404, 503] as const,
     'profileAPIRequest'
   );
   c.status(httpStatus);
   for (const [header, value] of Object.entries(Constants.API_RESPONSE_HEADERS)) {
     c.header(header, value);
+  }
+  if (httpStatus === 503) {
+    c.header('Retry-After', String(Constants.API_RETRY_AFTER_SECONDS));
   }
   return jsonAfterNormalize<typeof profileV2Route>(c, payload, httpStatus);
 };
@@ -263,12 +266,15 @@ export const profileStatusesAPIRequest = (async (c): Promise<TwitterProfileStatu
 
   const { httpStatus, payload } = normalizeApiJsonResponse(
     statusesResponse,
-    [200, 400, 404, 500] as const,
+    [200, 400, 404, 500, 503] as const,
     'profileStatusesAPIRequest'
   );
   c.status(httpStatus);
   for (const [header, value] of Object.entries(Constants.API_RESPONSE_HEADERS)) {
     c.header(header, value);
+  }
+  if (httpStatus === 503) {
+    c.header('Retry-After', String(Constants.API_RETRY_AFTER_SECONDS));
   }
   return jsonAfterNormalize<typeof profileStatusesV2Route>(c, payload, httpStatus);
 }) as RouteHandler<typeof profileStatusesV2Route>;
