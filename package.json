@@ -54,7 +54,7 @@
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.1",
-    "vitest": "^4.1.12",
+    "vitest": "^5.1.0",
     "wrangler": "^4.158.0"
   },
   "dependencies": {
