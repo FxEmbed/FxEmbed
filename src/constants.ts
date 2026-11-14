@@ -14,6 +14,10 @@ export const Constants = {
   MOSAIC_BSKY_DOMAIN_LIST: (process.env.MOSAIC_BSKY_DOMAIN_LIST ?? '').split(','),
   POLYGLOT_DOMAIN_LIST: (process.env.POLYGLOT_DOMAIN_LIST ?? '').split(','),
   POLYGLOT_ACCESS_TOKEN: process.env.POLYGLOT_ACCESS_TOKEN ?? '',
+  LLM_TRANSLATION_BASE_URL: process.env.LLM_TRANSLATION_BASE_URL ?? '',
+  LLM_TRANSLATION_API_KEY: process.env.LLM_TRANSLATION_API_KEY ?? '',
+  LLM_TRANSLATION_MODEL: process.env.LLM_TRANSLATION_MODEL ?? '',
+  LLM_TRANSLATION_EXTRA_BODY: process.env.LLM_TRANSLATION_EXTRA_BODY ?? '',
   API_HOST_LIST: (process.env.API_HOST_LIST ?? '').split(','),
   API_HOST_ROOT: `https://${(process.env.API_HOST_LIST ?? '').split(',')[0]}`,
   BLUESKY_API_HOST_LIST: (process.env.BLUESKY_API_HOST_LIST ?? '')
