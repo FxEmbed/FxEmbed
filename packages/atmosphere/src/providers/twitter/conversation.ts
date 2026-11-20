@@ -1341,7 +1341,8 @@ export const constructTwitterThread = async (
 const buildConversationReplies = async (
   bucket: GraphQLConversationBucket,
   host: TwitterBuildHost,
-  language?: string
+  language?: string,
+  requestCursor: string | null = null
 ): Promise<Pick<SocialConversation, 'replies' | 'cursor'>> => {
   const replies: APITwitterStatus[] = [];
   await Promise.all(
@@ -1373,7 +1374,20 @@ const buildConversationReplies = async (
   const bottomCursor = bucket.cursors.find(
     c => c.cursorType === 'Bottom' || c.cursorType === 'ShowMore'
   );
-  return { replies, cursor: bottomCursor ? { bottom: bottomCursor.value } : null };
+
+  /*
+   * X keeps handing out a bottom cursor after the last page of replies. Once a cursor page carries
+   * no replies, or the cursor is the one we were just given, there is nothing left to page through,
+   * so report the end instead of a cursor that makes clients request the same empty page forever.
+   */
+  const reachedEnd =
+    requestCursor !== null &&
+    (bucket.replyStatuses.length === 0 || bottomCursor?.value === requestCursor);
+
+  return {
+    replies,
+    cursor: bottomCursor && !reachedEnd ? { bottom: bottomCursor.value } : null
+  };
 };
 
 /* Fetch and construct a conversation view: full ancestor chain + replies from others */
@@ -1434,7 +1448,7 @@ export const constructTwitterConversation = async (
       status: null,
       thread: [],
       author: null,
-      ...(await buildConversationReplies(bucket, host, language)),
+      ...(await buildConversationReplies(bucket, host, language, cursor)),
       code: 200
     };
   }
@@ -1521,7 +1535,7 @@ export const constructTwitterConversation = async (
     }
   }
 
-  const page = await buildConversationReplies(bucket, host, language);
+  const page = await buildConversationReplies(bucket, host, language, cursor);
   socialConversation.replies = page.replies;
   socialConversation.cursor = page.cursor;
 
