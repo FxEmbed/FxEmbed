@@ -199,10 +199,14 @@
                     },
                     "altText": {
                       "type": "string"
+                    },
+                    "link": {
+                      "$ref": "#/components/schemas/APIMediaLink"
                     }
                   },
                   "required": ["type", "url", "width", "height"]
-                }
+                },
+                "description": "Photos in source order for supported X website cards, with per-item destinations in link."
               },
               "videos": {
                 "type": "array",
@@ -283,10 +287,14 @@
                           "nullable": true
                         }
                       ]
+                    },
+                    "link": {
+                      "$ref": "#/components/schemas/APIMediaLink"
                     }
                   },
                   "required": ["type", "url", "width", "height", "duration", "formats"]
-                }
+                },
+                "description": "Videos in source order for supported X website cards, with per-item destinations in link."
               },
               "all": {
                 "type": "array",
@@ -320,6 +328,9 @@
                         },
                         "altText": {
                           "type": "string"
+                        },
+                        "link": {
+                          "$ref": "#/components/schemas/APIMediaLink"
                         }
                       },
                       "required": ["type", "url", "width", "height"]
@@ -401,6 +412,9 @@
                               "nullable": true
                             }
                           ]
+                        },
+                        "link": {
+                          "$ref": "#/components/schemas/APIMediaLink"
                         }
                       },
                       "required": ["type", "url", "width", "height", "duration", "formats"]
@@ -438,6 +452,9 @@
                             }
                           },
                           "required": ["webp", "jpeg"]
+                        },
+                        "link": {
+                          "$ref": "#/components/schemas/APIMediaLink"
                         }
                       },
                       "required": ["type", "formats"]
@@ -462,12 +479,16 @@
                         },
                         "height": {
                           "type": "number"
+                        },
+                        "link": {
+                          "$ref": "#/components/schemas/APIMediaLink"
                         }
                       },
                       "required": ["type", "url", "width", "height"]
                     }
                   ]
-                }
+                },
+                "description": "Media in source order for supported X website carousel and collection cards, with per-item destinations in link."
               },
               "mosaic": {
                 "type": "object",
@@ -502,6 +523,9 @@
                       }
                     },
                     "required": ["webp", "jpeg"]
+                  },
+                  "link": {
+                    "$ref": "#/components/schemas/APIMediaLink"
                   }
                 },
                 "required": ["type", "formats"]
@@ -1627,7 +1651,8 @@
                 }
               }
             },
-            "required": ["url"]
+            "required": ["url"],
+            "description": "Link preview or single-item website card. Multi-item website cards expose destinations on individual media items through link."
           }
         },
         "required": [
@@ -2537,6 +2562,23 @@
           }
         },
         "required": ["code", "timeline_type", "trends", "cursor"]
+      },
+      "APIMediaLink": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string"
+          },
+          "domain": {
+            "type": "string"
+          }
+        },
+        "required": ["url"],
+        "description": "Destination attached to an individual X website-card photo or video, including prefilled X post URLs. Available in v1 and v2. The media item's url remains the image or video URL."
       }
     },
     "parameters": {}

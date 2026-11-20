@@ -8,6 +8,7 @@ import { convertToApiUser, fetchTwitterGraphQLUserByRestId } from './profile.js'
 import { DataProvider } from '../../types/data-provider.js';
 import type {
   APIFacet,
+  APIMediaLink,
   APIPhoto,
   APIRepostedBy,
   APIStatusTombstone,
@@ -775,7 +776,23 @@ export const buildAPITwitterStatus = async (
     status.legacy.extended_entities?.media || status.legacy.entities?.media || []
   );
 
-  /* Populate status media */
+  const shouldTranscodeGifs = host.shouldTranscodeGif?.() ?? false;
+  const appendMedia = (media: TweetMedia, link?: APIMediaLink) => {
+    const mediaObject = processMedia(host, media);
+    if (mediaObject) {
+      if (link) mediaObject.link = link;
+      apiStatus.media.all = apiStatus.media?.all ?? [];
+      apiStatus.media.all.push(mediaObject);
+      if (mediaObject.type === 'photo' || (mediaObject.type === 'gif' && shouldTranscodeGifs)) {
+        apiStatus.embed_card = 'summary_large_image';
+      } else if (
+        mediaObject.type === 'video' ||
+        (mediaObject.type === 'gif' && !shouldTranscodeGifs)
+      ) {
+        apiStatus.embed_card = 'player';
+      }
+    }
+  };
   mediaList.forEach(media => {
     apiStatus.raw_text.facets.push({
       type: 'media',
@@ -785,52 +802,9 @@ export const buildAPITwitterStatus = async (
       original: media.url,
       replacement: media.expanded_url
     });
-    const mediaObject = processMedia(host, media);
-    if (mediaObject) {
-      apiStatus.media.all = apiStatus.media?.all ?? [];
-      const shouldTranscodeGifs = host.shouldTranscodeGif?.() ?? false;
-      apiStatus.media?.all?.push(mediaObject);
-      if (mediaObject.type === 'photo' || (mediaObject.type === 'gif' && shouldTranscodeGifs)) {
-        apiStatus.embed_card = 'summary_large_image';
-        apiStatus.media.photos = apiStatus.media?.photos ?? [];
-        apiStatus.media.photos?.push(mediaObject as APIPhoto);
-      } else if (
-        mediaObject.type === 'video' ||
-        (mediaObject.type === 'gif' && !shouldTranscodeGifs)
-      ) {
-        apiStatus.embed_card = 'player';
-        apiStatus.media.videos = apiStatus.media?.videos ?? [];
-        apiStatus.media.videos?.push(mediaObject as APIVideo);
-      } else {
-        console.log('Unknown media type', mediaObject.type);
-      }
-    }
+    appendMedia(media);
   });
 
-  /* Grab color palette data */
-  /*
-  if (mediaList[0]?.ext_media_color?.palette) {
-    apiStatus.color = colorFromPalette(mediaList[0].ext_media_color.palette);
-  }
-  */
-
-  /* Handle photos and mosaic if available */
-  if (
-    (apiStatus?.media.photos?.length || 0) > 1 &&
-    !threadAuthor &&
-    getTwitterProviderEnv().mosaicDomainList.length > 0
-  ) {
-    const twEnv = getTwitterProviderEnv();
-    const mosaic = await handleMosaic(apiStatus.media?.photos || [], id, DataProvider.Twitter, {
-      twitterLikeDomains: twEnv.mosaicDomainList,
-      blueskyDomains: twEnv.mosaicBskyDomainList
-    });
-    if (typeof apiStatus.media !== 'undefined' && mosaic !== null) {
-      apiStatus.media.mosaic = mosaic;
-    }
-  }
-
-  // Add source but remove the link HTML tag
   if (status.source) {
     apiStatus.source = (status.source || '').replace(
       /<a href="(.+?)" rel="nofollow">(.+?)<\/a>/,
@@ -838,15 +812,12 @@ export const buildAPITwitterStatus = async (
     );
   }
 
-  /* Populate a Twitter card */
-
   if (status.card ?? status.tweet_card) {
     const card = await renderCard(host, status.card ?? status.tweet_card);
     if (card.external_media) {
       apiStatus.embed_card = 'player';
       apiStatus.media.external = card.external_media;
       if (apiStatus.media.external?.url.match('https://www.youtube.com/embed/')) {
-        /* Add YouTube thumbnail URL */
         apiStatus.media.external.thumbnail_url = `https://img.youtube.com/vi/${apiStatus.media.external.url.replace(
           'https://www.youtube.com/embed/',
           ''
@@ -888,30 +859,17 @@ export const buildAPITwitterStatus = async (
     if (card.poll) {
       apiStatus.poll = card.poll;
     }
-    /* TODO: Right now, we push them after native photos and videos but should we prepend them instead? */
     if (card.media) {
-      if (card.media.videos) {
-        card.media.videos.forEach(video => {
-          const mediaObject = processMedia(host, video) as APIVideo;
-          if (mediaObject) {
-            apiStatus.media.all = apiStatus.media?.all ?? [];
-            apiStatus.media?.all?.push(mediaObject);
-            apiStatus.media.videos = apiStatus.media?.videos ?? [];
-            apiStatus.media.videos?.push(mediaObject);
-          }
-        });
+      const nativeMediaById = new Map(mediaList.map(media => [media.id_str, media]));
+      const cardMediaIds = new Set(card.media.map(item => item.media.id_str));
+      if (apiStatus.media.all) {
+        apiStatus.media.all = apiStatus.media.all.filter(
+          item => !item.id || !cardMediaIds.has(item.id)
+        );
       }
-      if (card.media.photos) {
-        card.media.photos.forEach(photo => {
-          const mediaObject = processMedia(host, photo) as APIPhoto;
-          if (mediaObject) {
-            apiStatus.media.all = apiStatus.media?.all ?? [];
-            apiStatus.media?.all?.push(mediaObject);
-            apiStatus.media.photos = apiStatus.media?.photos ?? [];
-            apiStatus.media.photos?.push(mediaObject);
-          }
-        });
-      }
+      card.media.forEach(item =>
+        appendMedia({ ...item.media, ...nativeMediaById.get(item.media.id_str) }, item.link)
+      );
     }
     if (card.website_card) {
       const wc = card.website_card;
@@ -949,12 +907,28 @@ export const buildAPITwitterStatus = async (
     }
   }
 
-  if (
-    apiStatus.media?.videos &&
-    apiStatus.media?.videos.length > 0 &&
-    apiStatus.embed_card !== 'player'
-  ) {
-    apiStatus.embed_card = 'player';
+  if (apiStatus.media.all) {
+    const photos = apiStatus.media.all.filter(
+      (item): item is APIPhoto =>
+        item.type === 'photo' || (item.type === 'gif' && shouldTranscodeGifs)
+    );
+    const videos = apiStatus.media.all.filter(
+      (item): item is APIVideo =>
+        item.type === 'video' || (item.type === 'gif' && !shouldTranscodeGifs)
+    );
+    if (photos.length > 0) apiStatus.media.photos = photos;
+    if (videos.length > 0) {
+      apiStatus.media.videos = videos;
+      apiStatus.embed_card = 'player';
+    }
+    const twEnv = getTwitterProviderEnv();
+    if (photos.length > 1 && !threadAuthor && twEnv.mosaicDomainList.length > 0) {
+      const mosaic = await handleMosaic(photos, id, DataProvider.Twitter, {
+        twitterLikeDomains: twEnv.mosaicDomainList,
+        blueskyDomains: twEnv.mosaicBskyDomainList
+      });
+      if (mosaic) apiStatus.media.mosaic = mosaic;
+    }
   }
 
   if (language) {
@@ -983,8 +957,7 @@ export const buildAPITwitterStatus = async (
   }
 
   /* If a language is specified in API or by user, let's try translating it! */
-  const normalizedTarget =
-    typeof language === 'string' ? normalizeLanguage(language) : '';
+  const normalizedTarget = typeof language === 'string' ? normalizeLanguage(language) : '';
   if (
     typeof language === 'string' &&
     (normalizedTarget.length === 2 || normalizedTarget.length === 5) && // ISO 639-1 or regional (e.g. zh-tw)

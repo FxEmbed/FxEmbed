@@ -1,0 +1,223 @@
+{
+  "layout": {
+    "type": "collection",
+    "data": {
+      "slides": [
+        ["details_1", "media_1"],
+        ["details_2", "media_2"],
+        ["details_3", "media_3"],
+        ["details_4", "media_4"],
+        ["details_5", "media_5"]
+      ]
+    }
+  },
+  "type": "image_collection_website",
+  "component_objects": {
+    "media_4": {
+      "type": "media",
+      "data": {
+        "id": "3_2015618822439596032",
+        "destination": "browser_4"
+      }
+    },
+    "details_3": {
+      "type": "details",
+      "data": {
+        "title": {
+          "content": "下のボタンをタップ！",
+          "is_rtl": false
+        },
+        "subtitle": {
+          "content": "x.com",
+          "is_rtl": false
+        },
+        "destination": "browser_3"
+      }
+    },
+    "media_3": {
+      "type": "media",
+      "data": {
+        "id": "3_2015618820950593536",
+        "destination": "browser_3"
+      }
+    },
+    "details_5": {
+      "type": "details",
+      "data": {
+        "title": {
+          "content": "下のボタンをタップ！",
+          "is_rtl": false
+        },
+        "subtitle": {
+          "content": "x.com",
+          "is_rtl": false
+        },
+        "destination": "browser_5"
+      }
+    },
+    "media_5": {
+      "type": "media",
+      "data": {
+        "id": "3_2015618812897546240",
+        "destination": "browser_5"
+      }
+    },
+    "details_2": {
+      "type": "details",
+      "data": {
+        "title": {
+          "content": "下のボタンをタップ！",
+          "is_rtl": false
+        },
+        "subtitle": {
+          "content": "x.com",
+          "is_rtl": false
+        },
+        "destination": "browser_2"
+      }
+    },
+    "media_2": {
+      "type": "media",
+      "data": {
+        "id": "3_2015618813207916544",
+        "destination": "browser_2"
+      }
+    },
+    "details_1": {
+      "type": "details",
+      "data": {
+        "title": {
+          "content": "下のボタンをタップ！",
+          "is_rtl": false
+        },
+        "subtitle": {
+          "content": "x.com",
+          "is_rtl": false
+        },
+        "destination": "browser_1"
+      }
+    },
+    "details_4": {
+      "type": "details",
+      "data": {
+        "title": {
+          "content": "下のボタンをタップ！",
+          "is_rtl": false
+        },
+        "subtitle": {
+          "content": "x.com",
+          "is_rtl": false
+        },
+        "destination": "browser_4"
+      }
+    },
+    "media_1": {
+      "type": "media",
+      "data": {
+        "id": "3_2015618820724142080",
+        "destination": "browser_1"
+      }
+    }
+  },
+  "destination_objects": {
+    "browser_3": {
+      "type": "browser",
+      "data": {
+        "url_data": {
+          "url": "https://x.com/intent/tweet?text=%E5%AF%92%E4%B8%AD%E3%81%8A%E8%A6%8B%E8%88%9E%E3%81%84%F0%9F%8D%8B%20%23%E3%82%B7%E3%83%A3%E3%83%8B%E3%83%9E%E3%82%B9%0A%0A%E2%96%BC%E4%BB%96%E3%81%AE%E2%9C%89%EF%B8%8F%E3%82%82%E8%A6%8B%E3%81%A6%E3%81%BF%E3%82%8B%0Ahttps%3A%2F%2Fx.com%2Fimassc_official%2Fstatus%2F2015726413303689484%0Ahttps%3A%2F%2Fx.com%2Fimassc_official%2Fstatus%2F2015619215257202826%2Fphoto%2F1",
+          "vanity": "x.com"
+        }
+      }
+    },
+    "browser_5": {
+      "type": "browser",
+      "data": {
+        "url_data": {
+          "url": "https://x.com/intent/tweet?text=%E5%AF%92%E4%B8%AD%E3%81%8A%E8%A6%8B%E8%88%9E%E3%81%84%F0%9F%8D%8D%20%23%E3%82%B7%E3%83%A3%E3%83%8B%E3%83%9E%E3%82%B9%0A%0A%E2%96%BC%E4%BB%96%E3%81%AE%E2%9C%89%EF%B8%8F%E3%82%82%E8%A6%8B%E3%81%A6%E3%81%BF%E3%82%8B%0Ahttps%3A%2F%2Fx.com%2Fimassc_official%2Fstatus%2F2015726413303689484%0Ahttps%3A%2F%2Fx.com%2Fimassc_official%2Fstatus%2F2015619148320289091%2Fphoto%2F1",
+          "vanity": "x.com"
+        }
+      }
+    },
+    "browser_2": {
+      "type": "browser",
+      "data": {
+        "url_data": {
+          "url": "https://x.com/intent/tweet?text=%E5%AF%92%E4%B8%AD%E3%81%8A%E8%A6%8B%E8%88%9E%E3%81%84%F0%9F%8D%8A%20%23%E3%82%B7%E3%83%A3%E3%83%8B%E3%83%9E%E3%82%B9%0A%0A%E2%96%BC%E4%BB%96%E3%81%AE%E2%9C%89%EF%B8%8F%E3%82%82%E8%A6%8B%E3%81%A6%E3%81%BF%E3%82%8B%0Ahttps%3A%2F%2Fx.com%2Fimassc_official%2Fstatus%2F2015726413303689484%0Ahttps%3A%2F%2Fx.com%2Fimassc_official%2Fstatus%2F2015619295791964279%2Fphoto%2F1",
+          "vanity": "x.com"
+        }
+      }
+    },
+    "browser_1": {
+      "type": "browser",
+      "data": {
+        "url_data": {
+          "url": "https://x.com/imassc_official",
+          "vanity": "x.com"
+        }
+      }
+    },
+    "browser_4": {
+      "type": "browser",
+      "data": {
+        "url_data": {
+          "url": "https://x.com/intent/tweet?text=%E5%AF%92%E4%B8%AD%E3%81%8A%E8%A6%8B%E8%88%9E%E3%81%84%F0%9F%A5%9D%20%23%E3%82%B7%E3%83%A3%E3%83%8B%E3%83%9E%E3%82%B9%0A%0A%E2%96%BC%E4%BB%96%E3%81%AE%E2%9C%89%EF%B8%8F%E3%82%82%E8%A6%8B%E3%81%A6%E3%81%BF%E3%82%8B%0Ahttps%3A%2F%2Fx.com%2Fimassc_official%2Fstatus%2F2015726413303689484%0Ahttps%3A%2F%2Fx.com%2Fimassc_official%2Fstatus%2F2015619249738576175%2Fphoto%2F1",
+          "vanity": "x.com"
+        }
+      }
+    }
+  },
+  "components": [],
+  "media_entities": {
+    "3_2015618813207916544": {
+      "id_str": "2015618813207916544",
+      "media_key": "3_2015618813207916544",
+      "type": "photo",
+      "media_url_https": "https://pbs.twimg.com/media/G_jqoaPaMAAIZoo.png",
+      "original_info": {
+        "width": 800,
+        "height": 800
+      }
+    },
+    "3_2015618820724142080": {
+      "id_str": "2015618820724142080",
+      "media_key": "3_2015618820724142080",
+      "type": "photo",
+      "media_url_https": "https://pbs.twimg.com/media/G_jqo2PasAAe--D.png",
+      "original_info": {
+        "width": 800,
+        "height": 800
+      }
+    },
+    "3_2015618812897546240": {
+      "id_str": "2015618812897546240",
+      "media_key": "3_2015618812897546240",
+      "type": "photo",
+      "media_url_https": "https://pbs.twimg.com/media/G_jqoZFaUAALDEZ.png",
+      "original_info": {
+        "width": 800,
+        "height": 800
+      }
+    },
+    "3_2015618822439596032": {
+      "id_str": "2015618822439596032",
+      "media_key": "3_2015618822439596032",
+      "type": "photo",
+      "media_url_https": "https://pbs.twimg.com/media/G_jqo8oacAAvWip.png",
+      "original_info": {
+        "width": 800,
+        "height": 800
+      }
+    },
+    "3_2015618820950593536": {
+      "id_str": "2015618820950593536",
+      "media_key": "3_2015618820950593536",
+      "type": "photo",
+      "media_url_https": "https://pbs.twimg.com/media/G_jqo3FaEAAII-J.png",
+      "original_info": {
+        "width": 800,
+        "height": 800
+      }
+    }
+  },
+  "experiment_signals": {}
+}
