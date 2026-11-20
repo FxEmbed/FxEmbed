@@ -55,6 +55,7 @@ export const handleProfile = async (
         api.reason === 'suspended' ? Strings.ERROR_USER_SUSPENDED : Strings.ERROR_USER_NOT_FOUND
       );
     case 500:
+    case 503:
       return returnError(c, Strings.ERROR_API_FAIL);
   }
 

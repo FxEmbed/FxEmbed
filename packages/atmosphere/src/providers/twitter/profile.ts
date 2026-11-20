@@ -16,7 +16,14 @@ import {
   UserProfileAboutQuery
 } from './graphql/queries.js';
 import { validateAboutAccountQuery, validateUserProfileAboutQuery } from './graphql/validators.js';
-import { graphQLOrchestrator, type GraphQLOrchestratorRequest } from './graphql/orchestrator.js';
+import {
+  graphQLOrchestrator,
+  type GraphQLAttempt,
+  type GraphQLOrchestratorRequest
+} from './graphql/orchestrator.js';
+
+/** Envelope message used with code 503 when X (or the account pool) could not answer. */
+export const UPSTREAM_UNAVAILABLE_MESSAGE = 'Upstream unavailable, try again shortly';
 
 function asUnknownRecord(value: unknown): Record<string, unknown> | undefined {
   if (value !== null && typeof value === 'object') {
@@ -62,6 +69,39 @@ export function isSuspendedUserUnavailable(result: unknown): boolean {
   const reason =
     `${r['unavailable_reason'] ?? ''} ${r['reason'] ?? ''} ${r['message'] ?? ''}`.toLowerCase();
   return reason.includes('suspend');
+}
+
+/**
+ * X answers a lookup for a user that does not exist with a `data` object that holds no user and
+ * no `errors`. A rate limit, overload or proxy failure has no `data` or carries `errors`.
+ */
+function isMissingUserResponse(response: unknown): boolean {
+  const body = asUnknownRecord(response);
+  if (!asUnknownRecord(body?.['data'])) {
+    return false;
+  }
+  const errors = body?.['errors'];
+  return Array.isArray(errors) ? errors.length === 0 : !errors;
+}
+
+/**
+ * True when a failed user lookup does not prove the user is missing: some method got no answer
+ * at all, or got one that is not X's "no such user" reply.
+ */
+function userLookupUpstreamFailed(
+  bucket: { success: boolean; attempts?: GraphQLAttempt[] } | undefined
+): boolean {
+  if (bucket?.success) {
+    return false;
+  }
+  const attempts = bucket?.attempts ?? [];
+  return (
+    attempts.length === 0 ||
+    attempts.some(
+      attempt =>
+        attempt.rejectedResponse === undefined || !isMissingUserResponse(attempt.rejectedResponse)
+    )
+  );
 }
 
 function userByScreenNameResultValid(result: unknown): boolean {
@@ -359,6 +399,7 @@ const fetchUser = async (
 ): Promise<{
   userResponse: GraphQLUserResponse | UserResultByScreenNameResponse | null;
   aboutAccountResponse: AboutAccountQueryResponse | null;
+  upstreamFailed: boolean;
 }> => {
   const userRequest: GraphQLOrchestratorRequest = {
     key: 'user',
@@ -413,7 +454,8 @@ const fetchUser = async (
 
   return {
     userResponse: userData,
-    aboutAccountResponse: aboutAccountData
+    aboutAccountResponse: aboutAccountData,
+    upstreamFailed: userLookupUpstreamFailed(results.user)
   };
 };
 
@@ -424,6 +466,7 @@ const fetchUserById = async (
 ): Promise<{
   userResponse: GraphQLUserResponse | UserResultByScreenNameResponse | null;
   aboutProfileResponse: UserProfileAboutResponse | null;
+  upstreamFailed: boolean;
 }> => {
   const userRequest: GraphQLOrchestratorRequest = {
     key: 'user',
@@ -476,7 +519,8 @@ const fetchUserById = async (
 
   return {
     userResponse: userData,
-    aboutProfileResponse: aboutProfileData
+    aboutProfileResponse: aboutProfileData,
+    upstreamFailed: userLookupUpstreamFailed(results.user)
   };
 };
 
@@ -505,22 +549,31 @@ export async function fetchTwitterGraphQLUserByRestId(
   return user;
 }
 
+/**
+ * Resolve rest_id for timeline queries (e.g. UserTweets, ProfileTimeline).
+ * `upstreamFailed` separates "X could not answer" from a user that does not exist.
+ */
+export const lookupTwitterUserRestId = async (
+  host: TwitterBuildHost,
+  screenName: string
+): Promise<{ userId: string | null; upstreamFailed: boolean }> => {
+  const { userResponse, upstreamFailed } = await fetchUser(host, screenName, false);
+  if (!userResponse) {
+    return { userId: null, upstreamFailed };
+  }
+  const node = extractUserResultNode(userResponse);
+  if (!node || isUserUnavailableResult(node.result)) {
+    return { userId: null, upstreamFailed: false };
+  }
+  const user = node.result as GraphQLUser;
+  return { userId: user.rest_id ?? null, upstreamFailed: false };
+};
+
 /** Resolve rest_id for timeline queries (e.g. UserTweets, ProfileTimeline) */
 export const getTwitterUserRestIdByScreenName = async (
   host: TwitterBuildHost,
   screenName: string
-): Promise<string | null> => {
-  const { userResponse } = await fetchUser(host, screenName, false);
-  if (!userResponse) {
-    return null;
-  }
-  const node = extractUserResultNode(userResponse);
-  if (!node || isUserUnavailableResult(node.result)) {
-    return null;
-  }
-  const user = node.result as GraphQLUser;
-  return user.rest_id ?? null;
-};
+): Promise<string | null> => (await lookupTwitterUserRestId(host, screenName)).userId;
 
 /* API for Twitter profiles (Users)
    Available for free using api.fxtwitter.com. */
@@ -530,13 +583,16 @@ export const userAPI = async (
   legacyApiUserCounts = false,
   includeAboutAccount = false
 ): Promise<UserAPIResponse> => {
-  const { userResponse, aboutAccountResponse } = await fetchUser(
+  const { userResponse, aboutAccountResponse, upstreamFailed } = await fetchUser(
     host,
     username,
     includeAboutAccount
   );
 
   if (!userResponse || !Object.keys(userResponse).length) {
+    if (upstreamFailed) {
+      return { code: 503, message: UPSTREAM_UNAVAILABLE_MESSAGE };
+    }
     return {
       code: 404,
       message: 'User not found'
@@ -641,13 +697,16 @@ export const userAPIById = async (
   legacyApiUserCounts = false,
   includeAboutAccount = false
 ): Promise<UserAPIResponse> => {
-  const { userResponse, aboutProfileResponse } = await fetchUserById(
+  const { userResponse, aboutProfileResponse, upstreamFailed } = await fetchUserById(
     host,
     userId,
     includeAboutAccount
   );
 
   if (!userResponse || !Object.keys(userResponse).length) {
+    if (upstreamFailed) {
+      return { code: 503, message: UPSTREAM_UNAVAILABLE_MESSAGE };
+    }
     return {
       code: 404,
       message: 'User not found'
