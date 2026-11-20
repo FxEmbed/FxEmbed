@@ -1,9 +1,9 @@
 ---
 title: API Overview
-description: Introduction to the FxEmbed JSON APIs for X/Twitter, Bluesky, and Mastodon.
+description: Introduction to the FxEmbed JSON APIs for X/Twitter, Bluesky, Mastodon, Threads, Instagram, and TikTok.
 ---
 
-FxEmbed provides a public API for X/Twitter and Bluesky. These are the same APIs that power the embed service itself and more.
+FxEmbed provides public JSON APIs for X/Twitter, Bluesky, and several other social platforms. These APIs power the embed service and can also be used by other applications.
 
 We've built abstractions between different platforms to make it easier to support multiple at once and adapt your own work between them.
 
@@ -26,6 +26,14 @@ Bluesky / AT Protocol data, with response shapes aligned to the FxTwitter API wh
 - **Base URL**: `https://api.fxbsky.app`
 - **Spec**: [FxBluesky API Reference](/api/bluesky/operations/)
 - Posts, threads, conversations, profiles, search
+
+### FxEmbed Atmosphere API
+
+The Atmosphere host provides routes for Mastodon, Threads, Instagram, and TikTok. It also forwards Twitter and Bluesky requests under `/2/twitter/` and `/2/bluesky/`; use the corresponding API references above for their full schemas.
+
+- **Base URL**: `https://api.fxembed.com`
+- **Spec**: [OpenAPI specification](https://api.fxembed.com/2/openapi.json)
+- Requests must include a descriptive `User-Agent` header.
 
 ## Versioning
 
@@ -66,7 +74,7 @@ List endpoints (search results, timelines, followers, etc.) return a `cursor` ob
 
 ## Rate limiting
 
-API v2 has a rate limit of 1000 requests per minute (16.7 requests per second) per IP address.
+The FxTwitter and FxBluesky APIs have a rate limit of 1000 requests per minute (16.7 requests per second) per IP address.
 We believe this is generous enough for most legitimate applications.
 If you need more, it might be worth [self-hosting](/deployment/) your own instance.
 
@@ -76,3 +84,4 @@ Machine-readable OpenAPI 3.0 specs are available at runtime:
 
 - FxTwitter: `https://api.fxtwitter.com/2/openapi.json`
 - FxBluesky: `https://api.fxbsky.app/2/openapi.json`
+- FxEmbed Atmosphere: `https://api.fxembed.com/2/openapi.json`
