@@ -86,6 +86,29 @@ describe('ClientTransaction indices extraction', () => {
     expect(atob(id).length).toBe(70);
   });
 
+  test('follows the middleware chunk after the header rename to x-client-transaction-id', async () => {
+    // x.com renamed the middleware header to `x-client-transaction-id` in November 2026; the
+    // `x-botox-` name is gone from every chunk, so matching only the old name finds nothing.
+    // New entry and chunk names keep the cached copies from the other scenarios out of play.
+    const entryName = 'entry-client-logged-out-RENAMED.js';
+    const renamedMiddlewareChunk = middlewareChunk
+      .split('x-botox-client-transaction-id')
+      .join('x-client-transaction-id');
+    expect(renamedMiddlewareChunk).not.toContain('x-botox-client-transaction-id');
+    serve({
+      [HOME_URL]: withEntry(entryName),
+      [`${XWEB_BASE}${entryName}`]: currentEntryJs
+        .split('./assets/DY5yQU7B.js')
+        .join('./assets/RenamedA.js'),
+      [ASSET('RenamedA.js')]: renamedMiddlewareChunk,
+      [ASSET('DFhr1Vbc.js')]: registryChunk,
+      [ASSET('BmFofgsP.js')]: generatorChunk
+    });
+
+    await ClientTransaction.create();
+    expect(consoleLogs).toContain('Indices: 0,13,31,41');
+  });
+
   test('still reads sign.o-*.js referenced directly from the entry (older layout)', async () => {
     const entryName = 'entry-client-legacy-direct-AAAAAA.js';
     serve({

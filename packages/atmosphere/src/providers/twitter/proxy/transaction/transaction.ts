@@ -189,7 +189,8 @@ export class ClientTransaction {
    * lazily imported chunk of the x-web bundle. Chunk file names are now opaque
    * hashes (e.g. assets/BmFofgsP.js, no "sign.o-" prefix any more), so the chunk
    * is located structurally: the entry statically imports a module that
-   * registers the `x-botox-client-transaction-id` middleware, and that module does
+   * registers the `x-client-transaction-id` middleware (formerly
+   * `x-botox-client-transaction-id`; both names are matched), and that module does
    * `import(`./<chunk>.js`).then(e => e.default())` to load the generator.
    * Older layouts (sign.o-*.js named directly in the entry / sentry-filter chunk)
    * are still tried first; on layouts like the current one that branch is dormant
@@ -230,7 +231,7 @@ export class ClientTransaction {
     ];
     const texts = await Promise.all(candidates.map(c => fetchText(c).catch(() => '')));
     for (const text of texts) {
-      if (!text.includes('x-botox-client-transaction-id')) continue;
+      if (!text.includes('client-transaction-id')) continue;
       const chunk = text.match(GENERATOR_IMPORT_REGEX)?.[1];
       if (!chunk) continue;
       const parsed = this.parseKeyByteIndices(await fetchText(chunk));
