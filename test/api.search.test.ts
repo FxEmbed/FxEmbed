@@ -1,9 +1,21 @@
-import { test, expect } from 'vitest';
+import { vi, test, expect } from 'vitest';
 import type { APITwitterStatus } from '../src/realms/api/schemas';
 import { TWITTER_SEARCH_RAW_QUERY_MAX_LENGTH } from '@fxembed/atmosphere/providers/twitter/searchErrors';
 import { app } from '../src/worker';
 import { botHeaders, twitterBaseUrl } from './helpers/data';
 import harness from './helpers/harness';
+
+// X search is switched off by default (see Experiment.TWITTER_SEARCH); exercise the live code path here.
+vi.mock('../src/experiments', async importOriginal => {
+  const actual = await importOriginal<typeof import('../src/experiments')>();
+  return {
+    ...actual,
+    experimentCheck: (experiment: import('../src/experiments').Experiment, condition = true) =>
+      experiment === actual.Experiment.TWITTER_SEARCH
+        ? condition
+        : actual.experimentCheck(experiment, condition)
+  };
+});
 
 test('API search rejects empty q with 400 and ApiQueryError shape', async () => {
   const result = await app.request(
