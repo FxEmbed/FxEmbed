@@ -264,5 +264,6 @@ Allow: /watch?v=dQw4w9WgXcQ
 # 0100011101101111011011110110010000100000011000100110111101110100`,
   ROBOTS_TXT_API: `# Crawlers should not crawl API endpoints
 User-agent: *
-Disallow: /`
+Disallow: /`,
+  X_SEARCH_UNAVAILABLE: `X/Twitter search is unavailable due to current API limitations.`
 };

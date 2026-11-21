@@ -10,7 +10,8 @@ export enum Experiment {
   USE_HORIZON_WEB = 'USE_HORIZON_WEB',
   ENABLE_CUSTOM_BRANDING = 'ENABLE_CUSTOM_BRANDING',
   TELEGRAM_PBS_PROXY = 'TELEGRAM_PBS_PROXY',
-  COMPONENT_EMBED = 'COMPONENT_EMBED'
+  COMPONENT_EMBED = 'COMPONENT_EMBED',
+  TWITTER_SEARCH = 'TWITTER_SEARCH'
 }
 
 type ExperimentConfig = {
@@ -78,6 +79,12 @@ const Experiments: { [key in Experiment]: ExperimentConfig } = {
   [Experiment.COMPONENT_EMBED]: {
     name: 'Discord component embed',
     description: 'Use Discord component embeds',
+    percentage: 0
+  },
+  [Experiment.TWITTER_SEARCH]: {
+    name: 'X/Twitter search',
+    description:
+      'Serve API routes backed by X search (/2/search, /2/search/users, /2/typeahead, /2/status/{id}/quotes). At 0 they answer 503 and the OpenAPI spec marks them unavailable.',
     percentage: 0
   }
 };
