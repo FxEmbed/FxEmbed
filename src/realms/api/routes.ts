@@ -1,5 +1,6 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import { TWITTER_NUMERIC_STATUS_ID_PATTERN } from '../../helpers/utils';
+import { Experiment, experimentCheck } from '../../experiments';
 import {
   PUBLIC_EXPLORE_TIMELINE_KINDS,
   type PublicExploreTimelineKind
@@ -16,11 +17,35 @@ import {
   APITypeaheadResponseSchema,
   APITrendsResponseSchema,
   ApiQueryErrorSchema,
+  ApiFeatureUnavailableSchema,
   SocialConversationSchema,
   SocialThreadSchema,
   UserAPIResponseSchema,
   ProfileAboutAPIResponseSchema
 } from './schemas';
+import { Strings } from '../../strings';
+
+/**
+ * Search, people search, typeahead and quotes all depend on X search. While the `TWITTER_SEARCH`
+ * experiment is off they answer 503, and the OpenAPI spec (which the docs are generated from) says so.
+ */
+const twitterSearchEnabled = experimentCheck(Experiment.TWITTER_SEARCH);
+
+const twitterSearchSummary = (summary: string): string =>
+  twitterSearchEnabled ? summary : `${summary} (unavailable)`;
+
+const twitterSearchDescription = (description?: string): string | undefined =>
+  twitterSearchEnabled
+    ? description
+    : `**Currently unavailable:** ${Strings.X_SEARCH_UNAVAILABLE} Requests return \`503\`.` +
+      (description ? `\n\n${description}` : '');
+
+const twitterSearchUnavailableResponse = {
+  503: {
+    description: 'X search is disabled on this deployment',
+    content: { 'application/json': { schema: ApiFeatureUnavailableSchema } }
+  }
+} as const;
 
 /** X search treats underscores as non-content for empty-query behavior; require another character after stripping `_` and whitespace. */
 const twitterSearchQueryHasEffectiveContent = (raw: string): boolean =>
@@ -151,9 +176,10 @@ export const statusRepostsV2Route = createRoute({
 export const statusQuotesV2Route = createRoute({
   method: 'get',
   path: '/2/status/{id}/quotes',
-  summary: 'List quotes of post',
-  description:
-    'Returns posts whose text quotes the given post (X search operator `quoted_tweet_id`). Uses the Latest search tab. Use `cursor.bottom` from the prior response to fetch the next page.',
+  summary: twitterSearchSummary('List quotes of post'),
+  description: twitterSearchDescription(
+    'Returns posts whose text quotes the given post (X search operator `quoted_tweet_id`). Uses the Latest search tab. Use `cursor.bottom` from the prior response to fetch the next page.'
+  ),
   request: {
     params: z.object({
       id: twitterStatusIdParam
@@ -186,7 +212,8 @@ export const statusQuotesV2Route = createRoute({
     500: {
       description: 'Upstream or processing error',
       content: { 'application/json': { schema: APISearchResultsSchema } }
-    }
+    },
+    ...twitterSearchUnavailableResponse
   }
 });
 
@@ -574,7 +601,8 @@ export const profileFollowingV2Route = createRoute({
 export const searchV2Route = createRoute({
   method: 'get',
   path: '/2/search',
-  summary: 'Search posts',
+  summary: twitterSearchSummary('Search posts'),
+  description: twitterSearchDescription(),
   request: {
     query: z.object({
       q: twitterSearchQueryString({
@@ -610,16 +638,18 @@ export const searchV2Route = createRoute({
     500: {
       description: 'Upstream or processing error',
       content: { 'application/json': { schema: APISearchResultsSchema } }
-    }
+    },
+    ...twitterSearchUnavailableResponse
   }
 });
 
 export const searchUsersV2Route = createRoute({
   method: 'get',
   path: '/2/search/users',
-  summary: 'Search people',
-  description:
-    'Search accounts using the People tab of X search. Same envelope as `/2/profile/{handle}/followers` (`code`, `results`, `cursor`). Pass `cursor.bottom` back as `cursor` for the next page. `/2/typeahead` is the lighter, unpaginated autocomplete over the same corpus.',
+  summary: twitterSearchSummary('Search people'),
+  description: twitterSearchDescription(
+    'Search accounts using the People tab of X search. Same envelope as `/2/profile/{handle}/followers` (`code`, `results`, `cursor`). Pass `cursor.bottom` back as `cursor` for the next page. `/2/typeahead` is the lighter, unpaginated autocomplete over the same corpus.'
+  ),
   request: {
     query: z.object({
       q: twitterSearchQueryString({
@@ -651,7 +681,8 @@ export const searchUsersV2Route = createRoute({
     500: {
       description: 'Upstream or processing error',
       content: { 'application/json': { schema: APIUserListResultsSchema } }
-    }
+    },
+    ...twitterSearchUnavailableResponse
   }
 });
 
@@ -663,8 +694,8 @@ const typeaheadResultTypeDescription =
 export const typeaheadV2Route = createRoute({
   method: 'get',
   path: '/2/typeahead',
-  summary: 'Search typeahead suggestions',
-  description: 'Autocomplete suggestions from X/Twitter search',
+  summary: twitterSearchSummary('Search typeahead suggestions'),
+  description: twitterSearchDescription('Autocomplete suggestions from X/Twitter search'),
   request: {
     query: z.object({
       q: twitterSearchQueryString({
@@ -697,7 +728,8 @@ export const typeaheadV2Route = createRoute({
     500: {
       description: 'Upstream or processing error',
       content: { 'application/json': { schema: APITypeaheadResponseSchema } }
-    }
+    },
+    ...twitterSearchUnavailableResponse
   }
 });
 
