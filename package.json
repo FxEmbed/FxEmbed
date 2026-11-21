@@ -33,17 +33,17 @@
   "author": "dangered wolf",
   "license": "MIT",
   "devDependencies": {
-    "@aws-sdk/client-s3": "^3.1158.0",
-    "@aws-sdk/s3-request-presigner": "^3.1158.0",
+    "@aws-sdk/client-s3": "^3.1169.0",
+    "@aws-sdk/s3-request-presigner": "^3.1169.0",
     "@cloudflare/vitest-pool-workers": "^0.23.0",
-    "@cloudflare/workers-types": "^5.20261028.1",
+    "@cloudflare/workers-types": "^5.20261114.1",
     "@eslint/js": "^10.0.1",
     "@microsoft/eslint-formatter-sarif": "^3.1.0",
-    "@sentry/esbuild-plugin": "^11.9.0",
+    "@sentry/esbuild-plugin": "^11.12.0",
     "@typescript-eslint/eslint-plugin": "^8.72.1",
     "@typescript-eslint/parser": "^8.72.1",
-    "dotenv": "^18.0.9",
-    "eslint": "^10.13.0",
+    "dotenv": "^18.0.10",
+    "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-config-typescript": "^3.0.0",
     "eslint-plugin-optimize-regex": "^1.2.1",
@@ -55,15 +55,15 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.1",
     "vitest": "^4.1.12",
-    "wrangler": "^4.154.0"
+    "wrangler": "^4.161.0"
   },
   "dependencies": {
     "@fxembed/atmosphere": "*",
     "@hono/sentry": "^1.2.2",
     "@hono/zod-openapi": "^1.6.3",
     "cheerio": "^1.2.0",
-    "hono": "^4.13.13",
-    "i18next": "^26.5.11",
+    "hono": "^4.13.18",
+    "i18next": "^26.7.2",
     "i18next-icu": "^2.6.1",
     "zod": "^4.6.7"
   }

@@ -1411,6 +1411,14 @@ export const ApiQueryErrorSchema = z
   })
   .openapi('ApiQueryError');
 
+/** Returned when an endpoint is turned off on this deployment (e.g. its upstream is broken). */
+export const ApiFeatureUnavailableSchema = z
+  .object({
+    code: z.literal(503),
+    message: z.string()
+  })
+  .openapi('ApiFeatureUnavailable');
+
 export type APIFacet = z.infer<typeof APIFacetSchema>;
 export type APITranslate = z.infer<typeof APITranslateSchema>;
 export type APIPollChoice = z.infer<typeof APIPollChoiceSchema>;
