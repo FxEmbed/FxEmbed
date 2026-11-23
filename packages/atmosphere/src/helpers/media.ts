@@ -70,13 +70,20 @@ export const processMedia = (
   const env = getTwitterProviderEnv();
 
   if (media.type === 'photo') {
+    const taggedUsers = (media.features?.all?.tags ?? []).map(tag => ({
+      id: tag.user_id,
+      name: tag.name,
+      screen_name: tag.screen_name
+    }));
+
     return {
       type: 'photo',
       id: media.id_str,
       url: formatImageUrl(media.media_url_https, 'orig'),
       width: media.original_info?.width,
       height: media.original_info?.height,
-      altText: media.ext_alt_text
+      altText: media.ext_alt_text,
+      ...(taggedUsers.length > 0 && { tagged_users: taggedUsers })
     };
   } else if (media.type === 'video' || media.type === 'animated_gif') {
     const formats: APIVideoFormat[] = media.video_info?.variants?.map(convertVariantToFormat) ?? [];
