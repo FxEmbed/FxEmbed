@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 import { cloudflareTest } from '@cloudflare/vitest-pool-workers';
 import { WORKER_TEST_PROCESS_ENV } from './test/helpers/env';
+import { workerConfigPlugin } from './test/helpers/worker-config';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -37,6 +38,9 @@ const compatibilityDate =
 
 export default defineConfig({
   plugins: [
+    // A fresh checkout has no gitignored `branding.json` / `wrangler.toml` / `.env` (only their
+    // `.example` counterparts are tracked), so serve the example content for the missing ones.
+    workerConfigPlugin(__dirname),
     cloudflareTest({
       remoteBindings: false,
       // Use Miniflare options only (not `wrangler.configPath`): loading the full Wrangler project
@@ -53,7 +57,10 @@ export default defineConfig({
     keepProcessEnv: true
   },
   test: {
+    // The live spec needs a real credential and the network, so it is excluded here and
+    // run through vitest.orcarouter-live.config.mts instead.
     include: ['test/*.ts'],
+    exclude: ['test/orcarouter.live.test.ts', '**/node_modules/**', '**/dist/**'],
     globals: true,
     env: { ...WORKER_TEST_PROCESS_ENV },
     coverage: {

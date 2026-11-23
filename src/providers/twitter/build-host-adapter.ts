@@ -6,13 +6,13 @@ import { experimentCheck, Experiment } from '../../experiments';
 import { shouldTranscodeGif } from '../../helpers/giftranscode';
 import { withLocalizedTombstoneMessage } from '../../helpers/tombstone';
 import { translateStatus } from '../../helpers/translate';
-import { translateStatusAI } from '../../helpers/translateAI';
+import { isAiTranslationEnabled, translateStatusAI } from '../../helpers/translateAI';
 
 /** Maps Hono request context into {@link TwitterBuildHost} for `@fxembed/atmosphere` Twitter processors. */
 export function twitterBuildHostFromContext(c: Context): TwitterBuildHost {
   return {
     credentialKey: c.env?.CREDENTIAL_KEY,
-    aiEnabled: Boolean(c.env?.AI),
+    aiEnabled: isAiTranslationEnabled(c.env),
     twitterProxy: c.env?.TwitterProxy,
     analyticsEngine: c.env?.AnalyticsEngine,
     exceptionWebhookUrl: c.env?.EXCEPTION_DISCORD_WEBHOOK,
