@@ -33,10 +33,10 @@
   "author": "dangered wolf",
   "license": "MIT",
   "devDependencies": {
-    "@aws-sdk/client-s3": "^3.1169.0",
-    "@aws-sdk/s3-request-presigner": "^3.1169.0",
+    "@aws-sdk/client-s3": "^3.1170.0",
+    "@aws-sdk/s3-request-presigner": "^3.1170.0",
     "@cloudflare/vitest-pool-workers": "^0.23.0",
-    "@cloudflare/workers-types": "^5.20261116.1",
+    "@cloudflare/workers-types": "^5.20261117.1",
     "@eslint/js": "^10.0.1",
     "@microsoft/eslint-formatter-sarif": "^3.1.0",
     "@sentry/esbuild-plugin": "^11.12.0",
@@ -55,14 +55,14 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.2",
     "vitest": "^4.1.12",
-    "wrangler": "^4.162.0"
+    "wrangler": "^4.163.0"
   },
   "dependencies": {
     "@fxembed/atmosphere": "*",
     "@hono/sentry": "^1.2.2",
     "@hono/zod-openapi": "^1.6.3",
     "cheerio": "^1.2.0",
-    "hono": "^4.13.18",
+    "hono": "^4.13.19",
     "i18next": "^26.7.2",
     "i18next-icu": "^2.7.0",
     "zod": "^4.6.7"
