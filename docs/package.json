@@ -16,6 +16,6 @@
   "dependencies": {
     "@astrojs/starlight": "^0.43.1",
     "astro": "^7.4.12",
-    "starlight-openapi": "^0.27.0"
+    "starlight-openapi": "^0.27.1"
   }
 }
