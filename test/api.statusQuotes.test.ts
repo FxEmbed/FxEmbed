@@ -1,8 +1,20 @@
-import { test, expect } from 'vitest';
+import { vi, test, expect } from 'vitest';
 import type { APISearchResults } from '../src/realms/api/schemas';
 import { app } from '../src/worker';
 import { botHeaders, twitterBaseUrl } from './helpers/data';
 import harness from './helpers/harness';
+
+// X search is switched off by default (see Experiment.TWITTER_SEARCH); exercise the live code path here.
+vi.mock('../src/experiments', async importOriginal => {
+  const actual = await importOriginal<typeof import('../src/experiments')>();
+  return {
+    ...actual,
+    experimentCheck: (experiment: import('../src/experiments').Experiment, condition = true) =>
+      experiment === actual.Experiment.TWITTER_SEARCH
+        ? condition
+        : actual.experimentCheck(experiment, condition)
+  };
+});
 
 test('API status quotes returns posts and cursor envelope for a known post', async () => {
   const result = await app.request(

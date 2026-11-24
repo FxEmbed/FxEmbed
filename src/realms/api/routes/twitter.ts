@@ -5,6 +5,7 @@ import {
   type TweetDetailRankingMode
 } from '@fxembed/atmosphere/providers/twitter/conversation';
 import { Constants } from '../../../constants';
+import { Experiment, experimentCheck } from '../../../experiments';
 import {
   userAPI,
   userAPIById,
@@ -28,7 +29,7 @@ import { twitterBuildHostFromContext } from '../../../providers/twitter/build-ho
 import { Context } from 'hono';
 import { jsonAfterNormalize, normalizeApiJsonResponse } from '../normalizeApiJsonResponse';
 import { isParamTruthy } from '../../../helpers/utils';
-import type { RouteHandler } from '@hono/zod-openapi';
+import type { RouteConfig, RouteHandler } from '@hono/zod-openapi';
 import {
   conversationV2Route,
   profileMediaV2Route,
@@ -47,6 +48,16 @@ import {
   trendsV2Route,
   typeaheadV2Route
 } from '../routes';
+import { Strings } from '../../../strings';
+
+/** Short-circuits X-search-backed routes with a 503 while the `TWITTER_SEARCH` experiment is off. */
+const twitterSearchUnavailable = <R extends RouteConfig>(c: Context) => {
+  if (experimentCheck(Experiment.TWITTER_SEARCH)) return null;
+  for (const [header, value] of Object.entries(Constants.API_RESPONSE_HEADERS)) {
+    c.header(header, value);
+  }
+  return jsonAfterNormalize<R>(c, { code: 503, message: Strings.X_SEARCH_UNAVAILABLE }, 503);
+};
 
 const shouldIncludeAboutAccount = (c: Context) => {
   return isParamTruthy(c.req.query('about_account') ?? c.req.query('aboutAccount'));
@@ -96,6 +107,8 @@ export const statusRepostsAPIRequest: RouteHandler<typeof statusRepostsV2Route> 
 };
 
 export const statusQuotesAPIRequest: RouteHandler<typeof statusQuotesV2Route> = async c => {
+  const unavailable = twitterSearchUnavailable<typeof statusQuotesV2Route>(c);
+  if (unavailable) return unavailable;
   const host = twitterBuildHostFromContext(c);
   const { id } = c.req.valid('param');
   const query = c.req.valid('query');
@@ -372,6 +385,8 @@ export const profileFollowingAPIRequest: RouteHandler<typeof profileFollowingV2R
 };
 
 export const searchAPIRequest: RouteHandler<typeof searchV2Route> = async c => {
+  const unavailable = twitterSearchUnavailable<typeof searchV2Route>(c);
+  if (unavailable) return unavailable;
   const host = twitterBuildHostFromContext(c);
   const query = c.req.valid('query');
   const q = query.q;
@@ -394,6 +409,8 @@ export const searchAPIRequest: RouteHandler<typeof searchV2Route> = async c => {
 };
 
 export const searchUsersAPIRequest: RouteHandler<typeof searchUsersV2Route> = async c => {
+  const unavailable = twitterSearchUnavailable<typeof searchUsersV2Route>(c);
+  if (unavailable) return unavailable;
   const host = twitterBuildHostFromContext(c);
   const query = c.req.valid('query');
 
@@ -436,6 +453,8 @@ export const trendsAPIRequest: RouteHandler<typeof trendsV2Route> = async c => {
 };
 
 export const typeaheadAPIRequest: RouteHandler<typeof typeaheadV2Route> = async c => {
+  const unavailable = twitterSearchUnavailable<typeof typeaheadV2Route>(c);
+  if (unavailable) return unavailable;
   const host = twitterBuildHostFromContext(c);
   const query = c.req.valid('query');
   const response = await typeaheadAPI(query.q, host, {

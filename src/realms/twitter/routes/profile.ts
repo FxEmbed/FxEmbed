@@ -65,35 +65,19 @@ export const profileRequest = async (c: Context) => {
 
     const profileResponse = await handleProfile(c, username, flags);
 
-    let newUrl = `${baseUrl}/${handle}`;
-    if (baseUrl.startsWith('twitter:/')) {
-      newUrl = `twitter://user?screen_name=${handle}`;
-    }
-    /* Check for custom redirect */
-
-    if (!isBotUA && !flags.api) {
-      if (flags.horizon) {
-        return c.redirect(horizonProfileUrl, 302);
-      }
-      if (experimentCheck(Experiment.USE_HORIZON_WEB, baseUrl === Constants.TWITTER_ROOT)) {
-        const app = await fetch(`https://app.fxtwitter.com/${handle}`);
-        const appBody = await app.text();
-        if (appBody.includes('<!doctype html>')) {
-          return c.html(appBody, 200);
-        } else {
-          return c.redirect(newUrl, 302);
-        }
-      } else {
-        return c.redirect(newUrl, 302);
-      }
-    }
-
     /* Return the response containing embed information */
     return profileResponse;
   } else {
     /* A human has clicked a fxtwitter.com/:screen_name link!
         Obviously we just need to redirect to the user directly.*/
     console.log('Matched human UA', userAgent);
+
+    let newUrl = `${baseUrl}/${handle}`;
+    if (baseUrl.startsWith('twitter:/')) {
+      newUrl = `twitter://user?screen_name=${handle}`;
+    }
+
+    /* Check for custom redirect */
     if (flags.horizon) {
       return c.redirect(horizonProfileUrl, 302);
     }
@@ -103,10 +87,10 @@ export const profileRequest = async (c: Context) => {
       if (appBody.includes('<!doctype html>')) {
         return c.html(appBody, 200);
       } else {
-        return c.redirect(url, 302);
+        return c.redirect(newUrl, 302);
       }
     } else {
-      return c.redirect(url, 302);
+      return c.redirect(newUrl, 302);
     }
   }
 };
