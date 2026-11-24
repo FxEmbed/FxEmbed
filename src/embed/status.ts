@@ -42,6 +42,11 @@ import {
   renderComponentEmbed
 } from './components';
 
+/* Embed pages are only ever meant to be parsed for <meta> tags; they never need to run script.
+   The component embed uses a non-executable `application/json` script block, which this allows. */
+const EMBED_CONTENT_SECURITY_POLICY =
+  "default-src 'none'; img-src * data:; media-src *; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'";
+
 /**
  * Telegram's link preview plays videos inside an embed container. Instagram
  * files fail there, so Telegram user agents get the video file directly.
@@ -437,6 +442,12 @@ export const handleStatus = async (
 
   let newText = status.text;
 
+  /* Author names (and handles, on some platforms) are free text chosen by the account owner,
+     so they must be escaped before being interpolated into any HTML attribute. */
+  const authorLabel = sanitizeText(
+    `${status.author.name ?? ''} (@${status.author.screen_name ?? ''})`
+  );
+
   /* Base headers included in all responses */
   const headers = [];
 
@@ -477,8 +488,8 @@ export const handleStatus = async (
     headers.push(
       `<link rel="canonical" href="${twitterPublicStatusUrl}"/>`,
       `<meta property="og:url" content="${twitterPublicStatusUrl}"/>`,
-      `<meta property="twitter:site" content="@${status.author.screen_name}"/>`,
-      `<meta property="twitter:creator" content="@${status.author.screen_name}"/>`
+      `<meta property="twitter:site" content="@${sanitizeText(status.author.screen_name ?? '')}"/>`,
+      `<meta property="twitter:creator" content="@${sanitizeText(status.author.screen_name ?? '')}"/>`
     );
   } else if (status.provider === DataProvider.Bluesky) {
     headers.push(
@@ -494,9 +505,7 @@ export const handleStatus = async (
 
   if (!flags.gallery) {
     headers.push(`<meta property="theme-color" content="${getBranding(c).color}"/>`);
-    headers.push(
-      `<meta property="twitter:title" content="${status.author.name} (@${status.author.screen_name})"/>`
-    );
+    headers.push(`<meta property="twitter:title" content="${authorLabel}"/>`);
   }
 
   /* This little thing ensures if by some miracle our embed is loaded in a browser,
@@ -677,17 +686,19 @@ export const handleStatus = async (
       const { external } = status.media;
       authorText = newText || '';
       headers.push(
-        `<meta property="twitter:player" content="${external.url}">`,
-        `<meta property="twitter:player:width" content="${external.width}">`,
-        `<meta property="twitter:player:height" content="${external.height}">`,
+        `<meta property="twitter:player" content="${sanitizeText(external.url)}">`,
+        `<meta property="twitter:player:width" content="${Number(external.width) || 0}">`,
+        `<meta property="twitter:player:height" content="${Number(external.height) || 0}">`,
         `<meta property="og:type" content="video.other">`,
-        `<meta property="og:video:url" content="${external.url}">`,
-        `<meta property="og:video:secure_url" content="${external.url}">`,
-        `<meta property="og:video:width" content="${external.width}">`,
-        `<meta property="og:video:height" content="${external.height}">`
+        `<meta property="og:video:url" content="${sanitizeText(external.url)}">`,
+        `<meta property="og:video:secure_url" content="${sanitizeText(external.url)}">`,
+        `<meta property="og:video:width" content="${Number(external.width) || 0}">`,
+        `<meta property="og:video:height" content="${Number(external.height) || 0}">`
       );
       if (external.thumbnail_url && !status.media.photos?.length) {
-        headers.push(`<meta property="og:image" content="${external.thumbnail_url}">`);
+        headers.push(
+          `<meta property="og:image" content="${sanitizeText(external.thumbnail_url)}">`
+        );
       }
     }
   }
@@ -800,7 +811,7 @@ export const handleStatus = async (
   let text = useIV ? sanitizeText(newText).replace(/\n/g, '<br>') : sanitizeText(newText);
 
   // For article-only tweets, use article title and preview text
-  let ogTitle = `${status.author.name} (@${status.author.screen_name})`;
+  let ogTitle = authorLabel;
   if (articleOnly && twitterStatus.article && isTelegram) {
     ogTitle = sanitizeText(twitterStatus.article.title);
     text = sanitizeText(twitterStatus.article.preview_text);
@@ -822,19 +833,15 @@ export const handleStatus = async (
       `<meta property="og:description" content="${text}"/>`
     );
     if (!useActivity) {
-      headers.push(`<meta property="og:site_name" content="${siteName}"/>`);
+      headers.push(`<meta property="og:site_name" content="${sanitizeText(siteName)}"/>`);
     } else {
-      headers.push(`<meta property="og:site_name" content="${originalSiteName}"/>`);
+      headers.push(`<meta property="og:site_name" content="${sanitizeText(originalSiteName)}"/>`);
     }
   } else {
     if (isTelegram) {
-      headers.push(
-        `<meta property="og:site_name" content="${status.author.name} (@${status.author.screen_name})"/>`
-      );
+      headers.push(`<meta property="og:site_name" content="${authorLabel}"/>`);
     } else {
-      headers.push(
-        `<meta property="og:title" content="${status.author.name} (@${status.author.screen_name})"/>`
-      );
+      headers.push(`<meta property="og:title" content="${authorLabel}"/>`);
     }
   }
 
@@ -895,12 +902,10 @@ export const handleStatus = async (
       `<link rel="alternate" href="{base}/owoembed?text={text}&status={status}&author={author}{provider}" type="application/json+oembed" title="{name}">`.format(
         {
           base: `https://${getBranding(c).domains[0]}`,
-          text: flags.gallery
-            ? status.author.name
-            : encodeURIComponent(truncateWithEllipsis(authorText, 255)),
+          text: encodeURIComponent(truncateWithEllipsis(authorText, 255)),
           status: encodeURIComponent(statusId),
           author: encodeURIComponent(status.author.screen_name || ''),
-          name: status.author.name || '',
+          name: sanitizeText(status.author.name || ''),
           provider: provider ? `&provider=${encodeURIComponent(provider)}` : ''
         }
       )
@@ -989,7 +994,13 @@ export const handleStatus = async (
   }
 
   /* When dealing with a Tweet of unknown lang, fall back to en */
-  const lang = status.lang === null ? 'en' : status.lang || 'en';
+  /* lang comes from post metadata (e.g. Bluesky record `langs`), so only allow BCP-47-ish values */
+  const rawLang = status.lang === null ? 'en' : status.lang || 'en';
+  const lang = /^[A-Za-z0-9-]{1,35}$/.test(rawLang) ? rawLang : 'en';
+
+  /* Defense in depth: embed pages never need to run script. This also covers the case where
+     the page is served to a real browser (e.g. direct-media URLs on posts without media). */
+  c.header('content-security-policy', EMBED_CONTENT_SECURITY_POLICY);
 
   /* Finally, after all that work we return the response HTML! */
   return c.html(
