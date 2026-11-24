@@ -95,15 +95,15 @@ const generateStatusMedia = (status: APIStatus, proxyPbs: boolean, isTelegram: b
           }
           url = proxyTwitterPostPhotoUrl(url, proxyPbs);
           media += `<img src="{url}" {altText}/>`.format({
-            altText: altText ? `alt="${altText}"` : '',
+            altText: altText ? `alt="${sanitizeText(altText)}"` : '',
             url: url
           });
           break;
         case 'video':
-          media += `<video src="${url}" alt="${i18next.t('videoAltTextUnavailable').format({ author: status.author.name })}"/>`;
+          media += `<video src="${url}" alt="${i18next.t('videoAltTextUnavailable').format({ author: sanitizeText(status.author.name ?? '') })}"/>`;
           break;
         case 'gif':
-          media += `<video src="${url}" alt="${i18next.t('gifAltTextUnavailable').format({ author: status.author.name })}"/>`;
+          media += `<video src="${url}" alt="${i18next.t('gifAltTextUnavailable').format({ author: sanitizeText(status.author.name ?? '') })}"/>`;
           break;
       }
     });
@@ -202,24 +202,24 @@ const generateInlineAuthorHeader = (
   if (authorActionType === AuthorActionType.Original) {
     return `<h5><i>${i18next.t('ivAuthorActionOriginal', {
       statusUrl: status.url,
-      authorName: author.name,
+      authorName: sanitizeText(author.name ?? ''),
       authorUrl: author.url,
-      authorScreenName: author.screen_name
+      authorScreenName: sanitizeText(author.screen_name ?? '')
     })}</i></h5>`;
   } else if (authorActionType === AuthorActionType.FollowUp) {
     return `<h5><i>${i18next.t('ivAuthorActionFollowUp', {
       statusUrl: status.url,
-      authorName: author.name,
+      authorName: sanitizeText(author.name ?? ''),
       authorUrl: author.url,
-      authorScreenName: author.screen_name
+      authorScreenName: sanitizeText(author.screen_name ?? '')
     })}</i></h5>`;
   }
   // Reply / unknown
   return `<h5><i>${i18next.t('ivAuthorActionReply', {
     statusUrl: status.url,
-    authorName: author.name,
+    authorName: sanitizeText(author.name ?? ''),
     authorUrl: author.url,
-    authorScreenName: author.screen_name
+    authorScreenName: sanitizeText(author.screen_name ?? '')
   })}</i></h5>`;
 };
 
@@ -233,7 +233,7 @@ const generateStatusFooter = (
   author: APIUser,
   language: string
 ): string => {
-  let description = author.description;
+  let description = sanitizeText(author.description ?? '');
   description = htmlifyLinks(description);
   if (status.provider === DataProvider.Twitter) {
     description = htmlifyHashtags(description, status);
@@ -259,8 +259,8 @@ const generateStatusFooter = (
         ? ''
         : `<h2>${i18next.t('ivAboutAuthor')}</h2>
         {pfp}
-        <h2>${author.name}</h2>
-        <p><a href="${author.url}">@${author.screen_name}</a></p>
+        <h2>${sanitizeText(author.name ?? '')}</h2>
+        <p><a href="${author.url}">@${sanitizeText(author.screen_name ?? '')}</a></p>
         <p><b>${description}</b></p>
         <p>{location} {website} {joined}</p>
         <p>
@@ -268,10 +268,10 @@ const generateStatusFooter = (
           {followers} <b>${i18next.t('ivProfileFollowers', { numFollowers: author.followers })}</b> 
           {statuses} <b>${i18next.t('ivProfileStatuses', { numStatuses: author.statuses })}</b>
         </p>`.format({
-            pfp: `<img src="${author.avatar_url?.replace('_200x200', '_400x400')}" alt="${i18next.t('ivProfilePictureAlt', { author: author.name })}" />`,
-            location: author.location ? `📌 ${author.location}` : '',
+            pfp: `<img src="${author.avatar_url?.replace('_200x200', '_400x400')}" alt="${i18next.t('ivProfilePictureAlt', { author: sanitizeText(author.name ?? '') })}" />`,
+            location: author.location ? `📌 ${sanitizeText(author.location)}` : '',
             website: author.website
-              ? `🔗 <a rel="nofollow" href="${wrapForeignLinks(author.website.url)}">${author.website.display_url}</a>`
+              ? `🔗 <a rel="nofollow" href="${wrapForeignLinks(author.website.url)}">${sanitizeText(author.website.display_url ?? '')}</a>`
               : '',
             joined: author.joined ? `📆 ${formatDate(new Date(author.joined), language)}` : '',
             following: truncateSocialCount(author.following, language),
@@ -414,8 +414,8 @@ const generateStatus = (
       ? '<h4>' +
         i18next.t('ivQuoteHeader').format({
           url: status.url,
-          authorName: status.author.name,
-          authorHandle: status.author.screen_name,
+          authorName: sanitizeText(status.author.name ?? ''),
+          authorHandle: sanitizeText(status.author.screen_name ?? ''),
           authorURL: status.author.url
         }) +
         '</h4>'
@@ -461,8 +461,8 @@ export const renderInstantView = (properties: RenderProperties): ResponseInstruc
   // For article-only tweets, use article title as main heading and skip "View full thread" at top
   const mainHeading =
     articleOnly && twitterStatus.article
-      ? twitterStatus.article.title
-      : `${status.author.name} (@${status.author.screen_name})`;
+      ? sanitizeText(twitterStatus.article.title)
+      : sanitizeText(`${status.author.name ?? ''} (@${status.author.screen_name ?? ''})`);
 
   const topSection = articleOnly
     ? '' // No top "View full thread" for article-only tweets
@@ -483,7 +483,7 @@ export const renderInstantView = (properties: RenderProperties): ResponseInstruc
     <article>
     ${topSection}
     <h1>${mainHeading}</h1>
-        ${articleOnly ? `<h2>${status.author.name} (@${status.author.screen_name})</h2>` : ''}
+        ${articleOnly ? `<h2>${sanitizeText(`${status.author.name ?? ''} (@${status.author.screen_name ?? ''})`)}</h2>` : ''}
 
     ${useThread
       .map(item => {
