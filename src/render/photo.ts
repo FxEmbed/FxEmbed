@@ -2,6 +2,7 @@ import i18next from 'i18next';
 import { Strings } from '../strings';
 import { getBranding } from '../helpers/branding';
 import { proxyTwitterPostPhotoUrl, shouldProxyTelegramPbsPhotos } from '../helpers/pbsProxy';
+import { sanitizeText } from '../helpers/utils';
 
 export const renderPhoto = (
   properties: RenderProperties,
@@ -57,8 +58,8 @@ export const renderPhoto = (
     ];
     if (photo.altText) {
       instructions.addHeaders.push(
-        `<meta property="twitter:image:alt" content="${photo.altText}"/>`,
-        `<meta property="og:image:alt" content="${photo.altText}"/>`
+        `<meta property="twitter:image:alt" content="${sanitizeText(photo.altText)}"/>`,
+        `<meta property="og:image:alt" content="${sanitizeText(photo.altText)}"/>`
       );
     }
   }
