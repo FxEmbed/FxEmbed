@@ -98,7 +98,16 @@ export const APIPhotoSchema = z.object({
   width: z.number(),
   height: z.number(),
   transcode_url: z.string().optional().nullable(),
-  altText: z.string().optional()
+  altText: z.string().optional(),
+  tagged_users: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        screen_name: z.string()
+      })
+    )
+    .optional()
 });
 
 /** Same shape as `APIUser.about_account` (X “About this account” metadata). */
