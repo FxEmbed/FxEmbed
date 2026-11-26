@@ -3,6 +3,12 @@ import type { APIMastodonStatus, APITwitterStatus } from '../realms/api/schemas'
 import i18next from 'i18next';
 import { normalizeLanguage } from './language';
 
+type WorkersAITranslationResponse = {
+  choices?: { message?: { content?: string | null } }[];
+  response?: string;
+  usage: CFAITranslation['usage'];
+};
+
 const translateTextLLM = async (
   text: string,
   sourceLang: string,
@@ -27,10 +33,17 @@ The target language is ${i18next.t(`language_${targetLang}`, { lng: 'en' })}.`
     }
   ];
   console.log('messages', messages);
-  const response = await c.env.AI.run('@cf/openai/gpt-oss-120b', { messages });
+  const response: WorkersAITranslationResponse = await c.env.AI.run('@cf/openai/gpt-oss-120b', {
+    messages
+  });
   console.log(`translationResults`, response);
+  const translatedText = response.choices?.[0]?.message?.content ?? response.response;
+  if (typeof translatedText !== 'string' || !translatedText.trim()) {
+    return null;
+  }
+
   return {
-    translated_text: response.response,
+    translated_text: translatedText,
     usage: {
       prompt_tokens: response.usage.prompt_tokens,
       completion_tokens: response.usage.completion_tokens,
@@ -56,7 +69,7 @@ export const translateStatusAI = async (
       language,
       c
     );
-    return response;
+    if (response) return response;
   } catch (e: unknown) {
     console.error('Unknown error while fetching from Translation API', e);
   }
@@ -64,7 +77,6 @@ export const translateStatusAI = async (
   console.log('Using M2M100-1.2B translation');
 
   try {
-    console.log(c.env);
     const response: CFAITranslation = await c.env.AI.run('@cf/meta/m2m100-1.2b', {
       text: status.text,
       source_lang: status.lang,
