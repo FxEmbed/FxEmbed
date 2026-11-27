@@ -95,6 +95,8 @@ export const APIPhotoSchema = z.object({
   format: z.string().optional(),
   type: z.enum(['photo', 'gif']),
   url: z.string(),
+  /** Poster image for a transcoded `gif`; lets unfurlers such as Fluxer treat it as animated media. */
+  thumbnail_url: z.string().optional(),
   width: z.number(),
   height: z.number(),
   transcode_url: z.string().optional().nullable(),
