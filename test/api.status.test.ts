@@ -1,4 +1,5 @@
 import { test, expect } from 'vitest';
+import { processMedia } from '@fxembed/atmosphere/helpers/media';
 import type { APITwitterStatus } from '../src/realms/api/schemas';
 import type { SocialConversation, SocialThread } from '../src/types/apiStatus';
 import { app } from '../src/worker';
@@ -110,7 +111,28 @@ test('API v2 /2/status includes quote count', async () => {
   expect(body.status?.quotes).toEqual(2886);
 });
 
-const taggedPhotoHarness = {
+const taggedUsers = [{ id: '111', name: 'Fake Person', screen_name: 'fake_person' }];
+
+const [photo] = tweetMock.data.tweetResult.result.legacy.extended_entities.media;
+const video = {
+  ...photo,
+  type: 'video',
+  video_info: {
+    aspect_ratio: [16, 9],
+    duration_millis: 1000,
+    variants: [
+      { bitrate: 1, content_type: 'video/mp4', url: 'https://video.twimg.com/fake/vid.mp4' }
+    ]
+  }
+};
+const taggedFeatures = {
+  all: {
+    tags: [{ name: 'Fake Person', screen_name: 'fake_person', type: 'user', user_id: '111' }]
+  }
+};
+const taggedGif = { ...video, type: 'animated_gif', features: taggedFeatures };
+
+const taggedMediaHarness = {
   TwitterProxy: {
     fetch: async (request: string) => {
       if (!new URL(request).pathname.endsWith('/TweetResultByRestId')) {
@@ -121,12 +143,14 @@ const taggedPhotoHarness = {
       mock.data.tweetResult.result.rest_id = '991020';
       mock.data.tweetResult.result.legacy.id_str = '991020';
       mock.data.tweetResult.result.legacy.conversation_id_str = '991020';
-      const [tagged] = mock.data.tweetResult.result.legacy.extended_entities.media;
-      Object.assign(tagged.features, {
-        all: {
-          tags: [{ name: 'Fake Person', screen_name: 'fake_person', type: 'user', user_id: '111' }]
-        }
-      });
+      const media = [
+        { ...photo, features: taggedFeatures },
+        photo,
+        { ...video, features: taggedFeatures },
+        video,
+        taggedGif
+      ];
+      Object.assign(mock.data.tweetResult.result.legacy.extended_entities, { media });
 
       return Response.json(mock);
     }
@@ -136,22 +160,30 @@ const taggedPhotoHarness = {
 test.each([
   ['v1', '/status/991020', 'tweet'],
   ['v2', '/2/status/991020', 'status']
-] as const)('API %s exposes tagged_users on tagged photos only', async (_version, path, key) => {
+] as const)('API %s exposes tagged_users on tagged media', async (_version, path, key) => {
   const result = await app.request(
     new Request(`https://api.fxtwitter.com${path}`, { headers: botHeaders }),
     undefined,
-    taggedPhotoHarness
+    taggedMediaHarness
   );
   expect(result.status).toEqual(200);
   const { media } = ((await result.json()) as Record<typeof key, APITwitterStatus>)[key];
 
-  const expected = [{ id: '111', name: 'Fake Person', screen_name: 'fake_person' }];
-  for (const photos of [media.all, media.photos]) {
-    expect(photos).toHaveLength(3);
-    expect(photos![0]).toHaveProperty('tagged_users', expected);
-    expect(photos![1]).not.toHaveProperty('tagged_users');
-    expect(photos![2]).not.toHaveProperty('tagged_users');
-  }
+  const tagsOf = (items: object[] = []) =>
+    items.map(item => ('tagged_users' in item ? item.tagged_users : 'absent'));
+
+  expect(media.all?.map(item => item.type)).toEqual(['photo', 'photo', 'video', 'video', 'gif']);
+  expect(tagsOf(media.all)).toEqual([taggedUsers, 'absent', taggedUsers, 'absent', taggedUsers]);
+  expect(tagsOf(media.photos)).toEqual([taggedUsers, 'absent']);
+  expect(tagsOf(media.videos)).toEqual([taggedUsers, 'absent', taggedUsers]);
+});
+
+test('processMedia keeps tagged_users on transcoded GIFs', () => {
+  const host = { t: (key: string) => key, shouldTranscodeGif: () => true };
+  const media = processMedia(host, taggedGif as unknown as TweetMedia);
+
+  expect(media).not.toHaveProperty('formats');
+  expect(media).toHaveProperty('tagged_users', taggedUsers);
 });
 
 test('API v2 /2/status rejects non-numeric id with 400', async () => {

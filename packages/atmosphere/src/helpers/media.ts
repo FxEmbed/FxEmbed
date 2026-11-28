@@ -69,13 +69,13 @@ export const processMedia = (
   const requestUrl = host.request?.url ?? 'https://localhost/';
   const env = getTwitterProviderEnv();
 
-  if (media.type === 'photo') {
-    const taggedUsers = (media.features?.all?.tags ?? []).map(tag => ({
-      id: tag.user_id,
-      name: tag.name,
-      screen_name: tag.screen_name
-    }));
+  const taggedUsers = (media.features?.all?.tags ?? []).map(tag => ({
+    id: tag.user_id,
+    name: tag.name,
+    screen_name: tag.screen_name
+  }));
 
+  if (media.type === 'photo') {
     return {
       type: 'photo',
       id: media.id_str,
@@ -128,7 +128,8 @@ export const processMedia = (
           bestFormat?.url && transcodeBase
             ? bestFormat.url.replace(env.videoBase, transcodeBase).replace('.mp4', extension)
             : undefined,
-        altText: media.ext_alt_text
+        altText: media.ext_alt_text,
+        ...(taggedUsers.length > 0 && { tagged_users: taggedUsers })
       };
     }
 
@@ -151,7 +152,8 @@ export const processMedia = (
       formats: formats,
       publisher: media.additional_media_info?.source_user
         ? convertToApiUser(media.additional_media_info.source_user.user_results?.result, false)
-        : null
+        : null,
+      ...(taggedUsers.length > 0 && { tagged_users: taggedUsers })
     };
   }
   return null;

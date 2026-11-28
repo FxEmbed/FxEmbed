@@ -90,6 +90,14 @@ export const APIMediaBaseSchema = z.object({
   height: z.number()
 });
 
+export const APITaggedUsersSchema = z.array(
+  z.object({
+    id: z.string(),
+    name: z.string(),
+    screen_name: z.string()
+  })
+);
+
 export const APIPhotoSchema = z.object({
   id: z.string().optional(),
   format: z.string().optional(),
@@ -99,15 +107,7 @@ export const APIPhotoSchema = z.object({
   height: z.number(),
   transcode_url: z.string().optional().nullable(),
   altText: z.string().optional(),
-  tagged_users: z
-    .array(
-      z.object({
-        id: z.string(),
-        name: z.string(),
-        screen_name: z.string()
-      })
-    )
-    .optional()
+  tagged_users: APITaggedUsersSchema.optional()
 });
 
 /** Same shape as `APIUser.about_account` (X “About this account” metadata). */
@@ -192,7 +192,8 @@ export const APIVideoSchema = z.object({
   duration: z.number(),
   filesize: z.number().optional(),
   formats: z.array(APIVideoFormatSchema),
-  publisher: APIUserSchema.optional().nullable()
+  publisher: APIUserSchema.optional().nullable(),
+  tagged_users: APITaggedUsersSchema.optional()
 });
 
 export const APIExternalMediaSchema = z.object({
