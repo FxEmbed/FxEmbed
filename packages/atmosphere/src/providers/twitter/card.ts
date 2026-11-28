@@ -142,19 +142,19 @@ export const renderCard = async (
     const broadcastData = (await twitterFetch(host, {
       url: `${apiRoot}/1.1/live_video_stream/status/${broadcast.media_key}?client=web&use_syndication_guest_id=false&cookie_set_host=x.com`
     })) as {
-      source: {
-        location: string;
-        noRedirectPlaybackUrl: string;
-        status: string;
-        streamType: string;
+      source?: {
+        location?: string;
+        noRedirectPlaybackUrl?: string;
+        status?: string;
+        streamType?: string;
       };
-      sessionId: string;
-      chatToken: string;
-      lifecycleToken: string;
-      shareUrl: string;
-    };
+      sessionId?: string;
+      chatToken?: string;
+      lifecycleToken?: string;
+      shareUrl?: string;
+    } | null;
     console.log('broadcastData', broadcastData);
-    if (broadcastData) {
+    if (broadcastData?.source?.location) {
       console.log('time to load stream data');
       broadcast.stream = {
         url: broadcastData.source.location
